@@ -45,6 +45,7 @@ else
                 exit 1
         fi
 	echo "[+] Successfully installed the g++ compiler."
+fi
 
 echo "[INFO] Checking if service user '$ServiceUser' exists."
 if id "$ServiceUser" > /dev/null 2>&1; then
