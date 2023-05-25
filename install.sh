@@ -15,7 +15,7 @@ else
 		exit 1
 	fi
 	echo "[INFO] Creating symlink for libxml2 source code files."
-	sudo ln -s /usr/include/libxml2/libxml /usr/include/libxml
+	sudo ln -s /usr/include/libxml /usr/include/libxml2/libxml
 	if [ "$?" == "1" ];then
 		echo "[ERROR] Failed to create libxml symlink. This MAY result in code files failing to compile."
 	fi
