@@ -19,5 +19,5 @@ echo "Would you like to remove libxml2-dev, libssl-dev, and g++? (N/y)"
 read UserInput
 
 if [ "$UserInput" == "y" ]; then
-	sudo apt-get remove libxml2-dev libssl-dev g++
+	sudo apt-get remove libxml2-dev libssl-dev g++ -y
 fi
