@@ -15,9 +15,9 @@ sudo userdel -f $ServiceUser
 echo "[INFO] Removing service user group."
 sudo groupdel $ServiceUser 2>/dev/null
 
-echo "Would you like to remove libxml2-dev and libssl-dev? (N/y)"
+echo "Would you like to remove libxml2-dev, libssl-dev, and g++? (N/y)"
 read UserInput
 
 if [ "$UserInput" == "y" ]; then
-	sudo apt-get remove libxml2-dev libssl-dev
+	sudo apt-get remove libxml2-dev libssl-dev g++
 fi

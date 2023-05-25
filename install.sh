@@ -9,7 +9,7 @@ if [ "$?" == "0" ]; then
 	echo "[+] libxml2-dev found!"
 else
 	echo "[-] libxml2-dev not found! Attempting to install."
-	sudo apt-get install libxml2-dev
+	sudo apt-get install libxml2-dev -y
 	if [ "$?" == "1" ]; then
 		echo "[ERROR] Failed to install libxml2-dev. Aborting."
 		exit 1
@@ -27,12 +27,24 @@ if [ "$?" == "0" ]; then
         echo "[+] libssl-dev found!"
 else
         echo "[-] libssl-dev not found! Attempting to install."
-        sudo apt-get install libssl-dev
+        sudo apt-get install libssl-dev -y
         if [ "$?" == "1" ]; then
                 echo "[ERROR] Failed to install libssl-dev. Aborting."
                 exit 1
         fi
 fi
+
+dpkg -l g++ >/dev/null
+if [ "$?" == "0" ]; then
+	echo "[+] g++ comipler found!"
+else 
+	echo "[-] g++ compiler not found. Attempting to install."
+	sudo apt-get install g++ -y
+	if [ "$?" == "1" ]; then
+                echo "[ERROR] Failed to install g++. Aborting."
+                exit 1
+        fi
+	echo "[+] Successfully installed the g++ compiler."
 
 echo "[INFO] Checking if service user '$ServiceUser' exists."
 if id "$ServiceUser" > /dev/null 2>&1; then
