@@ -1,8 +1,8 @@
-BinaryName = "MorningMessenger"
+BinaryName = "./bin/MorningMessenger"
 all:
 	g++ main.cc -lxml2 -lcrypto -o $(BinaryName)
 clean:
-	rm ./$(BinaryName)
+	rm $(BinaryName)
 install:
 	./install.sh
 uninstall:

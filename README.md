@@ -9,4 +9,6 @@
 1. Run the command `make uninstall` and all processes, folders, and users created by the installer will be removed. You can optionally remove the installed dependancies if you desire; but by default this is skipped.
 
 ### Message From Morning Star
-Before I get to the code writing, I'm going to set up a brand new linux VM to test the install and properly document any unmentioned dependacies.
+1. I've provided some notes regarding how the initial startup will function. Feel free to read through them. 
+2. I've also started another repository for my SoundSnake class. Which will be used to allow VOIP using this messenger. This will be prioritized after I get some sleep and point 1 is completed.
+3. Enjoy the insanity.

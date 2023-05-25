@@ -1,0 +1,6 @@
+class MorningMessenger{
+	private:
+
+	public:
+
+};

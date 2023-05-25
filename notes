@@ -1,0 +1,90 @@
+Config file development.
+
+I've opted out of MySql because it would be too annoying getting people to configure a mysql server
+
+Key functionality notes:
+	- Password one will decrypt the entire XML file.
+	- Password two will decrypt the key encryption key.
+	- The Key encryption key will change after every use. 
+	- the password for the private key will be a derived key resulting from the two keys
+
+<root>
+	<pubkey>/location/of/public/key.pem</pubkey>
+	<prikey>/location/of/private/key.pem.encrypted</prikey>
+	<trustedkeys>/location/of/trusted/keys/</trustedkeys>
+	<keyencryptionkey>ENCRYPTED STRING OF DATA</keyencryptionkey>
+	<keyencryptioniv>ENCRYPTED STRING OF DATA</keyencryptioniv>
+	<serverhost>0.0.0.0</serverhost>
+	<serverport>21345</serverport>
+</root>
+
+
+
+
+example of trusted key file. Everything must be encrypted with the exception of the uid and the public key location. 
+As these two things will be used to place store the message properly. When you login properly, the names and contact info will be cached in memory.
+<root>
+	<uid>UNIQUE-ID-OF-TRUSTED-PERSON</uid>
+	<pubkey>/location/of/public/key.pem</pubkey>
+	<alias>Name of your Friend</alias>
+	<remoteserverhost>yourFriendsDomain.onion</remoteserverhost>
+	<remoteserverport>21345(default)</remoteserverport>
+</root>
+
+Example of message file. The entire message will be crafted by the client. the message data will be encrypted. Then the rest of the message will be encrypted as well
+to prevent manipulation of the self destruct bit.
+<root>
+	<recptdate>date and time</recptdate>
+	<messagedata>ENCRYPTED DATA<messagedata>
+	<selfdestruct>(0 or 1)</selfdesctruct>
+	
+</root>
+
+Application security operational states:
+- locked state, nothing but the public key is in memory.
+- unlocking state, ALL secruity keys are in memory. public key, config key, kek key, private key, computered export key.
+- unlocked state, only the public key, private key, and computered export key are in memory. 
+- locking state, reverts back to locked state.
+
+
+Derive IV from password function.
+1) Encrypt password.
+2) create a string array of size 4. string example[4];
+3) hash encrypted password with sha256. stor in example[0]
+4) hash the hash and stor in example[1]. Chain until all 4 cells are filled.
+5) for each hash, xor it's own bytes into themselves. 
+	for i 0 through 4
+		for a 0 through 16
+			result[i] += example[i][a] ^ example[i][a+16]
+6) One final batch of xor to create the IV
+	for i 0 through 16
+		iv[i] = result[0][i] ^ result[1][i] ^ result[2][i] ^ result[3][i]
+7) Profit
+
+
+Okay. This is the flow for the intial set up. Taking into account the above notes taken and flaws.
+
+application will be started via script that will run the program as the created service user via sudo -u SERVICE USER ./BinaryName
+
+[Startup Procedure]
+1) check in storage folder for config file. if file is missing, run initial setup procedure, else continue to authentication.
+2) Ensure required directories exist and make them if they don't
+3) requet username and password. 
+4) use password to decryot config, if decryption failes, show invalid credentails, else load values into morning messenger class.
+5) generate private key decryption key using username and password. decrypt private key into memory.
+6) generate private key export password using username, passowrd, and pin number. Validate generated password, if failed show invalid credentials.
+4) display main menu.
+
+
+[Setup Procedure]
+1) Check for server key storage dir, if not there, make it, configure permissions to 600
+2) Check if trusted key folder exists, if not make it, configure permissions to 600.
+3) check if messages folder exists, if not make it, configure permissions to 600.
+4) Request new username, password, and a pin number.
+5) generate a private key export password using all three variables. 
+6) generate key pair. 
+7) generate a key encryption key using username and password. Encrypt the private key.
+8) generate the default config file.
+9) generate config encryption key using password, encrypt the config file. 
+10) attempt start up procedure again. If failure, throw critial error.
+11) show main menu.

@@ -1,0 +1,13 @@
+#!/bin/bash
+ServiceUser="MorningNoLogin"
+if id "$ServiceUser" > /dev/null 2>&1; then
+	test -e ./bin/MorningMessenger
+	if [ "$?" == "0" ]; then
+		sudo -u $ServiceUser ./bin/MorningMessenger
+	else
+		echo "[ERROR] Binary not found. Run 'make'"
+	fi
+else
+	echo "[ERROR] Service user not found. Run 'make install'"
+fi
+

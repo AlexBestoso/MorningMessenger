@@ -5,8 +5,8 @@
 #include <string>
 using namespace std;
 #include "./snakeSuite/snakeSuite.h"
+#include "./core/morningMessenger.class.h"
 
 int main(void){
-	printf("Hello\n");
 	exit(EXIT_SUCCESS);
 }

@@ -19,9 +19,10 @@ echo "Would you like to remove libxml2-dev, libssl-dev, and g++? (N/y)"
 read UserInput
 
 if [ "$UserInput" == "y" ]; then
-	sudo apt-get remove libxml2-dev libssl-dev g++ -y
 	test -h /usr/include/libxml
 	if [ "$?" == "0" ]; then
 		sudo rm /usr/include/libxml
 	fi
+	sudo apt-get remove libxml2-dev libssl-dev g++ -y
+	sudo apt-get autoclean && sudo apt-get autoremove -y
 fi
