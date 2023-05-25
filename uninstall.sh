@@ -22,6 +22,6 @@ if [ "$UserInput" == "y" ]; then
 	sudo apt-get remove libxml2-dev libssl-dev g++ -y
 	test -h /usr/include/libxml
 	if [ "$?" == "0" ]; then
-		rm /usr/include/libxml
+		sudo rm /usr/include/libxml
 	fi
 fi
