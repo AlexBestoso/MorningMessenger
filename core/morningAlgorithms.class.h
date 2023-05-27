@@ -8,7 +8,7 @@ class MorningAlgorithms{
 	public:
 
 	string deriveConfigEncryptionIv(string username, string password){
-		string ret = "";
+		string ret = "aaaaaaaabbbbbbbb";
                 string usernameHash = encryptionSnake.sha256(username, username.length(), false);
                 if(encryptionSnake.didFail()){
                         throw MorningException("MorningAlgorithms::DeriveExportKey(): Failed to hash username.");
@@ -18,43 +18,36 @@ class MorningAlgorithms{
                         throw MorningException("MorningAlgorithms::DeriveExportKey(): Failed to hash password.");
                 }
 
-		string mashedUser = "";
-                string mashedPass = "";
+		string mashedUser = "aaaaaaaabbbbbbbb";
+                string mashedPass = "aaaaaaaabbbbbbbb";
                 for(int i=0; i<16; i++){
-                        mashedUser += usernameHash[i] ^ passwordHash[16+i];
-                        mashedPass += passwordHash[i] ^ usernameHash[16+i];
+                        mashedUser[i] = usernameHash[i] ^ passwordHash[16+i];
+                        mashedPass[i] = passwordHash[i] ^ usernameHash[16+i];
                 }
 
                 string mashedUnity = mashedUser + mashedPass;
-                mashedUser = encryptionSnake.sha256(mashedUser, 16, false);
-                if(encryptionSnake.didFail()){
-                        throw MorningException("MorningAlgorithms::DeriveExportKey(): Failed to hash mashed user.");
-                }
-                mashedPass = encryptionSnake.sha256(mashedPass, 16, false);
-                if(encryptionSnake.didFail()){
-                        throw MorningException("MorningAlgorithms::DeriveExportKey(): Failed to hash mashed pass.");
-                }
+
 		int ctrA = 0;
                 int ctrB = 0;
-		string disoriented = "";
+		string disoriented = "aaaaaaaabbbbbbbbccccccccdddddddd";
                 for(int i=0; i<32; i++){
                         if((i%2) == 0){
-                                disoriented += mashedUnity[i] ^ mashedUser[ctrA];
+                                disoriented[i] = mashedUnity[i] ^ mashedUser[ctrA];
                                 ctrA++;
                         }else{
-                                disoriented += mashedUnity[i] ^ mashedPass[ctrB];
+                                disoriented[i] = mashedUnity[i] ^ mashedPass[ctrB];
                                 ctrB++;
                         }
                 }
 
 		for(int i=0; i<16; i++){
-			ret += disoriented[i] ^ disoriented[15-i];
+			ret[i] = disoriented[i] ^ disoriented[15-i];
 		}
 		return ret;
 	}
 	
 	string deriveConfigEncryptionKey(string username, string password){
-		string ret = "";
+		string ret = "aaaaaaaabbbbbbbbccccccccdddddddd";
                 string usernameHash = encryptionSnake.sha256(username, username.length(), false);
                 if(encryptionSnake.didFail()){
                         throw MorningException("MorningAlgorithms::DeriveExportKey(): Failed to hash username.");
@@ -64,15 +57,15 @@ class MorningAlgorithms{
                         throw MorningException("MorningAlgorithms::DeriveExportKey(): Failed to hash password.");
                 }
 		
-		string mashedCreds = "";
-		string mashedUser = "";
-                string mashedPass = "";
+		string mashedCreds = "aaaaaaaabbbbbbbbccccccccdddddddd";
+		string mashedUser = "aaaaaaaabbbbbbbb";
+                string mashedPass = "aaaaaaaabbbbbbbb";
 
                 for(int i=0; i<32; i++)
-                        mashedCreds += usernameHash[i] ^ passwordHash[i];
+                        mashedCreds[i] = usernameHash[i] ^ passwordHash[i];
                 for(int i=0; i<16; i++){
-                        mashedUser += usernameHash[i] ^ usernameHash[16+i];
-                        mashedPass += passwordHash[i] ^ passwordHash[16+i];
+                        mashedUser[i] = usernameHash[i] ^ usernameHash[16+i];
+                        mashedPass[i] = passwordHash[i] ^ passwordHash[16+i];
                 }
 		
 		mashedCreds = encryptionSnake.sha256(mashedCreds, 32, false);
@@ -91,7 +84,7 @@ class MorningAlgorithms{
 	}
 
 	string deriveKeyEncryptionIv(string username, string password){
-		string ret = "";
+		string ret = "aaaaaaaabbbbbbbb";
 		string usernameHash = encryptionSnake.sha256(username, username.length(), false);
                 if(encryptionSnake.didFail()){
                         throw MorningException("MorningAlgorithms::DeriveExportKey(): Failed to hash username.");
@@ -101,9 +94,9 @@ class MorningAlgorithms{
                         throw MorningException("MorningAlgorithms::DeriveExportKey(): Failed to hash password.");
                 }
 		
-		string mashedCreds = "";
+		string mashedCreds = "aaaaaaaabbbbbbbbccccccccdddddddd";
 		for(int i=0; i<32; i++)
-			mashedCreds += usernameHash[i] ^ passwordHash[i];
+			mashedCreds[i] = usernameHash[i] ^ passwordHash[i];
 
 		string ivRay[4];
 		ivRay[0] = encryptionSnake.sha256(mashedCreds, 32, false);
@@ -114,7 +107,7 @@ class MorningAlgorithms{
 		string resultRay[4]; 
 		for(int i=0; i<4; i++)
 			for(int j=0; j<16; j++)
-				resultRay[i] += ivRay[i][j] ^ ivRay[i][j+16];
+				resultRay[i][j] = ivRay[i][j] ^ ivRay[i][j+16];
 
 		for(int i=0; i<16; i++)
 			ret += resultRay[0][i] ^ resultRay[2][i] ^ resultRay[1][i] ^ resultRay[3][i];
@@ -122,7 +115,7 @@ class MorningAlgorithms{
 		return ret;
 	}
 	string deriveKeyEncryptionKey(string username, string password){
-		string ret = "";
+		string ret = "aaaaaaaabbbbbbbbccccccccdddddddd";
 		string usernameHash = encryptionSnake.sha256(username, username.length(), false);
                 if(encryptionSnake.didFail()){
                         throw MorningException("MorningAlgorithms::DeriveExportKey(): Failed to hash username.");
@@ -132,12 +125,13 @@ class MorningAlgorithms{
                         throw MorningException("MorningAlgorithms::DeriveExportKey(): Failed to hash password.");
                 }
 		
-		string mashedUser = "";
-		string mashedPass = "";
+		string mashedUser = "aaaaaaaabbbbbbbb";
+		string mashedPass = "aaaaaaaabbbbbbbb";
 		for(int i=0; i<16; i++){
-			mashedUser += usernameHash[i] ^ usernameHash[16+i];
-			mashedPass += passwordHash[i] ^ passwordHash[16+i];
+			mashedUser[i] = usernameHash[i] ^ usernameHash[16+i];
+			mashedPass[i] = passwordHash[i] ^ passwordHash[16+i];
 		}
+
 
 		string mashedUnity = mashedUser + mashedPass;
 		mashedUser = encryptionSnake.sha256(mashedUser, 16, false);
@@ -150,7 +144,7 @@ class MorningAlgorithms{
                 }
 
 		for(int i=0; i<32; i++)
-			ret += mashedUser[i] ^ mashedUnity[i] ^ mashedPass[i];
+			ret[i] = mashedUser[i] ^ mashedUnity[i] ^ mashedPass[i];
 		return ret;
 	}
 
@@ -170,11 +164,11 @@ class MorningAlgorithms{
 		}
 
 		size_t hashlen = 32; // SHA 256 byte count.
-		string mashedHash = "";
+		string mashedHash = "aaaaaaaabbbbbbbbccccccccdddddddd";
 		for(int i=0; i<hashlen; i++){
-			char tmp = usernameHash[i] ^ pinHash[i] ^ 3;
-			char tmp2 = passwordHash[i] ^ pinHash[i] ^ 7;
-			mashedHash += tmp ^ tmp2 ^ 13;
+			mashedHash[i] = mashedHash[i] ^ usernameHash[i];
+			mashedHash[i] = mashedHash[i] ^ passwordHash[i];
+			mashedHash[i] = mashedHash[i] ^ pinHash[i];
 		}
 
 		ret = encryptionSnake.sha256(mashedHash, hashlen, false);

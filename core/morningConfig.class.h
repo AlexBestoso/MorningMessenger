@@ -14,6 +14,10 @@ class MorningConfig{
 		XmlSnake xml;
 		mornconf config;
 	public:
+		mornconf getConfig(void){
+			return config;
+		}
+
 		bool newConfig(string fileName, mornconf config){
 			this->config = config;
 
@@ -51,6 +55,36 @@ class MorningConfig{
 				throw MorningException("Failed to stop writing file.");
 			xml.closeFileWriter();
 			
+			return true;
+		}
+
+		bool loadConfig(string fileName){
+			if(!xml.openFileReader(fileName))
+				throw MorningException("Failed to open config file '%s'", fileName.c_str());
+			string previous = "";
+			while(xml.readLineReader()){
+				if(xml.readResult.name == "#text" && previous == "messages"){
+					config.messages = xml.readResult.value;
+				}
+				if(xml.readResult.name == "#text" && previous == "prikey"){
+					config.prikey = xml.readResult.value;
+				}
+				if(xml.readResult.name == "#text" && previous == "pubkey"){
+					config.pubkey = xml.readResult.value;
+				}
+				if(xml.readResult.name == "#text" && previous == "serverhost"){
+					config.serverhost = xml.readResult.value;
+				}
+				if(xml.readResult.name == "#text" && previous == "serverport"){
+					config.serverport = atoi(xml.readResult.value.c_str());
+				}
+				if(xml.readResult.name == "#text" && previous == "trustedkeys"){
+					config.trustedkeys = xml.readResult.value;
+				}
+
+				previous = xml.readResult.name;
+			}
+			xml.closeReader();
 			return true;
 		}
 };

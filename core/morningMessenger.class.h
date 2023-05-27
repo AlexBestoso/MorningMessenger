@@ -55,6 +55,154 @@ class MorningMessenger{
 			return stem + "/" + dire;
 		}
 
+		void unlockConfig(void){
+			size_t confSize = fileSnake.getFileSize(getConfigLoc());
+                        char *buff = new char[confSize];
+                        fileSnake.readFile(getConfigLoc(), buff, confSize);
+
+                        string _key = algorithms.deriveConfigEncryptionKey(username, password);
+                        unsigned char aesKey[32];
+                        for(int i=0; i<32; i++)
+                                aesKey[i] = _key[i];
+
+                        string _iv = algorithms.deriveConfigEncryptionIv(username, password);
+                        unsigned char aesIv[16];
+                        for(int i=0; i<16; i++)
+                                aesIv[i] = _iv[i];
+			
+			string _buff = "";
+			for(int i=0; i<confSize; i++)
+				_buff += buff[i];
+
+                        string configEncrypted = encryptionSnake.aes256cbc(false, _buff, confSize, aesKey, aesIv);
+                        delete[] buff;
+                        if(encryptionSnake.didFail()){
+                                encryptionSnake.printError();
+                                throw MorningException("Failed to decrypt config file.");
+                        }
+
+                        size_t encryptionResult = encryptionSnake.getResultLen();
+			buff = new char[encryptionResult];
+                        for(int i=0; i<encryptionResult; i++){
+                                buff[i] = configEncrypted[i];
+                        }
+                        if(!fileSnake.writeFileTrunc(getConfigLoc(), buff, encryptionResult)){
+                                throw MorningException("Failed to write decrypted config to file system.");
+                        }
+			delete[] buff;
+		}
+
+		void lockConfig(void){
+			size_t confSize = fileSnake.getFileSize(getConfigLoc());
+                        char *buff = new char[confSize];
+                        fileSnake.readFile(getConfigLoc(), buff, confSize);
+
+                        string _key = algorithms.deriveConfigEncryptionKey(username, password);
+                        unsigned char aesKey[32];
+                        for(int i=0; i<32; i++)
+                                aesKey[i] = _key[i];
+
+                        string _iv = algorithms.deriveConfigEncryptionIv(username, password);
+                        unsigned char aesIv[16];
+                        for(int i=0; i<16; i++)
+                                aesIv[i] = _iv[i];
+
+			string _buff = "";
+			for(int i=0; i<confSize; i++)
+				_buff += buff[i];
+                        string configEncrypted = encryptionSnake.aes256cbc(true, _buff, confSize, aesKey, aesIv);
+                        delete[] buff;
+                        if(encryptionSnake.didFail()){
+                                encryptionSnake.printError();
+                                throw MorningException("Failed to encrypt config file.");
+                        }
+
+                        size_t encryptionResult = encryptionSnake.getResultLen();
+			buff = new char[encryptionResult];
+			
+			for(int i=0; i<encryptionResult; i++){
+				buff[i] = configEncrypted[i];
+			}
+                        if(!fileSnake.writeFileTrunc(getConfigLoc(), buff, encryptionResult)){
+                                throw MorningException("Failed to write encrypted config to file system.");
+                        }
+			delete[] buff;
+		}
+
+		void unlockPrivateKey(void){
+			size_t priSize = fileSnake.getFileSize(getServerPriKeyLoc());
+                        char *priBuff = new char[priSize];
+                        fileSnake.readFile(getServerPriKeyLoc(), priBuff, priSize);
+
+                        string _key = algorithms.deriveKeyEncryptionKey(username, password);
+                        unsigned char aesKey[32];
+                        for(int i=0; i<32; i++)
+                                aesKey[i] = _key[i];
+
+                        string _iv = algorithms.deriveKeyEncryptionIv(username, password);
+                        unsigned char aesIv[16];
+                        for(int i=0; i<16; i++)
+                                aesIv[i] = _iv[i];
+
+			string _buff = "";
+                        for(int i=0; i<priSize; i++)
+                                _buff += priBuff[i];
+
+
+                        string priEncrypted = encryptionSnake.aes256cbc(false, _buff, priSize, aesKey, aesIv);
+                        delete[] priBuff;
+                        if(encryptionSnake.didFail()){
+                                encryptionSnake.printError();
+                                throw MorningException("Failed to decrypt private key.");
+                        }
+
+                        size_t encryptionResult = encryptionSnake.getResultLen();
+			priBuff = new char[encryptionResult];
+			for(int i=0; i<encryptionResult; i++){
+				priBuff[i] = priEncrypted[i];
+			}
+                        if(!fileSnake.writeFileTrunc(getServerPriKeyLoc(), priBuff, encryptionResult)){
+                                throw MorningException("Failed to write decrypted private key to file system.");
+                        }
+			delete[] priBuff;
+		}
+
+		void lockPrivateKey(void){
+			size_t priSize = fileSnake.getFileSize(getServerPriKeyLoc());
+                        char *priBuff = new char[priSize];
+                        fileSnake.readFile(getServerPriKeyLoc(), priBuff, priSize);
+
+                        string _key = algorithms.deriveKeyEncryptionKey(username, password);
+                        unsigned char aesKey[32];
+                        for(int i=0; i<32; i++)
+                                aesKey[i] = _key[i];
+
+                        string _iv = algorithms.deriveKeyEncryptionIv(username, password);
+                        unsigned char aesIv[16];
+                        for(int i=0; i<16; i++)
+                                aesIv[i] = _iv[i];
+
+			string _buff = "";
+                        for(int i=0; i<priSize; i++)
+                                _buff += priBuff[i];
+
+                        string priEncrypted = encryptionSnake.aes256cbc(true, _buff, priSize, aesKey, aesIv);
+                        delete[] priBuff;
+                        if(encryptionSnake.didFail()){
+                                encryptionSnake.printError();
+                                throw MorningException("Failed to encrypt private key.");
+                        }
+
+                        size_t encryptionResult = encryptionSnake.getResultLen();
+			priBuff = new char[encryptionResult];
+                        for(int i=0; i<encryptionResult; i++){
+                                priBuff[i] = priEncrypted[i];
+                        }
+                        if(!fileSnake.writeFileTrunc(getServerPriKeyLoc(), priBuff, encryptionResult)){
+                                throw MorningException("Failed to write encrypted private key to file system.");
+                        }
+			delete[] priBuff;
+		}
 		void setupServerKeysDir(void){
 			// Setup server keys dir
 			io.out(MORNING_IO_GENERAL, "Setting up server keys directory\n");
@@ -168,31 +316,7 @@ class MorningMessenger{
 			io.out(MORNING_IO_SUCCESS, "Successfully generated server's key pair!\n");
 
 			io.out(MORNING_IO_GENERAL, "Encrypting private server key.\n");
-			size_t priSize = fileSnake.getFileSize(getServerPriKeyLoc());
-			char *priBuff = new char[priSize];
-			fileSnake.readFile(getServerPriKeyLoc(), priBuff, priSize);
-
-			string _key = algorithms.deriveKeyEncryptionKey(username, password);
-			unsigned char aesKey[32];
-			for(int i=0; i<32; i++)
-				aesKey[i] = _key[i];
-
-			string _iv = algorithms.deriveKeyEncryptionIv(username, password);
-			unsigned char aesIv[16];
-			for(int i=0; i<16; i++)
-				aesIv[i] = _iv[i];
-
-			string priEncrypted = encryptionSnake.aes256cbc(true, priBuff, priSize, aesKey, aesIv);
-			delete[] priBuff;
-			if(encryptionSnake.didFail()){
-				encryptionSnake.printError();
-				throw MorningException("Failed to encrypt private key.");
-			}
-			
-			size_t encryptionResult = encryptionSnake.getResultLen();
-			if(!fileSnake.writeFileTrunc(getServerPriKeyLoc(), (char *)priEncrypted.c_str(), encryptionResult)){
-				throw MorningException("Failed to write encrypted private key to file system.");
-			}
+			lockPrivateKey();
 			io.out(MORNING_IO_SUCCESS, "Encrypted private key successfuly!\n");
 		}
 
@@ -214,31 +338,7 @@ class MorningMessenger{
 			}
 
 			io.out(MORNING_IO_GENERAL, "Encrypting the config file.\n");
-			size_t confSize = fileSnake.getFileSize(getConfigLoc());
-			char *buff = new char[confSize];
-			fileSnake.readFile(getConfigLoc(), buff, confSize);
-			
-			string _key = algorithms.deriveConfigEncryptionKey(username, password);
-                        unsigned char aesKey[32];
-                        for(int i=0; i<32; i++)
-                                aesKey[i] = _key[i];
-
-                        string _iv = algorithms.deriveConfigEncryptionIv(username, password);
-                        unsigned char aesIv[16];
-                        for(int i=0; i<16; i++)
-                                aesIv[i] = _iv[i];
-
-                        string configEncrypted = encryptionSnake.aes256cbc(true, buff, confSize, aesKey, aesIv);
-			delete[] buff;
-			if(encryptionSnake.didFail()){
-                                encryptionSnake.printError();
-                                throw MorningException("Failed to encrypt config file.");
-                        }
-
-                        size_t encryptionResult = encryptionSnake.getResultLen();
-                        if(!fileSnake.writeFileTrunc(getConfigLoc(), (char *)configEncrypted.c_str(), encryptionResult)){
-                                throw MorningException("Failed to write encrypted config to file system.");
-                        }
+			lockConfig();
                         io.out(MORNING_IO_SUCCESS, "Encrypted config file successfuly!\n");
 		}
 		
@@ -253,10 +353,50 @@ class MorningMessenger{
                         	solicitPassword(false);
                         	solicitPin();
 			}
-			// System should be ready now. Try to login and initalize system.
+			authenticateMessenger();
 		}catch(exception &e){
 			string what = e.what();
 			what = "Failed to start up Morning Messenger.\nCaught in MorningMessenger::MorningMessenger() | " + what;
+			throw MorningException(what);
+		}
+	}
+
+	bool run(){
+		bool running = true;
+		while(running){
+			// Post Setup entry point here.
+		}	
+		return true;
+	}
+
+	void authenticateMessenger(void){
+		try{
+			unlockConfig();
+				config.loadConfig(getConfigLoc());	
+			lockConfig();
+			mornconf c = config.getConfig();
+			io.out(MORNING_IO_SUCCESS, "Configuration loaded.\n");
+			io.outf(MORNING_IO_GENERAL, "Loading public key '%s'\n", c.pubkey.c_str());
+			encryptionSnake.fetchRsaKeyFromFile(false, false, false, c.pubkey, "");
+			if(encryptionSnake.didFail()){
+				encryptionSnake.cleanOutPublicKey();
+				encryptionSnake.printError();
+				throw MorningException("Failed to load public key.");
+			}
+			io.outf(MORNING_IO_GENERAL, "Unlocking and loading private key from '%s'\n", c.prikey.c_str());
+			unlockPrivateKey();
+				encryptionSnake.fetchRsaKeyFromFile(true, false, false, c.prikey, algorithms.deriveExportKey(username, password, pin));
+                        	if(encryptionSnake.didFail()){
+                        	        encryptionSnake.cleanOutPublicKey();
+                        	        encryptionSnake.printError();
+                        	        throw MorningException("Failed to load public key.");
+                        	}
+			lockPrivateKey();
+			io.outf(MORNING_IO_SUCCESS, "Welcome Home, %s. You're authenticated.\n", username.c_str());
+
+		}catch(exception &e){
+			string what = e.what();
+			what = "Authentication failure\nCaugth in MorningMessenger::authenticateMessenger() | " + what ;
 			throw MorningException(what);
 		}
 	}

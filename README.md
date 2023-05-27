@@ -9,5 +9,8 @@
 1. Run the command `make uninstall` and all processes, folders, and users created by the installer will be removed. You can optionally remove the installed dependancies if you desire; but by default this is skipped.
 
 ### Message From Morning Star
-1. The application now has a first start setup procedure. Can't do any messaging yet. But you can setup the required files and folders. As well as encrypt the generated private key and config file.
-2. Next push will bring the authentication process full cirlce. You currently provide a username, password, and pin upon startup. Which then creates all the files needed to run the program. The sensitive files are encrypted using your credentials so that the only way to run the program without erasing the config file is to have the proper creds.
+1. You can now generate your credentials from a fresh start and can decrypt and load your config file and key pairs. 
+2. There's still no messenger; But that comes next, I swear! 
+3. I've gotta figure out the best way to intialize the server and client. 
+4. I'be also gotta implement a system for updating the config file. As the thing can't be modifyed without it being decyrpted by the program. 
+5. Going to build out two types of messaging. "One-Way Session" chat and "Duel Server" chat. One way will be for enabling a one-way dialup scheme. IE, client calls server' but server cannot call client.

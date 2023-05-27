@@ -17,12 +17,5 @@ to prevent manipulation of the self destruct bit.
 	
 </root>
 
-[Startup Procedure]
-++1) check in storage folder for config file. if file is missing, run initial setup procedure, else continue to authentication.
-2) Ensure required directories exist and make them if they don't
-3) requet username and password. 
-4) use password to decryot config, if decryption failes, show invalid credentails, else load values into morning messenger class.
-5) generate private key decryption key using username and password. decrypt private key into memory.
-6) generate private key export password using username, passowrd, and pin number. Validate generated password, if failed show invalid credentials.
-4) display main menu.
+
 
