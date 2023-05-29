@@ -14,7 +14,7 @@ class MorningMenu{
 		string userInput = "";
 		size_t menuCount = 4;
 		string menuOptions[4] = {
-			"launch",
+			"server",
 			"connect",
 			"config",
 			"quit"

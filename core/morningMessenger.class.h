@@ -1,12 +1,12 @@
 class MorningMessenger{
 	private:
-		const char *verion = "0.0.0 Alpha";
+		const char *verion = "0.1.1 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
 		MorningMenu menu;
+		MorningServer server;
 
-		NetSnake netsnake;
 		FileSnake fileSnake;
 		EncryptionSnake encryptionSnake;
 
@@ -60,6 +60,7 @@ class MorningMessenger{
 				config.setSessionCreds(username, password, pin);
 			}
 			authenticateMessenger();
+			server.clearLockFile();
 		}catch(exception &e){
 			string what = e.what();
 			what = "Failed to start up Morning Messenger.\nCaught in MorningMessenger::MorningMessenger() | " + what;
@@ -72,13 +73,28 @@ class MorningMessenger{
 	}
 
 	bool launchServer(void){
-		printf("Debug : In launch server.\n");
+		if(server.obtainLockFile()){
+			server.pid = fork();
+			if(server.pid == 0){
+				/* Launch the server */
+
+				while(1);
+			}else{
+				io.out(MORNING_IO_SUCCESS, "Server has been started.\n");
+			}
+                }else{
+			string choice = io.inString(MORNING_IO_QUESTION, "Would you lke to stop the server? > ");
+			if(choice == "yes"){
+				server.killProcess();
+				io.out(MORNING_IO_SUCCESS, "Server has been stopped.\n");
+			}
+                }
 		menu.setCoreContext(MORNING_MENU_MAIN);
 		return false;
 	}
 	
 	bool connectToServer(void){
-		printf("Debug : In connect to server.\n");	
+		printf("Running in client mode\n");
 		menu.setCoreContext(MORNING_MENU_MAIN);
 		return false;
 	}
@@ -87,6 +103,12 @@ class MorningMessenger{
 		printf("Debug : In manage config file.\n");	
 		menu.setCoreContext(MORNING_MENU_MAIN);
 		return false;
+	}
+
+	void quitMessenger(){
+		if(server.lockHeld()){
+			server.killProcess();
+		}
 	}
 
 	int runMainMenu(){

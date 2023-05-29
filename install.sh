@@ -3,6 +3,8 @@ ServiceUser="MorningNoLogin"
 NoLoginPath=$(which nologin)
 StorageLocation="$(pwd)/MMS_Storage"
 
+mkdir ./bin 1>&2 > /dev/null
+
 echo "[INFO] Checking for required libraries."
 dpkg -l libxml2-dev >/dev/null
 if [ "$?" == "0" ]; then

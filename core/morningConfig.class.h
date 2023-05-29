@@ -26,6 +26,7 @@ class MorningConfig{
 		string pin = "";
 
 		const char *storageLocation = "./MMS_Storage";
+		const char *serverLockFile = "server.lock";
                 const char *configFile = "MMS_config.exml";
                 const char *serverKeysDir = "serverKeys";
                 const char *serverPubkey = "server.pub.key";
@@ -333,6 +334,12 @@ class MorningConfig{
                         string fil = configFile;
                         return dire + "/" + fil;
                 }
+
+		string getServerLockFile(void){
+			string dire = storageLocation;
+			string fil = serverLockFile;
+			return dire + "/" + serverLockFile;
+		}
 
 		void setSessionCreds(string u, string p, string pin){
 			username = u;
