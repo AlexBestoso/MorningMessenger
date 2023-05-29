@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *verion = "0.1.1 Alpha";
+		const char *verion = "0.1.2 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -77,8 +77,16 @@ class MorningMessenger{
 			server.pid = fork();
 			if(server.pid == 0){
 				/* Launch the server */
-
-				while(1);
+				server.setConfig(config);
+				server.setEncryptionSnake(encryptionSnake);
+				try{
+					server.launchServer();
+				}catch(exception &e){
+					server.clearLockFile();
+					string what = e.what();
+					what = "MorningMessenger::launchServer | Failure From Child Process.\n" + what;
+					throw MorningException(what);
+				}
 			}else{
 				io.out(MORNING_IO_SUCCESS, "Server has been started.\n");
 			}
