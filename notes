@@ -32,3 +32,41 @@ Current plan for setting up the client code.
 5) the keys provided to the servers will be placed into an untrusted key folder on the server.
 6) after server master marks keys as trusted, communications will be enabled and messages sent. 
 7) server master should also have the option to configure the system to allow for automated key trusting. 
+
+
+
+Server Communication Protocol: 
+The "I'm new here" command hash : a235210cd5476dfa0a045d60244e5cc6aebbc21e406fba344ce5d154b6337f5b
+The "I'm already here" command hash : f0773273589a87e67e71f402c08c93b464ff307846de3e7567dc1e423d65baf9
+
+The "Streamed chat" command hash : 6c0df3e03ccc8a63b41937acc7169cabad337da6bc7bb36a19245548d6eef2a3
+The "Leave a message" command hash : 7b5a3431691d02a5f335235bae96e65301311115d3688e2306c0a664ab29bfbe
+
+if new here
+	wait for client's public key.
+	try to load public key.
+	if failed, close connection and exit.
+	send server public key.
+	Ask client what their name is
+	Ask the client if they have any messages
+	Tell client; Thank you for your business. The Server Master will be notified and will review your request for trust.
+	Store public key and end user's name in a file within the untrusted key store.
+else if already here
+	wait for client's public key and take hash of it upon recipt.
+	if key isn't trysted, close connection and exit.
+	send client server public key. (Client side will also be able to validate server key)
+	if leave a message
+		wait for message
+		tell user if recpt was successful or not.
+		close connection.
+	else if stream chat
+		server generates two AES CTR keys and IVs.
+		server sends key pair to client.
+		Server then creates a AF_UNIX server forked.
+			socket in is routed to AF_UNIX server out.
+			AF_UNIX server in is routerd to socket out.
+		server master can then see that there's an active chat and join it at will.
+	 
+else
+	close connection. They a bad guy.
+	
