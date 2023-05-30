@@ -21,7 +21,7 @@ class MorningMenu{
 		};
 	public:
 		
-	void printBanner(void){
+	virtual void printBanner(void){
 		string banner = "=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=\n";
 		banner += "   \\  |                   _)                    \\  |                                                   \n";
 		banner += "  |\\/ |   _ \\   __| __ \\   |  __ \\    _` |     |\\/ |   _ \\   __|   __|   _ \\  __ \\    _` |   _ \\   __| \n";
@@ -32,6 +32,10 @@ class MorningMenu{
 		banner += "=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=\n";
 		printf("%s\n", banner.c_str());
 		showBanner = false;
+	}
+
+	string getUserInputString(void){
+		return userInput;
 	}
 
 	bool getShowBanner(void){
@@ -55,7 +59,7 @@ class MorningMenu{
 		subContext = ctx;
 	}
 	
-	virtual void getUserInput(){
+	void getUserInput(){
 		userInput = io.inString(MORNING_IO_INPUT, " > ");
 	}
 	virtual int parseSelectedOption(){
