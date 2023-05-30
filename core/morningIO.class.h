@@ -3,11 +3,13 @@
 #define MORNING_IO_SUCCESS 2
 #define MORNING_IO_NONE 3
 #define MORNING_IO_INPUT 4
+#define MORNING_IO_QUESTION 5
 class MorningIO{
 	private:
 		string msgStem_general = "[*] ";
 		string msgStem_error = "[E] ";
 		string msgStem_success = "[+] ";
+		string msgStem_question = "[?] ";
 		string msgStem_input = "[INPUT] ";
 
 		string getType(int type){
@@ -21,6 +23,8 @@ class MorningIO{
 				return "";
 			else if(type == MORNING_IO_INPUT)
 				return msgStem_input;
+			else if(type == MORNING_IO_QUESTION)
+				return msgStem_question;
 			else
 				return msgStem_general;
 		}

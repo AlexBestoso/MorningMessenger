@@ -9,13 +9,17 @@
 #include <sys/stat.h>
 #include <stdarg.h>
 #include <iostream>
+#include <signal.h>
 using namespace std;
 #include "./snakeSuite/snakeSuite.h"
 #include "./core/morningIO.class.h"
 #include "./core/morningException.class.h"
 #include "./core/morningAlgorithms.class.h"
 #include "./core/morningConfig.class.h"
+#include "./core/morningServer.class.h"
+#include "./core/morningClient.class.h"
 #include "./core/morningMenu.class.h"
+#include "./core/morningClientMenu.class.h"
 #include "./core/morningMessenger.class.h"
 
 int main(void){
@@ -50,6 +54,7 @@ int main(void){
 					break;
 				case MORNING_MENU_QUIT:
 					running = false;
+					MM.quitMessenger();
 					break;
 				default:
 					throw MorningException("Illegal Menu Context.");

@@ -1,12 +1,14 @@
 class MorningMessenger{
 	private:
-		const char *verion = "0.0.0 Alpha";
+		const char *verion = "0.1.3 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
 		MorningMenu menu;
+		MorningClientMenu clientMenu;
+		MorningServer server;
+		MorningClient client;
 
-		NetSnake netsnake;
 		FileSnake fileSnake;
 		EncryptionSnake encryptionSnake;
 
@@ -60,6 +62,7 @@ class MorningMessenger{
 				config.setSessionCreds(username, password, pin);
 			}
 			authenticateMessenger();
+			server.clearLockFile();
 		}catch(exception &e){
 			string what = e.what();
 			what = "Failed to start up Morning Messenger.\nCaught in MorningMessenger::MorningMessenger() | " + what;
@@ -72,21 +75,81 @@ class MorningMessenger{
 	}
 
 	bool launchServer(void){
-		printf("Debug : In launch server.\n");
+		if(server.obtainLockFile()){
+			server.pid = fork();
+			if(server.pid == 0){
+				/* Launch the server */
+				server.setConfig(config);
+				server.setEncryptionSnake(encryptionSnake);
+				try{
+					server.launchServer();
+				}catch(exception &e){
+					server.clearLockFile();
+					string what = e.what();
+					what = "MorningMessenger::launchServer | Failure From Child Process.\n" + what;
+					throw MorningException(what);
+				}
+			}else{
+				io.out(MORNING_IO_SUCCESS, "Server has been started.\n");
+			}
+                }else{
+			string choice = io.inString(MORNING_IO_QUESTION, "Would you lke to stop the server? > ");
+			if(choice == "yes"){
+				server.killProcess();
+				io.out(MORNING_IO_SUCCESS, "Server has been stopped.\n");
+			}
+                }
 		menu.setCoreContext(MORNING_MENU_MAIN);
-		return false;
+		return true;
 	}
 	
 	bool connectToServer(void){
-		printf("Debug : In connect to server.\n");	
-		menu.setCoreContext(MORNING_MENU_MAIN);
-		return false;
+		int menuCtx = clientMenu.getCoreContext();
+		if(menuCtx == MORNING_CLIENT_MENU_MAIN){
+			if(clientMenu.getShowBanner()){
+				clientMenu.printBanner();
+			}
+			clientMenu.showMenuOptions();
+			clientMenu.getUserInput();
+			int ret = clientMenu.parseSelectedOption();
+			if(ret == -1){
+				io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
+			}else{
+				clientMenu.setCoreContext(ret);
+			}
+		}else if(menuCtx == MORNING_CLIENT_MENU_BACK){
+			clientMenu.setShowBanner(true);
+			menu.setShowBanner(true);
+                        clientMenu.setCoreContext(MORNING_CLIENT_MENU_MAIN);
+                        menu.setCoreContext(MORNING_MENU_MAIN);
+		}else if(menuCtx == MORNING_CLIENT_MENU_STANDARD){
+			client.setConfig(config);
+			client.setEncryptionSnake(encryptionSnake);
+			
+			if(!client.connectToServer()){
+				io.out(MORNING_IO_ERROR, "Failed to connect to client.\n");
+			}
+
+			clientMenu.setCoreContext(MORNING_CLIENT_MENU_BACK);
+		}else if(menuCtx == MORNING_CLIENT_MENU_LIVE){
+			printf("DEBUG | In live chat menu");
+			clientMenu.setCoreContext(MORNING_CLIENT_MENU_BACK);
+		}else{
+			throw MorningException("Illegal chat menu context.\n");
+		}
+		return true;
 	}
 
 	bool manageConfigFile(void){
 		printf("Debug : In manage config file.\n");	
 		menu.setCoreContext(MORNING_MENU_MAIN);
 		return false;
+	}
+
+	void quitMessenger(){
+		if(server.lockHeld()){
+			server.killProcess();
+		}
 	}
 
 	int runMainMenu(){
