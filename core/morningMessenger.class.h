@@ -177,7 +177,7 @@ class MorningMessenger{
 			config.fetchPublicKey(encryptionSnake);
 			
 			io.outf(MORNING_IO_GENERAL, "Unlocking and loading private key from '%s'\n", c.prikey.c_str());
-			config.fetchPrivateKey(encryptionSnake);
+			encryptionSnake = config.fetchPrivateKey(encryptionSnake);
 			io.outf(MORNING_IO_SUCCESS, "Welcome Home, %s. You're authenticated.\n\n\n", username.c_str());
 
 		}catch(exception &e){

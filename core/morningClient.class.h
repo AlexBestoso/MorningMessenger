@@ -14,6 +14,8 @@ class MorningClient{
 
 		string serverPublicKey = "";
 
+		size_t rsaBufSize = 2000;
+
 		size_t levelOneCommandCount = 2;
 		string levelOneCommands[2] = {
 			"request_new",
@@ -126,6 +128,7 @@ class MorningClient{
                                 serverPublicKey += buffer[i];
                         delete[] buffer;
 
+			encryptionSnake.cleanOutPublicKey();
                         encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), netSnake.recvSize, "");
                         if(encryptionSnake.didFail()){
                                 netSnake.closeSocket();
@@ -139,7 +142,81 @@ class MorningClient{
 		bool recvCtrKey(){
 			encryptionSnake.aes256ctr_stop(true);
 			encryptionSnake.aes256ctr_stop(false);
+			
+			string keyPacket = rsaRecv();
+			if(keyPacket == "" || encryptionSnake.getResultLen() != 32+16){
+				return false;
+			}
 
+			unsigned char key[32];
+			unsigned char iv[16];
+			for(int i=0; i<16; i++){
+				iv[i] = keyPacket[i];
+			}
+			for(int i=0; i<32; i++){
+				key[i] = keyPacket[16+i];
+			}
+
+			if(!encryptionSnake.aes256ctr_start(true, key, iv)){
+                                return false;
+                        }
+
+                        if(!encryptionSnake.aes256ctr_start(false, key, iv)){
+                                return false;
+                        }
+			return true;
+		}
+
+		bool rsaSend(string msg, size_t msgLen){
+                        string encryptedMessage = encryptionSnake.rsa(true, msg, msgLen);
+                        if(encryptionSnake.didFail()){
+                                return false;
+                        }
+                        size_t encryptedMessageLen = encryptionSnake.getResultLen();
+
+                        if(!netSnake.sendInetClient(encryptedMessage.c_str(), encryptedMessageLen)){
+                                return false;
+                        }
+
+                        return true;
+                }
+
+                string rsaRecv(void){
+                        string ret = "";
+                        char *buf = new char[rsaBufSize];
+                        if(!netSnake.recvInetClient(buf, rsaBufSize, 0)){
+                                return "";
+                        }
+                        size_t recvSize = netSnake.recvSize;
+                        for(int i=0; i<recvSize; i++)
+                                ret += buf[i];
+
+                        ret = encryptionSnake.rsa(false, ret, recvSize);
+                        if(encryptionSnake.didFail()){
+				encryptionSnake.printError();
+                                return "";
+                        }
+                        return ret;
+                }
+
+		bool keyExchange(void){
+			if(!sendPublicKey()){
+				netSnake.closeSocket();
+				io.out(MORNING_IO_ERROR, "Failed to send public key.\n");
+				return false;
+			}
+
+			if(!recvPublicKey()){
+				netSnake.closeSocket();
+				io.out(MORNING_IO_ERROR, "Failed to recv public key\n");
+				return false;
+			}
+
+			if(!recvCtrKey()){
+				netSnake.closeSocket();
+				io.out(MORNING_IO_ERROR, "Failed to receive CTR key\n");
+				return false;
+			}
 			return true;
 		}
 
@@ -197,34 +274,20 @@ class MorningClient{
 					return false;
 				}
 
-				if(!sendPublicKey()){
-					netSnake.closeSocket();
-					printf("Failed to send public key.\n");
+				if(!keyExchange()){
+					io.out(MORNING_IO_ERROR, "MLS Key exchange failed.\n");
 					return false;
 				}
-
-				if(!recvPublicKey()){
-					netSnake.closeSocket();
-					printf("Failed to recv public key\n");
-					return false;
-				}
-
-				printf("Keys have been shared.\n");
 
 			}else if(levelOne == 2){ // Try to authenticate with remote server
 				if(!sendAuthRequest()){
 					return false;
 				}
-
-				if(!sendPublicKey()){
-                                        netSnake.closeSocket();
+				if(!keyExchange()){
+                                        io.out(MORNING_IO_ERROR, "MLS Key exchange failed.\n");
                                         return false;
                                 }
 
-                                if(!recvPublicKey()){
-                                        netSnake.closeSocket();
-                                        return false;
-                                }
 			}else{
 				io.out(MORNING_IO_ERROR, "Invalid command attempted.\n");
 			}

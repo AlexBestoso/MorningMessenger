@@ -480,7 +480,7 @@ class MorningConfig{
                         }
 		}
 
-		void fetchPrivateKey(EncryptionSnake encryptionSnake){
+		EncryptionSnake fetchPrivateKey(EncryptionSnake encryptionSnake){
 			unlockPrivateKey();
                                 encryptionSnake.fetchRsaKeyFromFile(true, false, false, config.prikey, algorithms.deriveExportKey(username, password, pin));
                                 if(encryptionSnake.didFail()){
@@ -490,5 +490,6 @@ class MorningConfig{
                                         throw MorningException("Failed to load private key.");
                                 }
                         lockPrivateKey();
+			return encryptionSnake;
 		}
 };

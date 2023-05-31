@@ -4,6 +4,8 @@ class MorningServer{
 		FileSnake fileSnake;
 		EncryptionSnake encryptionSnake;
 		EncryptionSnake remoteCerts;
+	
+		MorningAlgorithms algorithm;
 		MorningConfig config;
 
 		string cmd_newUser = "a235210cd5476dfa0a045d60244e5cc6aebbc21e406fba344ce5d154b6337f5b";
@@ -12,6 +14,8 @@ class MorningServer{
 		string cmd_chat = "7b5a3431691d02a5f335235bae96e65301311115d3688e2306c0a664ab29bfbe";
 		
 		string clientPublicKey = "";
+
+		size_t rsaBufSize = 2000;
 
 		int commandLevelOne(void){
 			size_t cmdSize = 64;
@@ -73,6 +77,7 @@ class MorningServer{
 				clientPublicKey += buffer[i];
 			delete[] buffer;
 
+			encryptionSnake.cleanOutPublicKey();
 			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey.c_str(), netSnake.server_recvSize, "");
 			if(encryptionSnake.didFail()){
 				netSnake.closeConnection();
@@ -105,6 +110,89 @@ class MorningServer{
                         }
                         delete[] buffer;
                         return true;
+		}
+
+
+		bool generateAndSendCtrKey(void){
+			encryptionSnake.aes256ctr_stop(true);
+                        encryptionSnake.aes256ctr_stop(false);
+
+			string keyPacket = "";
+			// IV is 16 bytes
+			string _iv = algorithm.deriveRandomIv();
+			unsigned char iv[16];
+			for(int i=0; i<16; i++){
+				iv[i] = _iv[i];
+				keyPacket += _iv[i];
+			}
+			// Key is 32 bytes
+			string _key = algorithm.deriveRandomKey();
+			unsigned char key[32];
+			for(int i=0; i<32; i++){
+				key[i] = _key[i];
+				keyPacket += _key[i];
+			}
+
+			if(!rsaSend(keyPacket, 32+16)){
+				return false;
+			}
+
+			if(!encryptionSnake.aes256ctr_start(true, key, iv)){
+				return false;
+			}
+
+			if(!encryptionSnake.aes256ctr_start(false, key, iv)){
+				return false;
+			}
+			return true;
+		}
+
+		bool keyExchange(void){
+			if(!recvPublicKey()){
+				netSnake.closeConnection();
+				return false;
+			}
+			if(!sendPublicKey()){
+				netSnake.closeConnection();
+				return false;
+			}
+
+			if(!generateAndSendCtrKey()){
+				netSnake.closeConnection();
+				return false;
+			}
+			return true;
+		}
+
+		bool rsaSend(string msg, size_t msgLen){
+			string encryptedMessage = encryptionSnake.rsa(true, msg, msgLen);
+			if(encryptionSnake.didFail()){
+				return false;
+			}
+			size_t encryptedMessageLen = encryptionSnake.getResultLen();
+
+			if(!netSnake.serverSend(encryptedMessage.c_str(), encryptedMessageLen)){
+				return false;
+			}
+
+			return true;
+		}
+
+		string rsaRecv(void){
+			string ret = "";
+			char *buf = new char[rsaBufSize];
+			if(!netSnake.serverRecv(buf, rsaBufSize, 0)){
+				return "";
+			}
+			size_t recvSize = netSnake.server_recvSize;
+			for(int i=0; i<recvSize; i++)
+				ret += buf[i];
+
+			ret = encryptionSnake.rsa(false, ret, recvSize);
+			if(encryptionSnake.didFail()){
+				return "";
+			}
+			return ret;
 		}
 	public:
 	pid_t pid = -1;
@@ -157,22 +245,12 @@ class MorningServer{
 						netSnake.closeConnection();
 						exit(EXIT_FAILURE);
 					}else if(cmdOne == 1){ // Setup new user
-						if(!recvPublicKey()){
-							netSnake.closeConnection();
-							exit(EXIT_FAILURE);
-						}
-						if(!sendPublicKey()){
-							netSnake.closeConnection();
+						if(!keyExchange()){
 							exit(EXIT_FAILURE);
 						}
 
 					}else if(cmdOne == 2){ // Authenticate existing user
-						if(!recvPublicKey()){
-                                                        netSnake.closeConnection();
-                                                        exit(EXIT_FAILURE);
-                                                }
-                                                if(!sendPublicKey()){
-                                                        netSnake.closeConnection();
+						if(!keyExchange()){
                                                         exit(EXIT_FAILURE);
                                                 }
 
