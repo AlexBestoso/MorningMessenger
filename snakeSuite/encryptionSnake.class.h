@@ -4,6 +4,7 @@
 #include <openssl/rsa.h>
 #include <openssl/encoder.h>
 #include <openssl/decoder.h>
+#include <openssl/rand.h>
 
 class EncryptionSnake{
 	private:
@@ -75,6 +76,10 @@ class EncryptionSnake{
 			privateKey = NULL;
 			publicKey = NULL;
 			decoderCtx = NULL;
+		}
+
+		void fetchRsaKeyFromStringFree(void){
+			fetchRsaKeyFromFileFree();
 		}
 
 		void rsaFree(void){
@@ -311,6 +316,69 @@ class EncryptionSnake{
 			return ret;
 		}
 
+		bool fetchRsaKeyFromString(bool fetchPrivateKey, bool useDER, string key, size_t keyLen, string keyPassword){
+			failed = false;
+                        string format = "PEM";
+                        if(useDER){
+                                format = "DER";
+                        }
+
+			if(fetchPrivateKey){
+				decoderCtx = OSSL_DECODER_CTX_new_for_pkey(&privateKey, format.c_str(), NULL, "RSA", OSSL_KEYMGMT_SELECT_PRIVATE_KEY, NULL, NULL);
+                                if(decoderCtx == NULL){
+                                        failed = true;
+                                        fetchRsaKeyFromStringFree();
+                                        return "";
+                                }
+
+                                if(keyPassword != ""){
+                                	OSSL_DECODER_CTX_set_passphrase(decoderCtx, (const unsigned char *)keyPassword.c_str(), keyPassword.length());
+                                }
+
+				unsigned char *data = new unsigned char[key.length()];
+
+				for(int i=0; i<key.length(); i++)
+					data[i] = key[i];
+
+				const unsigned char *doublePointer  = data;
+                                if(!OSSL_DECODER_from_data(decoderCtx, &doublePointer, &keyLen)){
+                                        fetchRsaKeyFromStringFree();
+                                        failed = true;
+					delete[] data;
+                                        return "";
+                                }
+
+				delete doublePointer;
+				delete[] data;
+                                OSSL_DECODER_CTX_free(decoderCtx);
+                                decoderCtx = NULL;
+			}else{
+				decoderCtx = OSSL_DECODER_CTX_new_for_pkey(&publicKey, format.c_str(), NULL, "RSA", OSSL_KEYMGMT_SELECT_PUBLIC_KEY, NULL, NULL);
+                                if(decoderCtx == NULL){
+                                        failed = true;
+                                        fetchRsaKeyFromStringFree();
+                                        return "";
+                                }
+
+				unsigned char *data = new unsigned char[key.length()];
+                                for(int i=0; i<key.length(); i++)
+                                        data[i] = key[i];
+
+				const unsigned char *doublePointer = data;
+                                if(!OSSL_DECODER_from_data(decoderCtx, &doublePointer, &keyLen)){
+                                        fetchRsaKeyFromStringFree();
+                                        failed = true;
+					delete[] data;
+                                       	return false;
+                                }
+
+				delete[] data;
+                                OSSL_DECODER_CTX_free(decoderCtx);
+                                decoderCtx = NULL;
+			}
+			return true;
+		}
+
 		string fetchRsaKeyFromFile(bool fetchPrivateKey, bool useDER, bool stringOutput, string keyLoc, string keyPassword){
 			string ret = "";
 			failed = false;
@@ -334,9 +402,9 @@ class EncryptionSnake{
 					return "";
 				}
 
-				if(keyPassword != ""){
-					OSSL_DECODER_CTX_set_passphrase(decoderCtx, (const unsigned char *)keyPassword.c_str(), keyPassword.length());
-				}
+                                if(keyPassword != ""){
+                              		OSSL_DECODER_CTX_set_passphrase(decoderCtx, (const unsigned char *)keyPassword.c_str(), keyPassword.length());
+                                }
 
 				if(!OSSL_DECODER_from_fp(decoderCtx, fp)){
 					fclose(fp);
@@ -458,8 +526,10 @@ class EncryptionSnake{
                         }
 
 			if(keyPassword != ""){
+				printf("Failing here.\n");
 				OSSL_ENCODER_CTX_set_passphrase(encoderCtx, (const unsigned char *)keyPassword.c_str(), keyPassword.length());
-			}
+				printf("nig\n");
+                        }
 
                         if(!OSSL_ENCODER_to_fp(encoderCtx, fp)){
                                 fclose(fp);
@@ -733,4 +803,40 @@ class EncryptionSnake{
 			}
 			return digest;
 		}	
+
+		string randomPublic(size_t byteCount){
+			failed = false;
+			if(byteCount <= 0)
+				return "";
+			
+			string ret = "";
+			unsigned char *buf = new unsigned char[byteCount];
+			if(RAND_bytes(buf, byteCount) != 1){
+				failed = true;
+				delete[] buf;
+				return "";
+			}
+			for(int i=0; i<byteCount; i++)
+				ret += buf[i];
+			delete[] buf;
+			return ret;
+		}
+
+		string randomPrivate(size_t byteCount){
+                        failed = false;
+                        if(byteCount <= 0)
+                                return "";
+
+                        string ret = "";
+                        unsigned char *buf = new unsigned char[byteCount];
+                        if(RAND_priv_bytes(buf, byteCount) != 1){
+                                failed = true;
+                                delete[] buf;
+                                return "";
+                        }
+                        for(int i=0; i<byteCount; i++)
+                                ret += buf[i];
+                        delete[] buf;
+                        return ret;
+                }
 };

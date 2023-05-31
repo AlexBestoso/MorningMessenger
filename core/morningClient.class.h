@@ -12,6 +12,8 @@ class MorningClient{
                 string cmd_streamChat = "6c0df3e03ccc8a63b41937acc7169cabad337da6bc7bb36a19245548d6eef2a3";
                 string cmd_chat = "7b5a3431691d02a5f335235bae96e65301311115d3688e2306c0a664ab29bfbe";
 
+		string serverPublicKey = "";
+
 		size_t levelOneCommandCount = 2;
 		string levelOneCommands[2] = {
 			"request_new",
@@ -45,7 +47,6 @@ class MorningClient{
                          string okayString = "";
 			 for(int i=0; i<netSnake.recvSize; i++)
 				 okayString += okay[i];
-			 printf("Recevied : %s\n", okayString.c_str());
 			 if(okayString == "OK"){
 			 	return true;
 			 }
@@ -73,10 +74,72 @@ class MorningClient{
 		}
 
 		bool sendPublicKey(){
+			mornconf cfg = config.getConfig();
+			size_t size = fileSnake.getFileSize(cfg.pubkey);
+			string keySize = to_string(size);
+			if(!netSnake.sendInetClient((char *)keySize.c_str(), keySize.length())){
+				netSnake.closeSocket();
+				return false;
+			}
+
+			char *buffer = new char[size];
+			if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
+				netSnake.closeSocket();
+				delete[] buffer;
+				return false;
+			}
+
+			if(!netSnake.sendInetClient(buffer, size)){
+				netSnake.closeSocket();
+				delete[] buffer;
+				return false;
+			}
+			delete[] buffer;
 			return true;
 		}
 
 		bool recvPublicKey(){
+			size_t keySize = 0;
+                        string key = "";
+                        char *buffer = new char[6];
+                        // recveive key size
+                        if(!netSnake.recvInetClient(buffer, 6, 0)){
+                                netSnake.closeSocket();
+                                delete[] buffer;
+                                return false;
+                        }
+
+                        keySize = atoi(buffer);
+                        delete[] buffer;
+                        if(keySize <= 0){
+                                netSnake.closeSocket();
+                                return false;
+                        }
+                        buffer = new char[keySize];
+                        if(!netSnake.recvInetClient(buffer, keySize, 0)){
+                                netSnake.closeSocket();
+                                return false;
+                        }
+
+                        serverPublicKey = "";
+                        for(int i=0; i<netSnake.recvSize; i++)
+                                serverPublicKey += buffer[i];
+                        delete[] buffer;
+
+                        encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), netSnake.recvSize, "");
+                        if(encryptionSnake.didFail()){
+                                netSnake.closeSocket();
+                                serverPublicKey = "";
+                                return false;
+                        }
+                    
+			return true;
+		}
+
+		bool recvCtrKey(){
+			encryptionSnake.aes256ctr_stop(true);
+			encryptionSnake.aes256ctr_stop(false);
+
 			return true;
 		}
 
@@ -136,13 +199,17 @@ class MorningClient{
 
 				if(!sendPublicKey()){
 					netSnake.closeSocket();
+					printf("Failed to send public key.\n");
 					return false;
 				}
 
 				if(!recvPublicKey()){
 					netSnake.closeSocket();
+					printf("Failed to recv public key\n");
 					return false;
 				}
+
+				printf("Keys have been shared.\n");
 
 			}else if(levelOne == 2){ // Try to authenticate with remote server
 				if(!sendAuthRequest()){

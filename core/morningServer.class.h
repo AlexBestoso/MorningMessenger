@@ -11,6 +11,7 @@ class MorningServer{
 		string cmd_streamChat = "6c0df3e03ccc8a63b41937acc7169cabad337da6bc7bb36a19245548d6eef2a3";
 		string cmd_chat = "7b5a3431691d02a5f335235bae96e65301311115d3688e2306c0a664ab29bfbe";
 		
+		string clientPublicKey = "";
 
 		int commandLevelOne(void){
 			size_t cmdSize = 64;
@@ -45,13 +46,65 @@ class MorningServer{
 		}
 
 		bool recvPublicKey(void){
-		
+			size_t keySize = 0;
+			string key = "";
+			char *buffer = new char[6];
+			// recveive key size
+			if(!netSnake.serverRecv(buffer, 6, 0)){
+				netSnake.closeConnection();
+				delete[] buffer;
+				return false;
+			}
+
+			keySize = atoi(buffer);
+			delete[] buffer;
+			if(keySize <= 0){
+				netSnake.closeConnection();
+				return false;
+			}
+			buffer = new char[keySize];
+			if(!netSnake.serverRecv(buffer, keySize, 0)){
+				netSnake.closeConnection();
+				return false;
+			}
+			
+			clientPublicKey = "";
+			for(int i=0; i<netSnake.server_recvSize; i++)
+				clientPublicKey += buffer[i];
+			delete[] buffer;
+
+			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey.c_str(), netSnake.server_recvSize, "");
+			if(encryptionSnake.didFail()){
+				netSnake.closeConnection();
+				clientPublicKey = "";
+				return false;
+			}
 			return true;
 		}
 
 		bool sendPublicKey(void){
-			
-			return true;
+			mornconf cfg = config.getConfig();
+                        size_t size = fileSnake.getFileSize(cfg.pubkey);
+                        string keySize = to_string(size);
+                        if(!netSnake.serverSend((char *)keySize.c_str(), keySize.length())){
+                                netSnake.closeConnection();
+                                return false;
+                        }
+
+                        char *buffer = new char[size];
+                        if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
+                                netSnake.closeConnection();
+                                delete[] buffer;
+                                return false;
+                        }
+
+                        if(!netSnake.serverSend(buffer, size)){
+                                netSnake.closeConnection();
+                                delete[] buffer;
+                                return false;
+                        }
+                        delete[] buffer;
+                        return true;
 		}
 	public:
 	pid_t pid = -1;
