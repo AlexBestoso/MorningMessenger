@@ -32,6 +32,7 @@ class MorningConfig{
                 const char *serverPubkey = "server.pub.key";
                 const char *serverPrikey = "server.pri.key";
                 const char *trustedKeysDir = "trustedKeys";
+		const char *untrustedKeysDir = "sketchyKeys";
                 const char *messagesDir = "messages";
 
 		/* Functions */
@@ -52,12 +53,6 @@ class MorningConfig{
                         string keyFile = serverPrikey;
                         string keyLoc = getServerKeysDirLoc();
                         return keyLoc + "/" + keyFile;
-                }
-
-                string getTrustedKeysLoc(void){
-                        string stem = storageLocation;
-                        string dire = trustedKeysDir;
-                        return stem + "/" + dire;
                 }
 
                 string getMessagesLoc(void){
@@ -260,6 +255,29 @@ class MorningConfig{
                         }
                 }
 
+		void setupUntrustedKeysDir(void){
+                        // Setup trusted keys dir.
+                        io.out(MORNING_IO_GENERAL, "Setting up untrusted keys directory.\n");
+                        if(!fileSnake.fileExists(getUntrustedKeysLoc())){
+                                if(!fileSnake.makeDir(getUntrustedKeysLoc())){
+                                        throw MorningException("Failed to make unrusted keys directory.");
+                                }else{
+                                        io.outf(MORNING_IO_SUCCESS, "Created untrusted keys directory '%s'.\n", getUntrustedKeysLoc().c_str());
+                                }
+                        }else if(fileSnake.getFileType(getUntrustedKeysLoc()) != FILE_SNAKE_DIR){
+                                throw MorningException("'%s' already exists but is not a directory.", getUntrustedKeysLoc().c_str());
+                        }else{
+                                io.outf(MORNING_IO_SUCCESS, "'%s' already exists!\n", getUntrustedKeysLoc().c_str());
+                        }
+
+                        io.out(MORNING_IO_GENERAL, "Setting untrusted keys directory to 600.\n");
+                        if(!fileSnake.perm(getUntrustedKeysLoc(), 00700)){ // lol, for perm to be 600, you need to write it as '00600'
+                                throw MorningException("Failed to configure untrusted keys permissions.");
+                        }else{
+                                io.out(MORNING_IO_SUCCESS, "Successfully configured permissions!\n");
+                        }
+                }
+
 		void setupMessagesDir(void){
                         // Setup Messages directory.
                         io.out(MORNING_IO_GENERAL, "Setting up messages directory.\n");
@@ -341,6 +359,18 @@ class MorningConfig{
 			return dire + "/" + serverLockFile;
 		}
 
+		string getTrustedKeysLoc(void){
+                        string stem = storageLocation;
+                        string dire = trustedKeysDir;
+                        return stem + "/" + dire;
+                }
+
+                string getUntrustedKeysLoc(void){
+                        string stem = storageLocation;
+                        string dire = untrustedKeysDir;
+                        return stem + "/" + dire;
+                }
+
 		void setSessionCreds(string u, string p, string pin){
 			username = u;
 			password = p;
@@ -354,6 +384,7 @@ class MorningConfig{
 				this->pin = pin;
                        	 	setupServerKeysDir();
                 	       	setupTrustedKeysDir();
+				setupUntrustedKeysDir();
                 	        setupMessagesDir();
                 	        generateServerKeys(username, password, pin);
                 	        generateDefaultConfig();
@@ -449,7 +480,7 @@ class MorningConfig{
                         }
 		}
 
-		void fetchPrivateKey(EncryptionSnake encryptionSnake){
+		EncryptionSnake fetchPrivateKey(EncryptionSnake encryptionSnake){
 			unlockPrivateKey();
                                 encryptionSnake.fetchRsaKeyFromFile(true, false, false, config.prikey, algorithms.deriveExportKey(username, password, pin));
                                 if(encryptionSnake.didFail()){
@@ -459,5 +490,6 @@ class MorningConfig{
                                         throw MorningException("Failed to load private key.");
                                 }
                         lockPrivateKey();
+			return encryptionSnake;
 		}
 };

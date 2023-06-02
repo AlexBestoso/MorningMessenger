@@ -12,10 +12,16 @@ class MorningClient{
                 string cmd_streamChat = "6c0df3e03ccc8a63b41937acc7169cabad337da6bc7bb36a19245548d6eef2a3";
                 string cmd_chat = "7b5a3431691d02a5f335235bae96e65301311115d3688e2306c0a664ab29bfbe";
 
-		size_t levelOneCommandCount = 2;
-		string levelOneCommands[2] = {
+		string serverPublicKey = "";
+
+		size_t rsaBufSize = 1024;
+		size_t ctrBufSize = 5000;
+
+		size_t levelOneCommandCount = 3;
+		string levelOneCommands[3] = {
 			"request_new",
-			"connect"
+			"connect",
+			"quit"
 		};
 
 		int parseSelectedOption(string input, string *options, size_t len){
@@ -45,7 +51,6 @@ class MorningClient{
                          string okayString = "";
 			 for(int i=0; i<netSnake.recvSize; i++)
 				 okayString += okay[i];
-			 printf("Recevied : %s\n", okayString.c_str());
 			 if(okayString == "OK"){
 			 	return true;
 			 }
@@ -65,6 +70,8 @@ class MorningClient{
 					return 1;
 				}else if(option == 2){
 					return 2;
+				}else if(option == 3){
+					return 3;
 				}else{
 					return -1;
 				}
@@ -73,10 +80,181 @@ class MorningClient{
 		}
 
 		bool sendPublicKey(){
+			mornconf cfg = config.getConfig();
+			size_t size = fileSnake.getFileSize(cfg.pubkey);
+			string keySize = to_string(size);
+			if(!netSnake.sendInetClient((char *)keySize.c_str(), keySize.length())){
+				netSnake.closeSocket();
+				return false;
+			}
+
+			char *buffer = new char[size];
+			if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
+				netSnake.closeSocket();
+				delete[] buffer;
+				return false;
+			}
+
+			if(!netSnake.sendInetClient(buffer, size)){
+				netSnake.closeSocket();
+				delete[] buffer;
+				return false;
+			}
+			delete[] buffer;
 			return true;
 		}
 
 		bool recvPublicKey(){
+			size_t keySize = 0;
+                        string key = "";
+                        char *buffer = new char[6];
+                        // recveive key size
+                        if(!netSnake.recvInetClient(buffer, 6, 0)){
+                                netSnake.closeSocket();
+                                delete[] buffer;
+                                return false;
+                        }
+
+                        keySize = atoi(buffer);
+                        delete[] buffer;
+                        if(keySize <= 0){
+                                netSnake.closeSocket();
+                                return false;
+                        }
+                        buffer = new char[keySize];
+                        if(!netSnake.recvInetClient(buffer, keySize, 0)){
+                                netSnake.closeSocket();
+                                return false;
+                        }
+
+                        serverPublicKey = "";
+                        for(int i=0; i<netSnake.recvSize; i++)
+                                serverPublicKey += buffer[i];
+                        delete[] buffer;
+
+			encryptionSnake.cleanOutPublicKey();
+                        encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), netSnake.recvSize, "");
+                        if(encryptionSnake.didFail()){
+                                netSnake.closeSocket();
+                                serverPublicKey = "";
+                                return false;
+                        }
+                    
+			return true;
+		}
+
+		bool recvCtrKey(){
+			encryptionSnake.aes256ctr_stop(true);
+			encryptionSnake.aes256ctr_stop(false);
+			
+			string keyPacket = rsaRecv();
+			if(keyPacket == "" || encryptionSnake.getResultLen() != 32+16){
+				return false;
+			}
+
+			unsigned char key[32];
+			unsigned char iv[16];
+			for(int i=0; i<16; i++){
+				iv[i] = keyPacket[i];
+			}
+			for(int i=0; i<32; i++){
+				key[i] = keyPacket[16+i];
+			}
+
+			if(!encryptionSnake.aes256ctr_start(true, key, iv)){
+                                return false;
+                        }
+
+                        if(!encryptionSnake.aes256ctr_start(false, key, iv)){
+                                return false;
+                        }
+			return true;
+		}
+
+		bool rsaSend(string msg, size_t msgLen){
+			if(msgLen > 1024){
+				msgLen = 1024;
+			}
+                        string encryptedMessage = encryptionSnake.rsa(true, msg, msgLen);
+                        if(encryptionSnake.didFail()){
+                                return false;
+                        }
+                        size_t encryptedMessageLen = encryptionSnake.getResultLen();
+
+                        if(!netSnake.sendInetClient(encryptedMessage.c_str(), encryptedMessageLen)){
+                                return false;
+                        }
+
+                        return true;
+                }
+
+                string rsaRecv(void){
+                        string ret = "";
+                        char *buf = new char[rsaBufSize];
+                        if(!netSnake.recvInetClient(buf, rsaBufSize, 0)){
+                                return "";
+                        }
+                        size_t recvSize = netSnake.recvSize;
+                        for(int i=0; i<recvSize; i++)
+                                ret += buf[i];
+
+                        ret = encryptionSnake.rsa(false, ret, recvSize);
+                        if(encryptionSnake.didFail()){
+				encryptionSnake.printError();
+                                return "";
+                        }
+                        return ret;
+                }
+
+		bool ctrSend(string msg, size_t msgLen){
+                        string encryptedMsg = encryptionSnake.aes256ctr_execute(true, msg, msgLen);
+                        if(encryptionSnake.didFail()){
+                                return false;
+                        }
+
+                        if(!netSnake.sendInetClient(encryptedMsg.c_str(), encryptionSnake.getResultLen())){
+                                return false;
+                        }
+                        return true;
+                }
+                string ctrRecv(void){
+                        string ret = "";
+                        char *recvBuffer = new char[ctrBufSize];
+                        if(!netSnake.recvInetClient(recvBuffer, ctrBufSize, 0)){
+                                delete[] recvBuffer;
+                                return "";
+                        }
+                        for(int i=0; i<netSnake.recvSize; i++){
+                                ret += recvBuffer[i];
+                        }
+                        delete[] recvBuffer;
+
+                        ret = encryptionSnake.aes256ctr_execute(false, ret, netSnake.recvSize);
+                        if(encryptionSnake.didFail()){
+                                return "";
+                        }
+
+                        return ret;
+                }
+
+		bool keyExchange(void){
+			if(!sendPublicKey()){
+				netSnake.closeSocket();
+				io.out(MORNING_IO_ERROR, "Failed to send public key.\n");
+				return false;
+			}
+
+			if(!recvPublicKey()){
+				netSnake.closeSocket();
+				io.out(MORNING_IO_ERROR, "Failed to recv public key\n");
+				return false;
+			}
+
+			if(!recvCtrKey()){
+				netSnake.closeSocket();
+				io.out(MORNING_IO_ERROR, "Failed to receive CTR key\n");
+				return false;
+			}
 			return true;
 		}
 
@@ -120,48 +298,90 @@ class MorningClient{
 		
 		bool connectToServer(void){
 			string ip = io.inString(MORNING_IO_INPUT, "Enter Host Name > ");
-			int port = atoi(io.inString(MORNING_IO_INPUT, "Enter Port Number > ").c_str());
-			if(!netSnake.createClient(ip, port, 0)){
-				return false;
-			}
+			int port = atoi(io.inString(MORNING_IO_INPUT, "Enter Port Number (Default : 21345) > ").c_str());
 			
 			int levelOne = getLevelOne();
 			if(levelOne == -1){
 				netSnake.closeSocket();
 				return false;
 			}else if(levelOne == 1){ // Access Request Protocol
+				if(!netSnake.createClient(ip, port, 0)){
+					return false;
+				}
 				if(!sendAccessRequest()){
 					return false;
 				}
 
-				if(!sendPublicKey()){
-					netSnake.closeSocket();
+				if(!keyExchange()){
+					io.out(MORNING_IO_ERROR, "MLS Key exchange failed.\n");
 					return false;
 				}
 
-				if(!recvPublicKey()){
+				// Recv name request
+				string msg = ctrRecv();
+				if(msg == ""){
 					netSnake.closeSocket();
+					io.out(MORNING_IO_ERROR, "Failed to receive name request.\n");
+					return false;
+				}
+				string name = io.inWithSpace(MORNING_IO_NONE, msg);
+				if(!ctrSend(name, name.length())){
+					netSnake.closeSocket();
+					io.out(MORNING_IO_ERROR, "Failed to send server your name.\n");
+					return false;
+				}
+
+				// Recv Reason for trust
+				msg = ctrRecv();
+				if(msg == ""){
+                                        netSnake.closeSocket();
+                                        io.out(MORNING_IO_ERROR, "Failed to receive request message prompt..\n");
+                                        return false;
+                                }
+				string reason = io.inWithSpace(MORNING_IO_NONE, msg);
+				if(!ctrSend(reason, reason.length())){
+					netSnake.closeSocket();
+					io.out(MORNING_IO_ERROR, "Failed to send reason to server.\n");
+					return false;
+				}
+			
+				// Receive succuess/failure message.
+				msg = ctrRecv();
+				if(msg == ""){
+                                        netSnake.closeSocket();
+                                        io.out(MORNING_IO_ERROR, "Failed to receive delivery confirmation\n");
+                                        return false;
+                                }
+
+				netSnake.closeSocket();
+				if(msg == "OK"){
+					io.out(MORNING_IO_SUCCESS, "Your message has been received and is awaiting approval.\n");
+					return true;
+				}else{
+					io.out(MORNING_IO_ERROR, "The server failed to store your approval request.\n");
 					return false;
 				}
 
 			}else if(levelOne == 2){ // Try to authenticate with remote server
+				if(!netSnake.createClient(ip, port, 0)){
+					return false;
+				}
 				if(!sendAuthRequest()){
 					return false;
 				}
-
-				if(!sendPublicKey()){
-                                        netSnake.closeSocket();
+				if(!keyExchange()){
+                                        io.out(MORNING_IO_ERROR, "MLS Key exchange failed.\n");
                                         return false;
                                 }
 
-                                if(!recvPublicKey()){
-                                        netSnake.closeSocket();
-                                        return false;
-                                }
+				netSnake.closeSocket();
+
+			}else if(levelOne == 3){
+				return true;
 			}else{
 				io.out(MORNING_IO_ERROR, "Invalid command attempted.\n");
+				return false;
 			}
-			netSnake.closeSocket();
 			return true;
 		}
 };

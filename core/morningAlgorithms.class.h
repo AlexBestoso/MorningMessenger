@@ -7,6 +7,14 @@ class MorningAlgorithms{
 		EncryptionSnake encryptionSnake;
 	public:
 
+	string deriveRandomIv(void){
+		return encryptionSnake.randomPublic(16);
+	}
+
+	string deriveRandomKey(void){
+		return encryptionSnake.randomPublic(32);
+	}
+
 	string deriveConfigEncryptionIv(string username, string password){
 		string ret = "aaaaaaaabbbbbbbb";
                 string usernameHash = encryptionSnake.sha256(username, username.length(), false);

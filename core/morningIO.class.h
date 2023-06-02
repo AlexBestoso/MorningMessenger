@@ -55,6 +55,16 @@ class MorningIO{
 			printf("%s", msgOut.c_str());
 		}
 
+		string inWithSpace(int type, string msg){
+			if(msg != "")
+                                out(type, msg);
+                        string ret = "";
+                        cout.flush();
+			cin.ignore();
+			getline(cin, ret);
+                        return ret;
+		}
+
 		string inString(int type, string msg){
 			if(msg != "")
 				out(type, msg);
