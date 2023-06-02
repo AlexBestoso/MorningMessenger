@@ -1,11 +1,12 @@
 class MorningMessenger{
 	private:
-		const char *verion = "0.2.1 Alpha";
+		const char *verion = "0.2.2 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
 		MorningMenu menu;
 		MorningClientMenu clientMenu;
+		MorningManagerMenu managerMenu;
 		MorningServer server;
 		MorningClient client;
 
@@ -145,6 +146,44 @@ class MorningMessenger{
 		menu.setCoreContext(MORNING_MENU_MAIN);
 		return false;
 	}
+	
+	bool keyManager(void){
+		int menuCtx = managerMenu.getCoreContext();
+		int subCtx = managerMenu.getSubContext();
+		if(menuCtx == MORNING_MANAGER_MENU_MAIN){
+			if(managerMenu.getShowBanner()){
+                                managerMenu.printBanner();
+                        }
+                        managerMenu.showMenuOptions();
+                        managerMenu.getUserInput();
+                        int ret = managerMenu.parseSelectedOption();
+                        if(ret == -1){
+                                io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
+                        }else{
+                                managerMenu.setCoreContext(ret);
+                        }
+		}else if(menuCtx == MORNING_MANAGER_MENU_BACK){
+			managerMenu.setShowBanner(true);
+			menu.setShowBanner(true);
+			managerMenu.setCoreContext(MORNING_MANAGER_MENU_MAIN);
+			managerMenu.setSubContext(0);
+			menu.setCoreContext(MORNING_MENU_MAIN);
+		}else if(menuCtx == MORNING_MANAGER_MENU_UNTRUSTED && subCtx == 0){
+			managerMenu.showUntrustedKeyOptions();
+			if(managerMenu.getCoreContext() == MORNING_MANAGER_MENU_MAIN){
+				managerMenu.setSubContext(0);
+				return true;
+			}
+
+		}else if(menuCtx == MORNING_MANAGER_MENU_UNTRUSTED && subCtx > 0){
+			return managerMenu.manageUntrustedKey();
+		}else if(menuCtx == MORNING_MANAGER_MENU_TRUSTED){
+		
+		}else{
+                        throw MorningException("Illegal manager menu context. Option ID %d\n", menuCtx);
+                }
+		return true;
+	}
 
 	void quitMessenger(){
 		if(server.lockHeld()){
@@ -156,6 +195,7 @@ class MorningMessenger{
 		if(menu.getShowBanner()){
 			menu.printBanner();
 		}
+		menu.info();
 		menu.showMenuOptions();
 		menu.getUserInput();
 		int ret = menu.parseSelectedOption();

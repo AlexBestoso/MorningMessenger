@@ -11,8 +11,10 @@
 ### Changes in this version.
 1. Added full key exchange. "MLS" - Morning Layer Security
 2. People who want to chat can now send their public keys to the server for the keys to be placed into the untrusted store for review and approval.
+3. You can now review untrusted keys and approve or deny them for use in messageing by using the `manage` menu. Trusted keys are moved to the "trusted key folder"
 
 ### Messages From Morning Star
-1. Version `0.2.1 alpha`
-2. Next I'll be building out a system for notifying you when an untrusted key is added as well as a system for apporving and denying the keys.
-3. There's still no messaging/chat capability, lol, but it's comming soon. Before I can implement a live chat, which will allow the server hoster to join chats via the forked server connection, I need to update my netsnake code to support `AF_UNIX` clients and servers. 
+1. Version `0.2.2 alpha`
+2. In the next update you will finally be able to send messages to the server in question. the standard chat, which is being implemented first, will function like an email server in the sense that you will receive a message and it will be stored for viewing later. 
+3. Once communications are properly established, I will be modifying the key management to enable mutual authentication.
+4. Before I can implement a live chat, which will allow the server hoster to join chats via the forked server connection, I need to update my netsnake code to support `AF_UNIX` clients and servers. 

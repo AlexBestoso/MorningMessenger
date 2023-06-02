@@ -20,6 +20,7 @@ to prevent manipulation of the self destruct bit.
 
 
 
+Before we can establish chat communications, we need a new option in the main menu that allows you to view and approve untrusted keys. 
 
 
 Server Communication Protocol: 

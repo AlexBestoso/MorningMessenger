@@ -21,6 +21,7 @@ using namespace std;
 #include "./core/morningClient.class.h"
 #include "./core/morningMenu.class.h"
 #include "./core/morningClientMenu.class.h"
+#include "./core/morningManagerMenu.class.h"
 #include "./core/morningMessenger.class.h"
 
 int main(void){
@@ -52,6 +53,9 @@ int main(void){
 					}else{
 					
 					}
+					break;
+				case MORNING_MENU_MANAGE:
+					MM.keyManager();
 					break;
 				case MORNING_MENU_QUIT:
 					running = false;

@@ -17,10 +17,11 @@ class MorningClient{
 		size_t rsaBufSize = 1024;
 		size_t ctrBufSize = 5000;
 
-		size_t levelOneCommandCount = 2;
-		string levelOneCommands[2] = {
+		size_t levelOneCommandCount = 3;
+		string levelOneCommands[3] = {
 			"request_new",
-			"connect"
+			"connect",
+			"quit"
 		};
 
 		int parseSelectedOption(string input, string *options, size_t len){
@@ -69,6 +70,8 @@ class MorningClient{
 					return 1;
 				}else if(option == 2){
 					return 2;
+				}else if(option == 3){
+					return 3;
 				}else{
 					return -1;
 				}
@@ -295,16 +298,16 @@ class MorningClient{
 		
 		bool connectToServer(void){
 			string ip = io.inString(MORNING_IO_INPUT, "Enter Host Name > ");
-			int port = atoi(io.inString(MORNING_IO_INPUT, "Enter Port Number > ").c_str());
-			if(!netSnake.createClient(ip, port, 0)){
-				return false;
-			}
+			int port = atoi(io.inString(MORNING_IO_INPUT, "Enter Port Number (Default : 21345) > ").c_str());
 			
 			int levelOne = getLevelOne();
 			if(levelOne == -1){
 				netSnake.closeSocket();
 				return false;
 			}else if(levelOne == 1){ // Access Request Protocol
+				if(!netSnake.createClient(ip, port, 0)){
+					return false;
+				}
 				if(!sendAccessRequest()){
 					return false;
 				}
@@ -360,6 +363,9 @@ class MorningClient{
 				}
 
 			}else if(levelOne == 2){ // Try to authenticate with remote server
+				if(!netSnake.createClient(ip, port, 0)){
+					return false;
+				}
 				if(!sendAuthRequest()){
 					return false;
 				}
@@ -368,10 +374,14 @@ class MorningClient{
                                         return false;
                                 }
 
+				netSnake.closeSocket();
+
+			}else if(levelOne == 3){
+				return true;
 			}else{
 				io.out(MORNING_IO_ERROR, "Invalid command attempted.\n");
+				return false;
 			}
-			netSnake.closeSocket();
 			return true;
 		}
 };

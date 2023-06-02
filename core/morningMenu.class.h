@@ -2,21 +2,25 @@
 #define MORNING_MENU_LAUNCH 1
 #define MORNING_MENU_CONNECT 2
 #define MORNING_MENU_CONFIG 3
-#define MORNING_MENU_QUIT 4
+#define MORNING_MENU_MANAGE 4
+#define MORNING_MENU_QUIT 5
 class MorningMenu{
 	private:
-		int coreContext = MORNING_MENU_MAIN;
+		int coreContext = 0;
 		int subContext = 0;
 		
 		bool showBanner = true;
 
 		MorningIO io;
+		MorningKeyManager keyManager;
+
 		string userInput = "";
-		size_t menuCount = 4;
-		string menuOptions[4] = {
+		size_t menuCount = 5;
+		string menuOptions[5] = {
 			"server",
 			"connect",
 			"config",
+			"manage",
 			"quit"
 		};
 	public:
@@ -32,6 +36,16 @@ class MorningMenu{
 		banner += "=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=\n";
 		printf("%s\n", banner.c_str());
 		showBanner = false;
+	}
+
+	virtual void info(){
+		int count = keyManager.untrustedKeyCount();
+		if(count > 0){
+			if(count == 1)
+				io.outf(MORNING_IO_GENERAL, "\tThere is 1 untrusted key\n");
+			else
+				io.outf(MORNING_IO_GENERAL, "\tThere are %d untrusted keys\n", count);
+		}
 	}
 
 	string getUserInputString(void){
