@@ -16,6 +16,7 @@ using namespace std;
 #include "./core/morningException.class.h"
 #include "./core/morningAlgorithms.class.h"
 #include "./core/morningConfig.class.h"
+#include "./core/morningKeyManager.class.h"
 #include "./core/morningServer.class.h"
 #include "./core/morningClient.class.h"
 #include "./core/morningMenu.class.h"

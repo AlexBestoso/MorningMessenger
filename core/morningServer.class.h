@@ -4,9 +4,11 @@ class MorningServer{
 		FileSnake fileSnake;
 		EncryptionSnake encryptionSnake;
 		EncryptionSnake remoteCerts;
+		XmlSnake xmlSnake;
 	
 		MorningAlgorithms algorithm;
 		MorningConfig config;
+		MorningKeyManager keyManager;
 
 		string cmd_newUser = "a235210cd5476dfa0a045d60244e5cc6aebbc21e406fba344ce5d154b6337f5b";
 		string cmd_existingUser = "f0773273589a87e67e71f402c08c93b464ff307846de3e7567dc1e423d65baf9";
@@ -14,8 +16,11 @@ class MorningServer{
 		string cmd_chat = "7b5a3431691d02a5f335235bae96e65301311115d3688e2306c0a664ab29bfbe";
 		
 		string clientPublicKey = "";
+		string clientName = "";
+		string clientMsg = "";
 
-		size_t rsaBufSize = 2000;
+		size_t rsaBufSize = 1024;
+		size_t ctrBufSize = 5000;
 
 		int commandLevelOne(void){
 			size_t cmdSize = 64;
@@ -147,6 +152,37 @@ class MorningServer{
 			return true;
 		}
 
+		bool ctrSend(string msg, size_t msgLen){
+			string encryptedMsg = encryptionSnake.aes256ctr_execute(true, msg, msgLen);
+			if(encryptionSnake.didFail()){
+				return false;
+			}
+
+			if(!netSnake.serverSend(encryptedMsg.c_str(), encryptionSnake.getResultLen())){
+				return false;
+			}
+			return true;	
+		}
+		string ctrRecv(void){
+			string ret = "";
+			char *recvBuffer = new char[ctrBufSize];
+			if(!netSnake.serverRecv(recvBuffer, ctrBufSize, 0)){
+				delete[] recvBuffer;
+				return "";
+			}
+			for(int i=0; i<netSnake.server_recvSize; i++){
+				ret += recvBuffer[i];
+			}
+			delete[] recvBuffer;
+
+			ret = encryptionSnake.aes256ctr_execute(false, ret, netSnake.server_recvSize);
+			if(encryptionSnake.didFail()){
+				return "";
+			}
+
+			return ret;
+		}
+
 		bool keyExchange(void){
 			if(!recvPublicKey()){
 				netSnake.closeConnection();
@@ -165,6 +201,8 @@ class MorningServer{
 		}
 
 		bool rsaSend(string msg, size_t msgLen){
+			if(msgLen > 1024)
+				msgLen = 1024;
 			string encryptedMessage = encryptionSnake.rsa(true, msg, msgLen);
 			if(encryptionSnake.didFail()){
 				return false;
@@ -193,6 +231,15 @@ class MorningServer{
 				return "";
 			}
 			return ret;
+		}
+
+		bool storeMessageRequest(void){
+			try{
+				bool ret = keyManager.createUntrusted(clientPublicKey, clientName, clientMsg);
+				return ret;
+			}catch(exception &e){
+				return false;
+			}
 		}
 	public:
 	pid_t pid = -1;
@@ -249,6 +296,42 @@ class MorningServer{
 							exit(EXIT_FAILURE);
 						}
 
+						string msg = "What is your name? > ";
+						if(!ctrSend(msg, msg.length())){
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}
+						
+						clientName = ctrRecv();
+						if(clientName == ""){
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}
+
+						msg = "Why should we trust you? > ";
+						if(!ctrSend(msg, msg.length())){
+                                                        netSnake.closeConnection();
+                                                        exit(EXIT_FAILURE);
+                                                }
+
+						clientMsg = ctrRecv();
+						if(clientMsg == ""){
+                                                        netSnake.closeConnection();
+                                                        exit(EXIT_FAILURE);
+                                                }
+
+
+						if(!storeMessageRequest()){
+							msg = "NO";
+							ctrSend(msg, msg.length());
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}
+							
+						msg = "OK";
+						ctrSend(msg, msg.length());
+						netSnake.closeConnection();
+						exit(EXIT_SUCCESS);
 					}else if(cmdOne == 2){ // Authenticate existing user
 						if(!keyExchange()){
                                                         exit(EXIT_FAILURE);

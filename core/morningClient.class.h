@@ -14,7 +14,8 @@ class MorningClient{
 
 		string serverPublicKey = "";
 
-		size_t rsaBufSize = 2000;
+		size_t rsaBufSize = 1024;
+		size_t ctrBufSize = 5000;
 
 		size_t levelOneCommandCount = 2;
 		string levelOneCommands[2] = {
@@ -168,6 +169,9 @@ class MorningClient{
 		}
 
 		bool rsaSend(string msg, size_t msgLen){
+			if(msgLen > 1024){
+				msgLen = 1024;
+			}
                         string encryptedMessage = encryptionSnake.rsa(true, msg, msgLen);
                         if(encryptionSnake.didFail()){
                                 return false;
@@ -196,6 +200,37 @@ class MorningClient{
 				encryptionSnake.printError();
                                 return "";
                         }
+                        return ret;
+                }
+
+		bool ctrSend(string msg, size_t msgLen){
+                        string encryptedMsg = encryptionSnake.aes256ctr_execute(true, msg, msgLen);
+                        if(encryptionSnake.didFail()){
+                                return false;
+                        }
+
+                        if(!netSnake.sendInetClient(encryptedMsg.c_str(), encryptionSnake.getResultLen())){
+                                return false;
+                        }
+                        return true;
+                }
+                string ctrRecv(void){
+                        string ret = "";
+                        char *recvBuffer = new char[ctrBufSize];
+                        if(!netSnake.recvInetClient(recvBuffer, ctrBufSize, 0)){
+                                delete[] recvBuffer;
+                                return "";
+                        }
+                        for(int i=0; i<netSnake.recvSize; i++){
+                                ret += recvBuffer[i];
+                        }
+                        delete[] recvBuffer;
+
+                        ret = encryptionSnake.aes256ctr_execute(false, ret, netSnake.recvSize);
+                        if(encryptionSnake.didFail()){
+                                return "";
+                        }
+
                         return ret;
                 }
 
@@ -276,6 +311,51 @@ class MorningClient{
 
 				if(!keyExchange()){
 					io.out(MORNING_IO_ERROR, "MLS Key exchange failed.\n");
+					return false;
+				}
+
+				// Recv name request
+				string msg = ctrRecv();
+				if(msg == ""){
+					netSnake.closeSocket();
+					io.out(MORNING_IO_ERROR, "Failed to receive name request.\n");
+					return false;
+				}
+				string name = io.inWithSpace(MORNING_IO_NONE, msg);
+				if(!ctrSend(name, name.length())){
+					netSnake.closeSocket();
+					io.out(MORNING_IO_ERROR, "Failed to send server your name.\n");
+					return false;
+				}
+
+				// Recv Reason for trust
+				msg = ctrRecv();
+				if(msg == ""){
+                                        netSnake.closeSocket();
+                                        io.out(MORNING_IO_ERROR, "Failed to receive request message prompt..\n");
+                                        return false;
+                                }
+				string reason = io.inWithSpace(MORNING_IO_NONE, msg);
+				if(!ctrSend(reason, reason.length())){
+					netSnake.closeSocket();
+					io.out(MORNING_IO_ERROR, "Failed to send reason to server.\n");
+					return false;
+				}
+			
+				// Receive succuess/failure message.
+				msg = ctrRecv();
+				if(msg == ""){
+                                        netSnake.closeSocket();
+                                        io.out(MORNING_IO_ERROR, "Failed to receive delivery confirmation\n");
+                                        return false;
+                                }
+
+				netSnake.closeSocket();
+				if(msg == "OK"){
+					io.out(MORNING_IO_SUCCESS, "Your message has been received and is awaiting approval.\n");
+					return true;
+				}else{
+					io.out(MORNING_IO_ERROR, "The server failed to store your approval request.\n");
 					return false;
 				}
 

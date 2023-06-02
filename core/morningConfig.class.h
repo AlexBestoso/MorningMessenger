@@ -55,18 +55,6 @@ class MorningConfig{
                         return keyLoc + "/" + keyFile;
                 }
 
-                string getTrustedKeysLoc(void){
-                        string stem = storageLocation;
-                        string dire = trustedKeysDir;
-                        return stem + "/" + dire;
-                }
-
-		string getUntrustedKeysLoc(void){
-			string stem = storageLocation;
-			string dire = untrustedKeysDir;
-			return stem + "/" + dire;
-		}
-
                 string getMessagesLoc(void){
                         string stem = storageLocation;
                         string dire = messagesDir;
@@ -370,6 +358,18 @@ class MorningConfig{
 			string fil = serverLockFile;
 			return dire + "/" + serverLockFile;
 		}
+
+		string getTrustedKeysLoc(void){
+                        string stem = storageLocation;
+                        string dire = trustedKeysDir;
+                        return stem + "/" + dire;
+                }
+
+                string getUntrustedKeysLoc(void){
+                        string stem = storageLocation;
+                        string dire = untrustedKeysDir;
+                        return stem + "/" + dire;
+                }
 
 		void setSessionCreds(string u, string p, string pin){
 			username = u;

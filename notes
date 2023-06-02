@@ -18,18 +18,13 @@ to prevent manipulation of the self destruct bit.
 </root>
 
 
+
+
+
+
 Server Communication Protocol: 
 
-if new here
-+	wait for client's public key.
-+	try to load public key.
-+	if failed, close connection and exit.
-+	send server public key.
-	Ask client what their name is
-	Ask the client if they have any messages
-	Tell client; Thank you for your business. The Server Master will be notified and will review your request for trust.
-	Store public key and end user's name in a file within the untrusted key store.
-else if already here
+if already here
 	wait for client's public key and take hash of it upon recipt.
 	if key isn't trysted, close connection and exit.
 	send client server public key. (Client side will also be able to validate server key)
