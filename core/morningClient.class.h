@@ -121,7 +121,7 @@ class MorningClient{
                                 netSnake.closeSocket();
                                 return false;
                         }
-			printf("Being sent key of size %ld\n", (long)keySize);
+
                         serverPublicKey = "";
                         buffer = new char[keySize];
                         if(!netSnake.recvInetClient(buffer, keySize, 0)){
@@ -136,7 +136,7 @@ class MorningClient{
 
 			// Ensure full key is received.
 			int remaining = keySize - netSnake.recvSize;
-			while(remaining > 0){
+			if(remaining > 0){
 				buffer = new char[remaining];
 				if(!netSnake.recvInetClient(buffer, remaining, 0)){
                         	        netSnake.closeSocket();

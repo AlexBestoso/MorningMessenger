@@ -85,7 +85,7 @@ class MorningServer{
 
 			// Ensure full key is received.
                         int remaining = keySize - netSnake.recvSize;
-                        while(remaining > 0){
+                        if(remaining > 0){
                                 buffer = new char[remaining];
                                 if(!netSnake.serverRecv(buffer, remaining, 0)){
                                         netSnake.closeSocket();
@@ -114,11 +114,6 @@ class MorningServer{
                         size_t size = fileSnake.getFileSize(cfg.pubkey);
                         string keySize = to_string(size);
                         if(!netSnake.serverSend((char *)keySize.c_str(), keySize.length())){
-                                netSnake.closeConnection();
-                                return false;
-                        }
-
-			if(!netSnake.serverSend("thank you!", 10)){
                                 netSnake.closeConnection();
                                 return false;
                         }
