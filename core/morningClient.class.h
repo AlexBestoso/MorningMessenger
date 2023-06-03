@@ -60,7 +60,7 @@ class MorningClient{
 		int getLevelOne(void){
 			while(1){
 				for(int i=0; i<levelOneCommandCount; i++){
-					printf("%d) %s\n", i+1, levelOneCommands[i].c_str());
+					io.outf(MORNING_IO_NONE, "%d) %s\n", i+1, levelOneCommands[i].c_str());
 				}
 				string input = io.inString(MORNING_IO_INPUT, " > ");
 				int option = parseSelectedOption(input, levelOneCommands, levelOneCommandCount);
@@ -82,7 +82,6 @@ class MorningClient{
 		bool sendPublicKey(){
 			mornconf cfg = config.getConfig();
 			size_t size = fileSnake.getFileSize(cfg.pubkey);
-			printf("Sending key size (%ld)\n", size);
 			/*string keySize = to_string(size);
 			if(!netSnake.sendInetClient((char *)keySize.c_str(), keySize.length())){
 				netSnake.closeSocket();
@@ -102,7 +101,6 @@ class MorningClient{
 				key += buffer[i];
 			delete[] buffer;
 
-			printf("Sending pubkey of %ld bytes.\n%s\n", size, key.c_str());
 			if(!netSnake.sendInetClient(key.c_str(), size)){
 				netSnake.closeSocket();
 				return false;
@@ -157,7 +155,6 @@ class MorningClient{
 			encryptionSnake.cleanOutPublicKey();
                         encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), serverPublicKey.length(), "");
                         if(encryptionSnake.didFail()){
-				printf("Received key(%ld) :\n%s\n", serverPublicKey.length(), serverPublicKey.c_str());
                                 netSnake.closeSocket();
                                 serverPublicKey = "";
                                 return false;
@@ -261,21 +258,18 @@ class MorningClient{
                 }
 
 		bool keyExchange(void){
-			printf("Sending my public key\n");
 			if(!sendPublicKey()){
 				netSnake.closeSocket();
 				io.out(MORNING_IO_ERROR, "Failed to send public key.\n");
 				return false;
 			}
 
-			printf("Receiving their public key\n");
 			if(!recvPublicKey()){
 				netSnake.closeSocket();
 				io.out(MORNING_IO_ERROR, "Failed to recv public key\n");
 				return false;
 			}
 
-			printf("Receiving AES key\n");
 			if(!recvCtrKey()){
 				netSnake.closeSocket();
 				io.out(MORNING_IO_ERROR, "Failed to receive CTR key\n");
@@ -285,14 +279,12 @@ class MorningClient{
 		}
 
 		bool sendAccessRequest(){
-			printf("\tSending...\n");
 			if(!netSnake.sendInetClient(cmd_newUser.c_str(), cmd_newUser.length())){
 				netSnake.closeSocket();
 				io.out(MORNING_IO_ERROR, "Failed to send command to remote server\n");
 				return false;
 			}
 
-			printf("\tvalidating...\n");
 			if(!validateResponse()){
 				netSnake.closeSocket();
 				io.out(MORNING_IO_ERROR, "Failed to validate command response.\n");
@@ -302,14 +294,12 @@ class MorningClient{
 		}
 
 		bool sendAuthRequest(){
-			printf("\tSending...\n");
 			if(!netSnake.sendInetClient(cmd_existingUser.c_str(), cmd_existingUser.length())){
 				netSnake.closeSocket();
 				io.out(MORNING_IO_ERROR, "Failed to send command to remote server\n");
 				return false;
 			}
 
-			printf("\tvalidating...\n");
 			if(!validateResponse()){
 				netSnake.closeSocket();
 				return false;
@@ -334,22 +324,18 @@ class MorningClient{
 			if(levelOne == -1){
 				return false;
 			}else if(levelOne == 1){ // Access Request Protocol
-				printf("Connecting\n");
 				if(!netSnake.createClient(ip, port, 0)){
 					return false;
 				}
-				printf("Sending access request\n");
 				if(!sendAccessRequest()){
 					return false;
 				}
 
-				printf("Starting key exchange.\n");
 				if(!keyExchange()){
 					io.out(MORNING_IO_ERROR, "MLS Key exchange failed.\n");
 					return false;
 				}
 
-				printf("doing the thing\n");
 				// Recv name request
 				string msg = ctrRecv();
 				if(msg == ""){

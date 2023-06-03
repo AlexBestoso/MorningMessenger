@@ -26,7 +26,6 @@ class MorningServer{
 		int commandLevelOne(void){
 			size_t cmdSize = 64;
 			char *cmdBuff = new char[cmdSize];
-			system("echo 'recving user command'");
 			if(!netSnake.serverRecv(cmdBuff, cmdSize, 0)){
 				delete[] cmdBuff;
 				return -1;
@@ -38,15 +37,12 @@ class MorningServer{
 			delete[] cmdBuff;
 			
 			if(conv == cmd_newUser){
-				system("echo 'new user'");
 				sendOkay();
 				return 1;
 			}else if(conv == cmd_existingUser){
-				system("echo 'existing user'");
 				sendOkay();
 				return 2;
 			}
-			system("echo 'invalid command user'");
 			sendNo();
 			return -1;
 		}
@@ -65,20 +61,6 @@ class MorningServer{
 			char buffer[1466];// = new char[6];
 
 			// recveive key size
-		/*	system("echo 'A'");
-			if(!netSnake.serverRecv(buffer, 6, 0)){
-				netSnake.closeConnection();
-				delete[] buffer;
-				return false;
-			}
-
-			keySize = atoi(buffer);
-			delete[] buffer;
-			if(keySize <= 0){
-				netSnake.closeConnection();
-				return false;
-			}*/
-			system("echo 'B'");
 			if(!netSnake.serverRecv(buffer, keySize, 0)){
 				netSnake.closeConnection();
 				return false;
@@ -88,14 +70,9 @@ class MorningServer{
 			for(int i=0; i<netSnake.server_recvSize; i++)
 				clientPublicKey += buffer[i];
 
-			system("echo 'C'");
 			// Ensure full key is received.
                         int remaining = keySize - netSnake.server_recvSize;
-			string fart = "echo '"+to_string(remaining) + " = " + to_string(keySize)+ " - " +to_string(netSnake.server_recvSize)+"'";
-			system(fart.c_str());
                         if(remaining > 0 && netSnake.server_recvSize > 0){
-				fart = "echo '"+to_string(remaining) + " = " + to_string(remaining)+ " - " +to_string(netSnake.server_recvSize)+"'";
-				system(fart.c_str());
 				memset(buffer, 0x00, keySize);
                                 if(!netSnake.serverRecv(buffer, remaining, 0)){
                                         netSnake.closeSocket();
@@ -107,13 +84,10 @@ class MorningServer{
                                 remaining = remaining - netSnake.server_recvSize;
                         }
 
-			system("echo 'D'");
 			encryptionSnake.cleanOutPublicKey();
 			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey, clientPublicKey.length(), "");
 			if(encryptionSnake.didFail()){
 				encryptionSnake.printError();
-				fileSnake.writeFileTrunc("/tmp/poop", (char *)clientPublicKey.c_str(), clientPublicKey.length());
-				system("cat /tmp/poop");
 				netSnake.closeConnection();
 				clientPublicKey = "";
 				return false;
@@ -318,13 +292,11 @@ class MorningServer{
 					throw MorningException(netSnake.errorMessage());
 				}
 				if(fork() == 0){
-					system("echo 'getting user command'");
 					int cmdOne = commandLevelOne();
 					if(cmdOne == -1){
 						netSnake.closeConnection();
 						exit(EXIT_FAILURE);
 					}else if(cmdOne == 1){ // Setup new user
-						system("echo 'Running key exchange'");
 						if(!keyExchange()){
 							exit(EXIT_FAILURE);
 						}
