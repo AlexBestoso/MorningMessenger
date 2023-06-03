@@ -9,6 +9,7 @@ class MorningServer{
 		MorningAlgorithms algorithm;
 		MorningConfig config;
 		MorningKeyManager keyManager;
+		MorningMessage morningMessage;
 
 		string cmd_newUser = "a235210cd5476dfa0a045d60244e5cc6aebbc21e406fba344ce5d154b6337f5b";
 		string cmd_existingUser = "f0773273589a87e67e71f402c08c93b464ff307846de3e7567dc1e423d65baf9";
@@ -336,7 +337,40 @@ class MorningServer{
 						if(!keyExchange()){
                                                         exit(EXIT_FAILURE);
                                                 }
+						
+						if(!keyManager.isKeyTrusted(clientPublicKey)){
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}
 
+						mornmsg clientMessage;
+						clientMessage.clientHost = netSnake.getClientIp();
+						clientMessage.messageDate = morningMessage.getCurrentDateTime();
+						clientMessage.messageBody = ctrRecv();
+						if(clientMessage.messageBody == ""){
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}
+							
+						try{
+						morningMessage.setConfig(config);
+						if(!morningMessage.storeClientMessage(clientMessage, clientPublicKey)){
+							string resp = "[E] Failed to store your message.";
+							ctrSend(resp, resp.length());
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}else{
+							string resp = "[+] Succefully received your message.";
+							ctrSend(resp, resp.length());
+							netSnake.closeConnection();
+							exit(EXIT_SUCCESS);
+						}}catch(exception &e){
+							string resp = e.what();
+							resp = "[E]" + resp;	
+                                                        ctrSend(resp, resp.length());
+                                                        netSnake.closeConnection();
+                                                        exit(EXIT_FAILURE);
+						}
 					}
 					netSnake.closeConnection();
 					exit(EXIT_SUCCESS);

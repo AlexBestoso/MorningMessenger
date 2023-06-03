@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *verion = "0.2.2 Alpha";
+		const char *verion = "0.3.0 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -178,7 +178,7 @@ class MorningMessenger{
 		}else if(menuCtx == MORNING_MANAGER_MENU_UNTRUSTED && subCtx > 0){
 			return managerMenu.manageUntrustedKey();
 		}else if(menuCtx == MORNING_MANAGER_MENU_TRUSTED){
-		
+			throw MorningException("Trusted key management has not been programmed yet");
 		}else{
                         throw MorningException("Illegal manager menu context. Option ID %d\n", menuCtx);
                 }

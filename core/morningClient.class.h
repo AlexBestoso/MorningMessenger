@@ -302,7 +302,6 @@ class MorningClient{
 			
 			int levelOne = getLevelOne();
 			if(levelOne == -1){
-				netSnake.closeSocket();
 				return false;
 			}else if(levelOne == 1){ // Access Request Protocol
 				if(!netSnake.createClient(ip, port, 0)){
@@ -374,8 +373,23 @@ class MorningClient{
                                         return false;
                                 }
 
-				netSnake.closeSocket();
+				string outMsg = io.inWithSpace(MORNING_IO_NONE, "Enter your message > ");
+				if(!ctrSend(outMsg, outMsg.length())){
+					io.out(MORNING_IO_ERROR, "Failed to send message\n");
+					netSnake.closeSocket();
+					return false;
+				}
 
+				string inMsg = ctrRecv();
+				if(inMsg == ""){
+					io.out(MORNING_IO_ERROR, "Failed to receive confirmation response from server\n");
+					netSnake.closeSocket();
+					return false;
+				}
+
+				io.outf(MORNING_IO_NONE, "%s\n", inMsg.c_str());
+				netSnake.closeSocket();
+				return true;
 			}else if(levelOne == 3){
 				return true;
 			}else{

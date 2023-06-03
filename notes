@@ -26,13 +26,13 @@ Before we can establish chat communications, we need a new option in the main me
 Server Communication Protocol: 
 
 if already here
-	wait for client's public key and take hash of it upon recipt.
-	if key isn't trysted, close connection and exit.
+	+wait for client's public key and take hash of it upon recipt.
+	+if key isn't trysted, close connection and exit.
 	send client server public key. (Client side will also be able to validate server key)
-	if leave a message
-		wait for message
-		tell user if recpt was successful or not.
-		close connection.
+	+if leave a message
+	+	wait for message
+	+	tell user if recpt was successful or not.
+	+	close connection.
 	else if stream chat
 		server generates two AES CTR keys and IVs.
 		server sends key pair to client.

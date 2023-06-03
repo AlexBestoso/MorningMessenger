@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <iostream>
 #include <signal.h>
+#include <time.h>
 using namespace std;
 #include "./snakeSuite/snakeSuite.h"
 #include "./core/morningIO.class.h"
@@ -17,6 +18,7 @@ using namespace std;
 #include "./core/morningAlgorithms.class.h"
 #include "./core/morningConfig.class.h"
 #include "./core/morningKeyManager.class.h"
+#include "./core/morningMessage.class.h"
 #include "./core/morningServer.class.h"
 #include "./core/morningClient.class.h"
 #include "./core/morningMenu.class.h"
