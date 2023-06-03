@@ -118,6 +118,11 @@ class MorningServer{
                                 return false;
                         }
 
+			if(!netSnake.serverSend("thank you!", 10)){
+                                netSnake.closeConnection();
+                                return false;
+                        }
+
                         char *buffer = new char[size];
                         if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
                                 netSnake.closeConnection();
