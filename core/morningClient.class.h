@@ -81,28 +81,35 @@ class MorningClient{
 
 		bool sendPublicKey(){
 			mornconf cfg = config.getConfig();
-			size_t size = 1466;//fileSnake.getFileSize(cfg.pubkey);
+			size_t size = fileSnake.getFileSize(cfg.pubkey);
+			printf("Sending key size (%ld)\n", size);
 			/*string keySize = to_string(size);
-			printf("Sending key size (%ld | %s)\n", size, keySize.c_str());
 			if(!netSnake.sendInetClient((char *)keySize.c_str(), keySize.length())){
 				netSnake.closeSocket();
 				return false;
 			}*/
 
 			char *buffer = new char[size];
+			memset(buffer, 0x00, size);
 			if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
 				netSnake.closeSocket();
 				delete[] buffer;
 				return false;
 			}
 
-			printf("Sending pubkey of %ld bytes.\n", size);
-			if(!netSnake.sendInetClient(buffer, size)){
+			string key = "";
+			for(int i=0; i<size; i++)
+				key += buffer[i];
+			delete[] buffer;
+
+			printf("Sending pubkey of %ld bytes.\n%s\n", size, key.c_str());
+			if(!netSnake.sendInetClient(key.c_str(), size)){
 				netSnake.closeSocket();
-				delete[] buffer;
 				return false;
 			}
-			delete[] buffer;
+			if(netSnake.sendSize != size){
+				throw MorningException("Failed to send the server your entire key.\n");
+			}
 			return true;
 		}
 

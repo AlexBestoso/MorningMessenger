@@ -62,7 +62,7 @@ class MorningServer{
 		bool recvPublicKey(void){
 			size_t keySize = 1466;
 			string key = "";
-			char *buffer;// = new char[6];
+			char buffer[1466];// = new char[6];
 
 			// recveive key size
 		/*	system("echo 'A'");
@@ -79,7 +79,6 @@ class MorningServer{
 				return false;
 			}*/
 			system("echo 'B'");
-			buffer = new char[keySize];
 			if(!netSnake.serverRecv(buffer, keySize, 0)){
 				netSnake.closeConnection();
 				return false;
@@ -88,7 +87,6 @@ class MorningServer{
 			clientPublicKey = "";
 			for(int i=0; i<netSnake.server_recvSize; i++)
 				clientPublicKey += buffer[i];
-			delete[] buffer;
 
 			/*system("echo 'C'");
 			// Ensure full key is received.
@@ -115,6 +113,7 @@ class MorningServer{
 			encryptionSnake.cleanOutPublicKey();
 			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey, keySize, "");
 			if(encryptionSnake.didFail()){
+				encryptionSnake.printError();
 				fileSnake.writeFileTrunc("/tmp/poop", (char *)clientPublicKey.c_str(), keySize);
 				system("cat /tmp/poop");
 				netSnake.closeConnection();
