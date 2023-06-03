@@ -88,33 +88,31 @@ class MorningServer{
 			for(int i=0; i<netSnake.server_recvSize; i++)
 				clientPublicKey += buffer[i];
 
-			/*system("echo 'C'");
+			system("echo 'C'");
 			// Ensure full key is received.
                         int remaining = keySize - netSnake.server_recvSize;
 			string fart = "echo '"+to_string(remaining) + " = " + to_string(keySize)+ " - " +to_string(netSnake.server_recvSize)+"'";
 			system(fart.c_str());
-                        while(remaining > 0 && netSnake.server_recvSize > 0){
+                        if(remaining > 0 && netSnake.server_recvSize > 0){
 				fart = "echo '"+to_string(remaining) + " = " + to_string(remaining)+ " - " +to_string(netSnake.server_recvSize)+"'";
 				system(fart.c_str());
-                                buffer = new char[remaining];
+				memset(buffer, 0x00, keySize);
                                 if(!netSnake.serverRecv(buffer, remaining, 0)){
                                         netSnake.closeSocket();
-                                        delete[] buffer;
                                         return false;
                                 }
 
                                 for(int i=0; i<netSnake.server_recvSize; i++)
                                         clientPublicKey += buffer[i];
                                 remaining = remaining - netSnake.server_recvSize;
-                                delete[] buffer;
-                        }*/
+                        }
 
 			system("echo 'D'");
 			encryptionSnake.cleanOutPublicKey();
-			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey, keySize, "");
+			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey, clientPublicKey.length(), "");
 			if(encryptionSnake.didFail()){
 				encryptionSnake.printError();
-				fileSnake.writeFileTrunc("/tmp/poop", (char *)clientPublicKey.c_str(), keySize);
+				fileSnake.writeFileTrunc("/tmp/poop", (char *)clientPublicKey.c_str(), clientPublicKey.length());
 				system("cat /tmp/poop");
 				netSnake.closeConnection();
 				clientPublicKey = "";

@@ -141,25 +141,23 @@ class MorningClient{
                                 serverPublicKey += buffer[i];
 
 			// Ensure full key is received.
-			/*int remaining = keySize - netSnake.recvSize;
-			while(remaining > 0){
-				buffer = new char[remaining];
+			int remaining = keySize - netSnake.recvSize;
+			if(remaining > 0){
+				memset(buffer, 0x00, keySize);
 				if(!netSnake.recvInetClient(buffer, remaining, 0)){
                         	        netSnake.closeSocket();
-                        	        delete[] buffer;
                         	        return false;
                         	}
 
 				for(int i=0; i<netSnake.recvSize; i++)
                                 	serverPublicKey += buffer[i];
 				remaining = remaining - netSnake.recvSize;
-				delete[] buffer;
-			}*/
+			}
 
 			encryptionSnake.cleanOutPublicKey();
-                        encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), keySize, "");
+                        encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), serverPublicKey.length(), "");
                         if(encryptionSnake.didFail()){
-				printf("Received key(%ld) :\n%s\n", keySize, serverPublicKey.c_str());
+				printf("Received key(%ld) :\n%s\n", serverPublicKey.length(), serverPublicKey.c_str());
                                 netSnake.closeSocket();
                                 serverPublicKey = "";
                                 return false;
