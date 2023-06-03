@@ -93,8 +93,10 @@ class MorningServer{
 			system("echo 'C'");
 			// Ensure full key is received.
                         int remaining = keySize - netSnake.server_recvSize;
-                        while(remaining > 0){
-				string fart = "echo '"+to_string(remaining) + " = " + to_string(keySize)+ " - " +to_string(netSnake.server_recvSize)+"'";
+			string fart = "echo '"+to_string(remaining) + " = " + to_string(keySize)+ " - " +to_string(netSnake.server_recvSize)+"'";
+			system(fart.c_str());
+                        while(remaining > 0 && netSnake.server_recvSize > 0){
+				fart = "echo '"+to_string(remaining) + " = " + to_string(remaining)+ " - " +to_string(netSnake.server_recvSize)+"'";
 				system(fart.c_str());
                                 buffer = new char[remaining];
                                 if(!netSnake.serverRecv(buffer, remaining, 0)){
