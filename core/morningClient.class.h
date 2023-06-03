@@ -83,6 +83,7 @@ class MorningClient{
 			mornconf cfg = config.getConfig();
 			size_t size = fileSnake.getFileSize(cfg.pubkey);
 			string keySize = to_string(size);
+			printf("Sending key size (%ld | %s)\n", size, keySize.c_str());
 			if(!netSnake.sendInetClient((char *)keySize.c_str(), keySize.length())){
 				netSnake.closeSocket();
 				return false;
@@ -95,6 +96,7 @@ class MorningClient{
 				return false;
 			}
 
+			printf("Sending pubkey of %ld bytes.\n", size);
 			if(!netSnake.sendInetClient(buffer, size)){
 				netSnake.closeSocket();
 				delete[] buffer;
