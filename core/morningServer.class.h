@@ -60,12 +60,12 @@ class MorningServer{
 		}
 
 		bool recvPublicKey(void){
-			size_t keySize = 0;
+			size_t keySize = 1464;
 			string key = "";
-			char *buffer = new char[6];
+			char *buffer;// = new char[6];
 
 			// recveive key size
-			system("echo 'A'");
+		/*	system("echo 'A'");
 			if(!netSnake.serverRecv(buffer, 6, 0)){
 				netSnake.closeConnection();
 				delete[] buffer;
@@ -77,7 +77,7 @@ class MorningServer{
 			if(keySize <= 0){
 				netSnake.closeConnection();
 				return false;
-			}
+			}*/
 			system("echo 'B'");
 			buffer = new char[keySize];
 			if(!netSnake.serverRecv(buffer, keySize, 0)){
@@ -90,7 +90,7 @@ class MorningServer{
 				clientPublicKey += buffer[i];
 			delete[] buffer;
 
-			system("echo 'C'");
+			/*system("echo 'C'");
 			// Ensure full key is received.
                         int remaining = keySize - netSnake.server_recvSize;
 			string fart = "echo '"+to_string(remaining) + " = " + to_string(keySize)+ " - " +to_string(netSnake.server_recvSize)+"'";
@@ -109,7 +109,7 @@ class MorningServer{
                                         clientPublicKey += buffer[i];
                                 remaining = remaining - netSnake.server_recvSize;
                                 delete[] buffer;
-                        }
+                        }*/
 
 			system("echo 'D'");
 			encryptionSnake.cleanOutPublicKey();
@@ -126,12 +126,12 @@ class MorningServer{
 
 		bool sendPublicKey(void){
 			mornconf cfg = config.getConfig();
-                        size_t size = fileSnake.getFileSize(cfg.pubkey);
-                        string keySize = to_string(size);
+                        size_t size = 1464;//fileSnake.getFileSize(cfg.pubkey);
+                        /*string keySize = to_string(size);
                         if(!netSnake.serverSend((char *)keySize.c_str(), keySize.length())){
                                 netSnake.closeConnection();
                                 return false;
-                        }
+                        }*/
 
                         char *buffer = new char[size];
                         if(!fileSnake.readFile(cfg.pubkey, buffer, size)){

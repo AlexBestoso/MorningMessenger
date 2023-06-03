@@ -81,13 +81,13 @@ class MorningClient{
 
 		bool sendPublicKey(){
 			mornconf cfg = config.getConfig();
-			size_t size = fileSnake.getFileSize(cfg.pubkey);
-			string keySize = to_string(size);
+			size_t size = 1464;//fileSnake.getFileSize(cfg.pubkey);
+			/*string keySize = to_string(size);
 			printf("Sending key size (%ld | %s)\n", size, keySize.c_str());
 			if(!netSnake.sendInetClient((char *)keySize.c_str(), keySize.length())){
 				netSnake.closeSocket();
 				return false;
-			}
+			}*/
 
 			char *buffer = new char[size];
 			if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
@@ -107,11 +107,11 @@ class MorningClient{
 		}
 
 		bool recvPublicKey(){
-			size_t keySize = 0;
+			size_t keySize = 1464;
                         string key = "";
-                        char *buffer = new char[6];
+                        char *buffer;// = new char[6];
                         // recveive key size
-                        if(!netSnake.recvInetClient(buffer, 6, 0)){
+                        /*if(!netSnake.recvInetClient(buffer, 6, 0)){
                                 netSnake.closeSocket();
                                 delete[] buffer;
                                 return false;
@@ -122,7 +122,7 @@ class MorningClient{
                         if(keySize <= 0){
                                 netSnake.closeSocket();
                                 return false;
-                        }
+                        }*/
 
                         serverPublicKey = "";
                         buffer = new char[keySize];
@@ -137,7 +137,7 @@ class MorningClient{
                         delete[] buffer;
 
 			// Ensure full key is received.
-			int remaining = keySize - netSnake.recvSize;
+			/*int remaining = keySize - netSnake.recvSize;
 			while(remaining > 0){
 				buffer = new char[remaining];
 				if(!netSnake.recvInetClient(buffer, remaining, 0)){
@@ -150,7 +150,7 @@ class MorningClient{
                                 	serverPublicKey += buffer[i];
 				remaining = remaining - netSnake.recvSize;
 				delete[] buffer;
-			}
+			}*/
 
 			encryptionSnake.cleanOutPublicKey();
                         encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), keySize, "");
