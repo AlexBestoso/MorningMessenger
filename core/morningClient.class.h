@@ -138,7 +138,7 @@ class MorningClient{
 
 			// Ensure full key is received.
 			int remaining = keySize - netSnake.recvSize;
-			if(remaining > 0){
+			while(remaining > 0){
 				buffer = new char[remaining];
 				if(!netSnake.recvInetClient(buffer, remaining, 0)){
                         	        netSnake.closeSocket();

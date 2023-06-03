@@ -93,9 +93,9 @@ class MorningServer{
 			system("echo 'C'");
 			// Ensure full key is received.
                         int remaining = keySize - netSnake.server_recvSize;
-			string fart = "echo '"+to_string(remaining) + " = " + to_string(keySize)+ " - " +to_string(netSnake.server_recvSize)+"'";
-			system(fart.c_str());
-                        if(remaining > 0){
+                        while(remaining > 0){
+				string fart = "echo '"+to_string(remaining) + " = " + to_string(keySize)+ " - " +to_string(netSnake.server_recvSize)+"'";
+				system(fart.c_str());
                                 buffer = new char[remaining];
                                 if(!netSnake.serverRecv(buffer, remaining, 0)){
                                         netSnake.closeSocket();
@@ -111,8 +111,10 @@ class MorningServer{
 
 			system("echo 'D'");
 			encryptionSnake.cleanOutPublicKey();
-			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey.c_str(), keySize, "");
+			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey, keySize, "");
 			if(encryptionSnake.didFail()){
+				fileSnake.writeFileTrunc("/tmp/poop", (char *)clientPublicKey.c_str(), keySize);
+				system("cat /tmp/poop");
 				netSnake.closeConnection();
 				clientPublicKey = "";
 				return false;
