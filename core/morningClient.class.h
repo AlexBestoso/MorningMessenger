@@ -116,7 +116,7 @@ class MorningClient{
 		bool recvPublicKey(){
 			size_t keySize = 1466;
                         string key = "";
-                        char *buffer;// = new char[6];
+                        char buffer[1466];// = new char[6];
                         // recveive key size
                         /*if(!netSnake.recvInetClient(buffer, 6, 0)){
                                 netSnake.closeSocket();
@@ -132,16 +132,13 @@ class MorningClient{
                         }*/
 
                         serverPublicKey = "";
-                        buffer = new char[keySize];
                         if(!netSnake.recvInetClient(buffer, keySize, 0)){
                                 netSnake.closeSocket();
-				delete[] buffer;
                                 return false;
                         }
 
                         for(int i=0; i<netSnake.recvSize; i++)
                                 serverPublicKey += buffer[i];
-                        delete[] buffer;
 
 			// Ensure full key is received.
 			/*int remaining = keySize - netSnake.recvSize;

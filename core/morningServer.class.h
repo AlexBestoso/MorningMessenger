@@ -125,7 +125,7 @@ class MorningServer{
 
 		bool sendPublicKey(void){
 			mornconf cfg = config.getConfig();
-                        size_t size = 1466;//fileSnake.getFileSize(cfg.pubkey);
+                        size_t size = fileSnake.getFileSize(cfg.pubkey);
                         /*string keySize = to_string(size);
                         if(!netSnake.serverSend((char *)keySize.c_str(), keySize.length())){
                                 netSnake.closeConnection();
@@ -138,13 +138,15 @@ class MorningServer{
                                 delete[] buffer;
                                 return false;
                         }
+			string key = "";
+                        for(int i=0; i<size; i++)
+                                key += buffer[i];
+                        delete[] buffer;
 
-                        if(!netSnake.serverSend(buffer, size)){
+                        if(!netSnake.serverSend(key.c_str(), size)){
                                 netSnake.closeConnection();
-                                delete[] buffer;
                                 return false;
                         }
-                        delete[] buffer;
                         return true;
 		}
 
