@@ -121,20 +121,39 @@ class MorningClient{
                                 netSnake.closeSocket();
                                 return false;
                         }
+			printf("Being sent key of size %ld\n", (long)keySize);
+                        serverPublicKey = "";
                         buffer = new char[keySize];
                         if(!netSnake.recvInetClient(buffer, keySize, 0)){
                                 netSnake.closeSocket();
+				delete[] buffer;
                                 return false;
                         }
 
-                        serverPublicKey = "";
                         for(int i=0; i<netSnake.recvSize; i++)
                                 serverPublicKey += buffer[i];
                         delete[] buffer;
 
+			// Ensure full key is received.
+			int remaining = keySize - netSnake.recvSize;
+			while(remaining > 0){
+				buffer = new char[remaining];
+				if(!netSnake.recvInetClient(buffer, remaining, 0)){
+                        	        netSnake.closeSocket();
+                        	        delete[] buffer;
+                        	        return false;
+                        	}
+
+				for(int i=0; i<netSnake.recvSize; i++)
+                                	serverPublicKey += buffer[i];
+				remaining = remaining - netSnake.recvSize;
+				delete[] buffer;
+			}
+
 			encryptionSnake.cleanOutPublicKey();
-                        encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), netSnake.recvSize, "");
+                        encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), keySize, "");
                         if(encryptionSnake.didFail()){
+				printf("Received key(%ld) :\n%s\n", keySize, serverPublicKey.c_str());
                                 netSnake.closeSocket();
                                 serverPublicKey = "";
                                 return false;

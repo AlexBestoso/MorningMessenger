@@ -83,8 +83,24 @@ class MorningServer{
 				clientPublicKey += buffer[i];
 			delete[] buffer;
 
+			// Ensure full key is received.
+                        int remaining = keySize - netSnake.recvSize;
+                        while(remaining > 0){
+                                buffer = new char[remaining];
+                                if(!netSnake.serverRecv(buffer, remaining, 0)){
+                                        netSnake.closeSocket();
+                                        delete[] buffer;
+                                        return false;
+                                }
+
+                                for(int i=0; i<netSnake.recvSize; i++)
+                                        clientPublicKey += buffer[i];
+                                remaining = remaining - netSnake.recvSize;
+                                delete[] buffer;
+                        }
+
 			encryptionSnake.cleanOutPublicKey();
-			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey.c_str(), netSnake.server_recvSize, "");
+			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey.c_str(), keySize, "");
 			if(encryptionSnake.didFail()){
 				netSnake.closeConnection();
 				clientPublicKey = "";
