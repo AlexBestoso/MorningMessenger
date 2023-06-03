@@ -26,6 +26,7 @@ class MorningServer{
 		int commandLevelOne(void){
 			size_t cmdSize = 64;
 			char *cmdBuff = new char[cmdSize];
+			system("echo 'recving user command'");
 			if(!netSnake.serverRecv(cmdBuff, cmdSize, 0)){
 				delete[] cmdBuff;
 				return -1;
@@ -35,14 +36,17 @@ class MorningServer{
 			for(int i=0; i<netSnake.server_recvSize; i++)
 				conv += cmdBuff[i];
 			delete[] cmdBuff;
-
+			
 			if(conv == cmd_newUser){
+				system("echo 'new user'");
 				sendOkay();
 				return 1;
 			}else if(conv == cmd_existingUser){
+				system("echo 'existing user'");
 				sendOkay();
 				return 2;
 			}
+			system("echo 'invalid command user'");
 			sendNo();
 			return -1;
 		}
@@ -310,11 +314,13 @@ class MorningServer{
 					throw MorningException(netSnake.errorMessage());
 				}
 				if(fork() == 0){
+					system("echo 'getting user command'");
 					int cmdOne = commandLevelOne();
 					if(cmdOne == -1){
 						netSnake.closeConnection();
 						exit(EXIT_FAILURE);
 					}else if(cmdOne == 1){ // Setup new user
+						system("echo 'Running key exchange'");
 						if(!keyExchange()){
 							exit(EXIT_FAILURE);
 						}
