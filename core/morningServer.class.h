@@ -60,7 +60,7 @@ class MorningServer{
 		}
 
 		bool recvPublicKey(void){
-			size_t keySize = 1464;
+			size_t keySize = 1466;
 			string key = "";
 			char *buffer;// = new char[6];
 
@@ -126,7 +126,7 @@ class MorningServer{
 
 		bool sendPublicKey(void){
 			mornconf cfg = config.getConfig();
-                        size_t size = 1464;//fileSnake.getFileSize(cfg.pubkey);
+                        size_t size = 1466;//fileSnake.getFileSize(cfg.pubkey);
                         /*string keySize = to_string(size);
                         if(!netSnake.serverSend((char *)keySize.c_str(), keySize.length())){
                                 netSnake.closeConnection();

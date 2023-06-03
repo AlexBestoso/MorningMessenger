@@ -81,7 +81,7 @@ class MorningClient{
 
 		bool sendPublicKey(){
 			mornconf cfg = config.getConfig();
-			size_t size = 1464;//fileSnake.getFileSize(cfg.pubkey);
+			size_t size = 1466;//fileSnake.getFileSize(cfg.pubkey);
 			/*string keySize = to_string(size);
 			printf("Sending key size (%ld | %s)\n", size, keySize.c_str());
 			if(!netSnake.sendInetClient((char *)keySize.c_str(), keySize.length())){
@@ -107,7 +107,7 @@ class MorningClient{
 		}
 
 		bool recvPublicKey(){
-			size_t keySize = 1464;
+			size_t keySize = 1466;
                         string key = "";
                         char *buffer;// = new char[6];
                         // recveive key size
