@@ -10,9 +10,11 @@
 
 ### Changes in this version.
 1. You can now send messages to servers.
+2. Added inbox menu
 
 ### Messages From Morning Star
-1. Version `0.3.0 alpha`
-2. I'm going to add base64 to encryption snake so that we can encrypt and store data within xml files themselves.
-3. Once communications are properly established, I will be modifying the key management to enable mutual authentication.
-4. Before I can implement a live chat, which will allow the server hoster to join chats via the forked server connection, I need to update my netsnake code to support `AF_UNIX` clients and servers. 
+1. Version `0.3.1 alpha`
+2. Building out the message management. I'll then be testing the code to see if communication through TOR works.
+3. I'm going to add base64 to encryption snake so that we can encrypt and store data within xml files themselves.
+4. Once communications are properly established, I will be modifying the key management to enable mutual authentication.
+5. Before I can implement a live chat, which will allow the server hoster to join chats via the forked server connection, I need to update my netsnake code to support `AF_UNIX` clients and servers. 

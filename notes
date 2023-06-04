@@ -19,8 +19,17 @@ to prevent manipulation of the self destruct bit.
 
 
 
-
-Before we can establish chat communications, we need a new option in the main menu that allows you to view and approve untrusted keys. 
+Inbox Menu Layout:
+	- Gather public key directories.
+	- Parse out of each directory the user alias
+	- Get message count for each user
+	- Display alias as menu option and show message count for the user.
+Selected user option:
+	- get path of each message
+	- display date of received message as menu options
+View Message
+	- Show message data
+	- provide option to delete or store message
 
 
 Server Communication Protocol: 

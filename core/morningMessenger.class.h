@@ -1,12 +1,15 @@
 class MorningMessenger{
 	private:
-		const char *verion = "0.3.0 Alpha";
+		const char *verion = "0.3.1 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
+
 		MorningMenu menu;
 		MorningClientMenu clientMenu;
 		MorningManagerMenu managerMenu;
+		MorningInboxtMenu inboxMenu;
+		
 		MorningServer server;
 		MorningClient client;
 
@@ -185,7 +188,32 @@ class MorningMessenger{
 		return true;
 	}
 
-	void quitMessenger(){
+	bool inbox(void){
+		int menuCtx = inboxMenu.getCoreContext();
+                int subCtx = inboxMenu.getSubContext();
+                if(menuCtx == MORNING_INBOX_MENU_MAIN){
+			if(inboxMenu.getShowBanner()){
+                                inboxMenu.printBanner();
+                        }
+                        inboxMenu.showMenuOptions();
+                        inboxMenu.getUserInput();
+                        int ret = inboxMenu.parseSelectedOption();
+                        if(ret == -1){
+                                io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
+                        }else{
+                                inboxMenu.setCoreContext(ret);
+                        }
+		}else if(menuCtx == MORNING_INBOX_MENU_BACK){
+                        inboxMenu.setShowBanner(true);
+                        menu.setShowBanner(true);
+                        inboxMenu.setCoreContext(MORNING_INBOX_MENU_MAIN);
+                        inboxMenu.setSubContext(0);
+                        menu.setCoreContext(MORNING_MENU_MAIN);
+                }
+		return true;
+	}
+
+	void quitMessenger(void){
 		if(server.lockHeld()){
 			server.killProcess();
 		}

@@ -98,11 +98,6 @@ class MorningServer{
 		bool sendPublicKey(void){
 			mornconf cfg = config.getConfig();
                         size_t size = fileSnake.getFileSize(cfg.pubkey);
-                        /*string keySize = to_string(size);
-                        if(!netSnake.serverSend((char *)keySize.c_str(), keySize.length())){
-                                netSnake.closeConnection();
-                                return false;
-                        }*/
 
                         char *buffer = new char[size];
                         if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
