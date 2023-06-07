@@ -19,20 +19,29 @@ to prevent manipulation of the self destruct bit.
 
 
 
-
-Before we can establish chat communications, we need a new option in the main menu that allows you to view and approve untrusted keys. 
+Inbox Menu Layout:
+	- Gather public key directories.
+	- Parse out of each directory the user alias
+	- Get message count for each user
+	- Display alias as menu option and show message count for the user.
+Selected user option:
+	- get path of each message
+	- display date of received message as menu options
+View Message
+	- Show message data
+	- provide option to save message, they will delete on default.
 
 
 Server Communication Protocol: 
 
 if already here
-	wait for client's public key and take hash of it upon recipt.
-	if key isn't trysted, close connection and exit.
+	+wait for client's public key and take hash of it upon recipt.
+	+if key isn't trysted, close connection and exit.
 	send client server public key. (Client side will also be able to validate server key)
-	if leave a message
-		wait for message
-		tell user if recpt was successful or not.
-		close connection.
+	+if leave a message
+	+	wait for message
+	+	tell user if recpt was successful or not.
+	+	close connection.
 	else if stream chat
 		server generates two AES CTR keys and IVs.
 		server sends key pair to client.

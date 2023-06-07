@@ -44,6 +44,18 @@ class MorningKeyManager{
 		return true;
 	}
 
+	bool isKeyTrusted(string pubkey){
+		size_t pubkeySize = pubkey.length();
+                if(pubkeySize > 1024)
+                        pubkeySize = 1024;
+		string keyHash = encryptionSnake.sha256(pubkey, pubkeySize, false);
+		string dirLoc = config.getTrustedKeysLoc() + "/" +keyHash;
+		if(fileSnake.fileExists(dirLoc) && fileSnake.getFileType(dirLoc) == FILE_SNAKE_DIR){
+			return true;
+		}
+		return false;
+	}
+
 	bool approveUntrustedKey(int id){
 		int keyCount = untrustedKeyCount();
                 if(keyCount <= 0 || id >= keyCount)

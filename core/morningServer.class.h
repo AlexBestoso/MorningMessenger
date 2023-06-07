@@ -9,6 +9,7 @@ class MorningServer{
 		MorningAlgorithms algorithm;
 		MorningConfig config;
 		MorningKeyManager keyManager;
+		MorningMessage morningMessage;
 
 		string cmd_newUser = "a235210cd5476dfa0a045d60244e5cc6aebbc21e406fba344ce5d154b6337f5b";
 		string cmd_existingUser = "f0773273589a87e67e71f402c08c93b464ff307846de3e7567dc1e423d65baf9";
@@ -34,7 +35,7 @@ class MorningServer{
 			for(int i=0; i<netSnake.server_recvSize; i++)
 				conv += cmdBuff[i];
 			delete[] cmdBuff;
-
+			
 			if(conv == cmd_newUser){
 				sendOkay();
 				return 1;
@@ -55,23 +56,11 @@ class MorningServer{
 		}
 
 		bool recvPublicKey(void){
-			size_t keySize = 0;
+			size_t keySize = 1466;
 			string key = "";
-			char *buffer = new char[6];
-			// recveive key size
-			if(!netSnake.serverRecv(buffer, 6, 0)){
-				netSnake.closeConnection();
-				delete[] buffer;
-				return false;
-			}
+			char buffer[1466];// = new char[6];
 
-			keySize = atoi(buffer);
-			delete[] buffer;
-			if(keySize <= 0){
-				netSnake.closeConnection();
-				return false;
-			}
-			buffer = new char[keySize];
+			// recveive key size
 			if(!netSnake.serverRecv(buffer, keySize, 0)){
 				netSnake.closeConnection();
 				return false;
@@ -80,11 +69,25 @@ class MorningServer{
 			clientPublicKey = "";
 			for(int i=0; i<netSnake.server_recvSize; i++)
 				clientPublicKey += buffer[i];
-			delete[] buffer;
+
+			// Ensure full key is received.
+                        int remaining = keySize - netSnake.server_recvSize;
+                        if(remaining > 0 && netSnake.server_recvSize > 0){
+				memset(buffer, 0x00, keySize);
+                                if(!netSnake.serverRecv(buffer, remaining, 0)){
+                                        netSnake.closeSocket();
+                                        return false;
+                                }
+
+                                for(int i=0; i<netSnake.server_recvSize; i++)
+                                        clientPublicKey += buffer[i];
+                                remaining = remaining - netSnake.server_recvSize;
+                        }
 
 			encryptionSnake.cleanOutPublicKey();
-			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey.c_str(), netSnake.server_recvSize, "");
+			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey, clientPublicKey.length(), "");
 			if(encryptionSnake.didFail()){
+				encryptionSnake.printError();
 				netSnake.closeConnection();
 				clientPublicKey = "";
 				return false;
@@ -95,11 +98,6 @@ class MorningServer{
 		bool sendPublicKey(void){
 			mornconf cfg = config.getConfig();
                         size_t size = fileSnake.getFileSize(cfg.pubkey);
-                        string keySize = to_string(size);
-                        if(!netSnake.serverSend((char *)keySize.c_str(), keySize.length())){
-                                netSnake.closeConnection();
-                                return false;
-                        }
 
                         char *buffer = new char[size];
                         if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
@@ -107,13 +105,15 @@ class MorningServer{
                                 delete[] buffer;
                                 return false;
                         }
+			string key = "";
+                        for(int i=0; i<size; i++)
+                                key += buffer[i];
+                        delete[] buffer;
 
-                        if(!netSnake.serverSend(buffer, size)){
+                        if(!netSnake.serverSend(key.c_str(), size)){
                                 netSnake.closeConnection();
-                                delete[] buffer;
                                 return false;
                         }
-                        delete[] buffer;
                         return true;
 		}
 
@@ -336,7 +336,40 @@ class MorningServer{
 						if(!keyExchange()){
                                                         exit(EXIT_FAILURE);
                                                 }
+						
+						if(!keyManager.isKeyTrusted(clientPublicKey)){
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}
 
+						mornmsg clientMessage;
+						clientMessage.clientHost = netSnake.getClientIp();
+						clientMessage.messageDate = morningMessage.getCurrentDateTime();
+						clientMessage.messageBody = ctrRecv();
+						if(clientMessage.messageBody == ""){
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}
+							
+						try{
+						morningMessage.setConfig(config);
+						if(!morningMessage.storeClientMessage(clientMessage, clientPublicKey)){
+							string resp = "[E] Failed to store your message.";
+							ctrSend(resp, resp.length());
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}else{
+							string resp = "[+] Succefully received your message.";
+							ctrSend(resp, resp.length());
+							netSnake.closeConnection();
+							exit(EXIT_SUCCESS);
+						}}catch(exception &e){
+							string resp = e.what();
+							resp = "[E]" + resp;	
+                                                        ctrSend(resp, resp.length());
+                                                        netSnake.closeConnection();
+                                                        exit(EXIT_FAILURE);
+						}
 					}
 					netSnake.closeConnection();
 					exit(EXIT_SUCCESS);

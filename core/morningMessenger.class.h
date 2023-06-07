@@ -1,12 +1,15 @@
 class MorningMessenger{
 	private:
-		const char *verion = "0.2.2 Alpha";
+		const char *verion = "0.3.3 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
+
 		MorningMenu menu;
 		MorningClientMenu clientMenu;
 		MorningManagerMenu managerMenu;
+		MorningInboxtMenu inboxMenu;
+		
 		MorningServer server;
 		MorningClient client;
 
@@ -178,14 +181,71 @@ class MorningMessenger{
 		}else if(menuCtx == MORNING_MANAGER_MENU_UNTRUSTED && subCtx > 0){
 			return managerMenu.manageUntrustedKey();
 		}else if(menuCtx == MORNING_MANAGER_MENU_TRUSTED){
-		
+			throw MorningException("Trusted key management has not been programmed yet");
 		}else{
                         throw MorningException("Illegal manager menu context. Option ID %d\n", menuCtx);
                 }
 		return true;
 	}
 
-	void quitMessenger(){
+	bool inbox(void){
+		int menuCtx = inboxMenu.getCoreContext();
+                int subCtx = inboxMenu.getSubContext();
+                if(menuCtx == MORNING_INBOX_MENU_MAIN){
+			if(inboxMenu.getShowBanner()){
+                                inboxMenu.printBanner();
+                        }
+                        inboxMenu.showMenuOptions();
+                        inboxMenu.getUserInput();
+                        int ret = inboxMenu.parseSelectedOption();
+                        if(ret == -1){
+                                io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
+                        }else{
+                                inboxMenu.setCoreContext(ret);
+                        }
+		}else if(menuCtx == MORNING_INBOX_MENU_BACK){
+                        inboxMenu.setShowBanner(true);
+                        menu.setShowBanner(true);
+                        inboxMenu.setCoreContext(MORNING_INBOX_MENU_MAIN);
+                        inboxMenu.setSubContext(0);
+                        menu.setCoreContext(MORNING_MENU_MAIN);
+                }else if(subCtx == 0){
+			inboxMenu.showSubMenuOptions();
+                        inboxMenu.getUserInput();
+			int ret = inboxMenu.parseSelectedSubOption();
+			if(ret == -1){
+                                io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
+                        }else if(ret == 1){
+				inboxMenu.setCoreContext(MORNING_INBOX_MENU_MAIN);
+			}else{
+                                inboxMenu.setSubContext(ret);
+                        }
+		}else if(subCtx > 1){
+			inboxMenu.showMessage();
+			inboxMenu.getUserInput();
+			int ret = inboxMenu.parseSelectedViewOption();
+			if(ret == -1){
+                                io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
+                        }else if(ret == 3){
+                                inboxMenu.setSubContext(0);
+			}else if(ret == 1){
+				// save message
+				if(inboxMenu.saveMessage())
+					io.out(MORNING_IO_SUCCESS, "Message saved.\n");
+                                inboxMenu.setSubContext(0);
+			}else if(ret == 2){
+				// delete message
+				if(inboxMenu.deleteMessage())
+					io.out(MORNING_IO_SUCCESS, "Message delete.\n");
+                                inboxMenu.setSubContext(0);
+			}
+		}else{
+			throw MorningException("Illegal inbox menu context.");
+		}
+		return true;
+	}
+
+	void quitMessenger(void){
 		if(server.lockHeld()){
 			server.killProcess();
 		}

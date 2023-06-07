@@ -10,18 +10,25 @@
 #include <stdarg.h>
 #include <iostream>
 #include <signal.h>
+#include <time.h>
 using namespace std;
 #include "./snakeSuite/snakeSuite.h"
 #include "./core/morningIO.class.h"
 #include "./core/morningException.class.h"
 #include "./core/morningAlgorithms.class.h"
+
 #include "./core/morningConfig.class.h"
 #include "./core/morningKeyManager.class.h"
+#include "./core/morningMessage.class.h"
+
 #include "./core/morningServer.class.h"
 #include "./core/morningClient.class.h"
+
 #include "./core/morningMenu.class.h"
 #include "./core/morningClientMenu.class.h"
 #include "./core/morningManagerMenu.class.h"
+#include "./core/morningInboxMenu.class.h"
+
 #include "./core/morningMessenger.class.h"
 
 int main(void){
@@ -56,6 +63,9 @@ int main(void){
 					break;
 				case MORNING_MENU_MANAGE:
 					MM.keyManager();
+					break;
+				case MORNING_MENU_INBOX:
+					MM.inbox();
 					break;
 				case MORNING_MENU_QUIT:
 					running = false;

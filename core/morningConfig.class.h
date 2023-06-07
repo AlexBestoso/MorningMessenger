@@ -21,9 +21,6 @@ class MorningConfig{
 		
 		mornconf config;
 
-		string username = "";
-		string password = "";
-		string pin = "";
 
 		const char *storageLocation = "./MMS_Storage";
 		const char *serverLockFile = "server.lock";
@@ -343,6 +340,10 @@ class MorningConfig{
                 }
 
 	public:
+		string username = "";
+		string password = "";
+		string pin = "";
+
 		mornconf getConfig(void){
 			return config;
 		}
@@ -471,13 +472,14 @@ class MorningConfig{
 			return true;
 		}
 
-		void fetchPublicKey(EncryptionSnake encryptionSnake){
+		EncryptionSnake fetchPublicKey(EncryptionSnake encryptionSnake){
 			encryptionSnake.fetchRsaKeyFromFile(false, false, false, config.pubkey, "");
                         if(encryptionSnake.didFail()){
                                 encryptionSnake.cleanOutPublicKey();
                                 encryptionSnake.printError();
                                 throw MorningException("Failed to load public key.");
                         }
+			return encryptionSnake;
 		}
 
 		EncryptionSnake fetchPrivateKey(EncryptionSnake encryptionSnake){

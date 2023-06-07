@@ -166,7 +166,7 @@ class EncryptionSnake{
 		bool failed = false;
 		size_t resultLen = 0;
 
-		string binToStr(string val){
+		string binToStr(string val, size_t len){
 			const char convRay[16] = {
 				'0', '1', '2', '3', '4', '5', '6',
 				'7', '8', '9', 'A', 'B', 'C', 'D', 
@@ -174,7 +174,7 @@ class EncryptionSnake{
 			};
 			
 			string ret = "";
-        	        for(int i=0; i<val.length(); i++){
+        	        for(int i=0; i<len; i++){
 				char b = val[i];
 				int indexA = (b>>4)&0xf;
 				int indexB = b&0xf;
@@ -794,12 +794,15 @@ class EncryptionSnake{
 	                        return "";
 			}
 
-			digest = (const char *)outdigest;
+			resultLen = len;
+//			digest = (const char *)outdigest;
+			for(int i=0; i<len; i++)
+				digest += outdigest[i];
 			OPENSSL_free(outdigest);
 			freeSha256();
 			
 			if(!binaryOutput){
-				return binToStr(digest);
+				return binToStr(digest, len);
 			}
 			return digest;
 		}	

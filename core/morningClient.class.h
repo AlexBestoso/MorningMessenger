@@ -60,7 +60,7 @@ class MorningClient{
 		int getLevelOne(void){
 			while(1){
 				for(int i=0; i<levelOneCommandCount; i++){
-					printf("%d) %s\n", i+1, levelOneCommands[i].c_str());
+					io.outf(MORNING_IO_NONE, "%d) %s\n", i+1, levelOneCommands[i].c_str());
 				}
 				string input = io.inString(MORNING_IO_INPUT, " > ");
 				int option = parseSelectedOption(input, levelOneCommands, levelOneCommandCount);
@@ -82,34 +82,41 @@ class MorningClient{
 		bool sendPublicKey(){
 			mornconf cfg = config.getConfig();
 			size_t size = fileSnake.getFileSize(cfg.pubkey);
-			string keySize = to_string(size);
+			/*string keySize = to_string(size);
 			if(!netSnake.sendInetClient((char *)keySize.c_str(), keySize.length())){
 				netSnake.closeSocket();
 				return false;
-			}
+			}*/
 
 			char *buffer = new char[size];
+			memset(buffer, 0x00, size);
 			if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
 				netSnake.closeSocket();
 				delete[] buffer;
 				return false;
 			}
 
-			if(!netSnake.sendInetClient(buffer, size)){
+			string key = "";
+			for(int i=0; i<size; i++)
+				key += buffer[i];
+			delete[] buffer;
+
+			if(!netSnake.sendInetClient(key.c_str(), size)){
 				netSnake.closeSocket();
-				delete[] buffer;
 				return false;
 			}
-			delete[] buffer;
+			if(netSnake.sendSize != size){
+				throw MorningException("Failed to send the server your entire key.\n");
+			}
 			return true;
 		}
 
 		bool recvPublicKey(){
-			size_t keySize = 0;
+			size_t keySize = 1466;
                         string key = "";
-                        char *buffer = new char[6];
+                        char buffer[1466];// = new char[6];
                         // recveive key size
-                        if(!netSnake.recvInetClient(buffer, 6, 0)){
+                        /*if(!netSnake.recvInetClient(buffer, 6, 0)){
                                 netSnake.closeSocket();
                                 delete[] buffer;
                                 return false;
@@ -120,20 +127,33 @@ class MorningClient{
                         if(keySize <= 0){
                                 netSnake.closeSocket();
                                 return false;
-                        }
-                        buffer = new char[keySize];
+                        }*/
+
+                        serverPublicKey = "";
                         if(!netSnake.recvInetClient(buffer, keySize, 0)){
                                 netSnake.closeSocket();
                                 return false;
                         }
 
-                        serverPublicKey = "";
                         for(int i=0; i<netSnake.recvSize; i++)
                                 serverPublicKey += buffer[i];
-                        delete[] buffer;
+
+			// Ensure full key is received.
+			int remaining = keySize - netSnake.recvSize;
+			if(remaining > 0){
+				memset(buffer, 0x00, keySize);
+				if(!netSnake.recvInetClient(buffer, remaining, 0)){
+                        	        netSnake.closeSocket();
+                        	        return false;
+                        	}
+
+				for(int i=0; i<netSnake.recvSize; i++)
+                                	serverPublicKey += buffer[i];
+				remaining = remaining - netSnake.recvSize;
+			}
 
 			encryptionSnake.cleanOutPublicKey();
-                        encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), netSnake.recvSize, "");
+                        encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), serverPublicKey.length(), "");
                         if(encryptionSnake.didFail()){
                                 netSnake.closeSocket();
                                 serverPublicKey = "";
@@ -302,7 +322,6 @@ class MorningClient{
 			
 			int levelOne = getLevelOne();
 			if(levelOne == -1){
-				netSnake.closeSocket();
 				return false;
 			}else if(levelOne == 1){ // Access Request Protocol
 				if(!netSnake.createClient(ip, port, 0)){
@@ -374,8 +393,23 @@ class MorningClient{
                                         return false;
                                 }
 
-				netSnake.closeSocket();
+				string outMsg = io.inWithSpace(MORNING_IO_NONE, "Enter your message > ");
+				if(!ctrSend(outMsg, outMsg.length())){
+					io.out(MORNING_IO_ERROR, "Failed to send message\n");
+					netSnake.closeSocket();
+					return false;
+				}
 
+				string inMsg = ctrRecv();
+				if(inMsg == ""){
+					io.out(MORNING_IO_ERROR, "Failed to receive confirmation response from server\n");
+					netSnake.closeSocket();
+					return false;
+				}
+
+				io.outf(MORNING_IO_NONE, "%s\n", inMsg.c_str());
+				netSnake.closeSocket();
+				return true;
 			}else if(levelOne == 3){
 				return true;
 			}else{
