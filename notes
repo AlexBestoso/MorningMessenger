@@ -29,7 +29,7 @@ Selected user option:
 	- display date of received message as menu options
 View Message
 	- Show message data
-	- provide option to delete or store message
+	- provide option to save message, they will delete on default.
 
 
 Server Communication Protocol: 

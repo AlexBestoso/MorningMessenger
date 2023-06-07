@@ -90,6 +90,31 @@ class MorningMessage{
 		return ret;
 	}
 
+	mornmsg getMessageFromFile(string path){
+		mornmsg ret;
+		string previous = "";
+		if(!xmlSnake.openFileReader(path)){
+			return ret;
+		}
+		while(xmlSnake.readLineReader()){
+			if(xmlSnake.readResult.name == "#text" && previous == "clientHost"){
+				ret.clientHost = xmlSnake.readResult.value;
+			}
+			if(xmlSnake.readResult.name == "#text" && previous == "messageDate"){
+				ret.messageDate = xmlSnake.readResult.value;
+			}
+			if(xmlSnake.readResult.name == "#text" && previous == "messageBody"){
+				ret.messageBody = xmlSnake.readResult.value;
+			}
+			if(xmlSnake.readResult.name == "#text" && previous == "messageLength"){
+				ret.messageLength = xmlSnake.readResult.value;
+			}
+			previous = xmlSnake.readResult.name;
+		}
+		xmlSnake.closeReader();
+		return ret;
+	}
+
 	bool storeClientMessage(mornmsg msg, string pubkey){
 		size_t pubkeySize = pubkey.length();
                 if(pubkeySize > 1024)
