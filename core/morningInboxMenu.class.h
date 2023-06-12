@@ -123,6 +123,11 @@ class MorningInboxtMenu : public MorningMenu{
 
 	public:
 
+		void setConfig(MorningConfig config){
+			this->config = config;
+			morningMessage.setConfig(config);
+		}
+
 		virtual void printBanner(void){
         	        string banner = "=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=\n";
 			banner += "      _ _|         |                  \n";

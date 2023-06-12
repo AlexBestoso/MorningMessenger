@@ -191,6 +191,7 @@ class MorningMessenger{
 	bool inbox(void){
 		int menuCtx = inboxMenu.getCoreContext();
                 int subCtx = inboxMenu.getSubContext();
+		inboxMenu.setConfig(config);
                 if(menuCtx == MORNING_INBOX_MENU_MAIN){
 			if(inboxMenu.getShowBanner()){
                                 inboxMenu.printBanner();
