@@ -58,6 +58,55 @@ class MorningMessage{
                         decryptionResultLen = encryptionSnake.getResultLen();	
 			return ret;
 		}
+
+		string encryptStoredMessage(string target, size_t targetSize){
+			string ret = "";
+			
+			string _key = algorithm.deriveConfigEncryptionKey(config.username, config.password);
+			unsigned char key[32];
+			for(int i=0; i<32; i++)
+				key[i] = _key[i];
+
+			string _iv = algorithm.deriveConfigEncryptionIv(config.username, config.password);
+			unsigned char iv[16];
+			for(int i=0; i<16; i++)
+				iv[i] = _iv[i];
+
+			ret = encryptionSnake.aes256cbc(true, target, targetSize, key, iv);
+			if(encryptionSnake.didFail())
+				throw new MorningException("Failed to encrypt recived message for storage.");
+			size_t eLen = encryptionSnake.getResultLen();
+
+			ret = encryptionSnake.base64(true, ret, eLen);
+			if(encryptionSnake.didFail())
+                                throw new MorningException("Failed to encode recived message for storage.");
+
+			return ret;
+		}
+
+		string decryptStoredMessage(string target, size_t targetSize){
+			string ret = "";
+			ret = encryptionSnake.base64(false, target, targetSize);
+			if(encryptionSnake.didFail())
+                                throw new MorningException("Failed to decode recived message from storage.");
+
+			string _key = algorithm.deriveConfigEncryptionKey(config.username, config.password);
+                        unsigned char key[32];
+                        for(int i=0; i<32; i++)
+                                key[i] = _key[i];
+
+                        string _iv = algorithm.deriveConfigEncryptionIv(config.username, config.password);
+                        unsigned char iv[16];
+                        for(int i=0; i<16; i++)
+                                iv[i] = _iv[i];
+
+			size_t eLen = encryptionSnake.getResultLen();
+			ret = encryptionSnake.aes256cbc(false, ret, eLen, key, iv);
+                        if(encryptionSnake.didFail())
+                                throw new MorningException("Failed to encrypt recived message for storage.");
+
+			return ret;
+		}
 	public:
 	
 	void setConfig(MorningConfig conf){
@@ -104,7 +153,7 @@ class MorningMessage{
 				ret.messageDate = xmlSnake.readResult.value;
 			}
 			if(xmlSnake.readResult.name == "#text" && previous == "messageBody"){
-				ret.messageBody = xmlSnake.readResult.value;
+				ret.messageBody = decryptStoredMessage(xmlSnake.readResult.value, xmlSnake.readResult.value.length());
 			}
 			if(xmlSnake.readResult.name == "#text" && previous == "messageLength"){
 				ret.messageLength = xmlSnake.readResult.value;
@@ -135,8 +184,8 @@ class MorningMessage{
 		string msgCountStr = to_string(getMessageCount()+1);
 		string fileName = storageLocation + "/" + msgCountStr + "_" + dateHash;
 
-		//msg.messageBody = encryptMessage(msg.messageBody, msg.messageBody.length());
-		msg.messageLength = to_string(encryptionResultLen); 
+		msg.messageBody = encryptStoredMessage(msg.messageBody, msg.messageBody.length());
+		msg.messageLength = to_string(encryptionSnake.getResultLen()); 
 		
 		// Store data in xml file
 		if(!xmlSnake.openFileWriter(fileName))

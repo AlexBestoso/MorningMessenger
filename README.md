@@ -10,15 +10,12 @@ You can now view and share messages with other people using this software, assum
 1. Run the command `make uninstall` and all processes, folders, and users created by the installer will be removed. You can optionally remove the installed dependancies if you desire; but by default this is skipped.
 
 ### Changes in this version.
-1. You can now send messages to servers.
-2. Added inbox menu
-3. You can now view, save, and delete messages that you receive from people.
+1. Received Messages are now encrypted before being stored.
 
 ### Messages From Morning Star
-1. Version `0.4.0 alpha`
+1. Version `0.4.1 alpha`
 2. I'll be looking into creating a notification system so that you don't need to manually refresh the message cache.
 3. I'll also be looking into isolating the server code into a seperate binary so that it can be run as a service on system startup.
 4. Will test TOR compatibility soon..
-5. Base64 was added to encryption snake, now I need to add encryption for the data within xml message files themselves.
 6. Once communications are properly established, I will be modifying the key management to enable mutual authentication.
-7. Before I can implement a live chat, which will allow the server hoster to join chats via the forked server connection, I need to update my netsnake code to support `AF_UNIX` clients and servers. 
+7. Need to implement the live chat feature now that AF UNIX support was added.
