@@ -72,12 +72,13 @@ class MorningMessage{
 			for(int i=0; i<16; i++)
 				iv[i] = _iv[i];
 
-			ret = encryptionSnake.aes256cbc(true, target, targetSize, key, iv);
+			/*ret = encryptionSnake.aes256cbc(true, target, targetSize, key, iv);
 			if(encryptionSnake.didFail())
 				throw new MorningException("Failed to encrypt recived message for storage.");
 			size_t eLen = encryptionSnake.getResultLen();
-
-			ret = encryptionSnake.base64(true, ret, eLen);
+*/
+			//ret = encryptionSnake.base64(true, ret, eLen);
+			ret = encryptionSnake.base64(true, target, targetSize);
 			if(encryptionSnake.didFail())
                                 throw new MorningException("Failed to encode recived message for storage.");
 
@@ -100,11 +101,11 @@ class MorningMessage{
                         for(int i=0; i<16; i++)
                                 iv[i] = _iv[i];
 
-			size_t eLen = encryptionSnake.getResultLen();
+			/*size_t eLen = encryptionSnake.getResultLen();
 			ret = encryptionSnake.aes256cbc(false, ret, eLen, key, iv);
                         if(encryptionSnake.didFail())
                                 throw new MorningException("Failed to encrypt recived message for storage.");
-
+*/
 			return ret;
 		}
 	public:
