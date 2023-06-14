@@ -13,6 +13,7 @@ You can now view and share messages with other people using this software, assum
 1. Received Messages are now encrypted before being stored.
 2. Refactored the locations of all the header files.
 3. Refactored access requests, added "findFriends" menu option.
+4. You can now update and view the config file directly in the application.
 
 ### Messages From Morning Star
 1. Version `0.4.2 alpha` (Messaging temporarally disabled.)

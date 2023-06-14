@@ -32,6 +32,7 @@ using namespace std;
 #include "./core/cliMenu/morningClientMenu.class.h"
 #include "./core/cliMenu/morningManagerMenu.class.h"
 #include "./core/cliMenu/morningInboxMenu.class.h"
+#include "./core/cliMenu/morningConfigMenu.class.h"
 
 #include "./core/morningMessenger.class.h"
 
@@ -53,11 +54,6 @@ int main(void){
 					break;
 				case MORNING_MENU_FINDFRIENDS:
 					MM.findFriends();
-					/*if(!MM.connectToServer()){
-					
-					}else{
-					
-					}*/
 					break;
 				case MORNING_MENU_CONFIG:
 					if(!MM.manageConfigFile()){

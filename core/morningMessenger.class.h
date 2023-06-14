@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *version = "0.4.2 Alpha";
+		const char *version = "0.4.3 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -9,6 +9,7 @@ class MorningMessenger{
 		MorningClientMenu clientMenu;
 		MorningManagerMenu managerMenu;
 		MorningInboxtMenu inboxMenu;
+		MorningConfigMenu configMenu;
 		
 		MorningServer server;
 		MorningClient client;
@@ -161,9 +162,17 @@ class MorningMessenger{
 	}
 
 	bool manageConfigFile(void){
-		printf("Debug : In manage config file.\n");	
-		menu.setCoreContext(MORNING_MENU_MAIN);
-		return false;
+		if(configMenu.getCoreContext() == MORNING_CONFIG_MENU_BACK){
+			config.loadConfig();
+			configMenu.setShowBanner(true);
+                        menu.setShowBanner(true);
+                        configMenu.setCoreContext(MORNING_CONFIG_MENU_MAIN);
+                        configMenu.setSubContext(0);
+                        menu.setCoreContext(MORNING_MENU_MAIN);
+			return true;
+		}
+		
+		return configMenu.runMenu(config, encryptionSnake);
 	}
 	
 	bool keyManager(void){
