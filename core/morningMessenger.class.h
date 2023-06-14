@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *verion = "0.4.1 Alpha";
+		const char *version = "0.4.2 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -107,7 +107,23 @@ class MorningMessenger{
 		return true;
 	}
 	
-	bool connectToServer(void){
+	bool findFriends(void){
+		menu.setCoreContext(MORNING_MENU_MAIN);
+		client.setConfig(config);
+		client.setEncryptionSnake(encryptionSnake);
+		io.out(MORNING_IO_GENERAL, "Enter the host name / IP address and the port number of the server you want to request access to.\n");
+		string ip = io.inString(MORNING_IO_INPUT, "Enter Host Name > ");
+                int port = atoi(io.inString(MORNING_IO_INPUT, "Enter Port Number (Default : 21345) > ").c_str());
+		if(!client.requestAccess(ip, port)){
+			io.out(MORNING_IO_ERROR, "The server failed to store your approval request.\n");
+                	return false;
+		}else{
+			io.out(MORNING_IO_SUCCESS, "Your message has been received and is awaiting approval.\n");
+                        return true;
+		}
+	}
+
+	__attribute__((deprecated("connecToServer is getting replaced."))) bool connectToServer(void){
 		int menuCtx = clientMenu.getCoreContext();
 		if(menuCtx == MORNING_CLIENT_MENU_MAIN){
 			if(clientMenu.getShowBanner()){
@@ -252,20 +268,8 @@ class MorningMessenger{
 		}
 	}
 
-	int runMainMenu(){
-		if(menu.getShowBanner()){
-			menu.printBanner();
-		}
-		menu.info();
-		menu.showMenuOptions();
-		menu.getUserInput();
-		int ret = menu.parseSelectedOption();
-		if(ret == -1){
-			io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
-		}else{
-			menu.setCoreContext(ret);
-		}
-		return menu.getCoreContext();
+	bool runMainMenu(){
+		return menu.runMenu(version);
 	}
 
 	void authenticateMessenger(void){

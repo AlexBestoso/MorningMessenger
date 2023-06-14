@@ -51,12 +51,13 @@ int main(void){
 					
 					}
 					break;
-				case MORNING_MENU_CONNECT:
-					if(!MM.connectToServer()){
+				case MORNING_MENU_FINDFRIENDS:
+					MM.findFriends();
+					/*if(!MM.connectToServer()){
 					
 					}else{
 					
-					}
+					}*/
 					break;
 				case MORNING_MENU_CONFIG:
 					if(!MM.manageConfigFile()){
