@@ -12,22 +12,26 @@
 #include <signal.h>
 #include <time.h>
 using namespace std;
-#include "./snakeSuite/snakeSuite.h"
-#include "./core/morningIO.class.h"
-#include "./core/morningException.class.h"
-#include "./core/morningAlgorithms.class.h"
+#include "./core/snakeSuite/snakeSuite.h"
 
-#include "./core/morningConfig.class.h"
-#include "./core/morningKeyManager.class.h"
-#include "./core/morningMessage.class.h"
+#include "./core/io/morningIO.class.h"
 
-#include "./core/morningServer.class.h"
-#include "./core/morningClient.class.h"
+#include "./core/error/morningException.class.h"
 
-#include "./core/morningMenu.class.h"
-#include "./core/morningClientMenu.class.h"
-#include "./core/morningManagerMenu.class.h"
-#include "./core/morningInboxMenu.class.h"
+#include "./core/algo/morningAlgorithms.class.h"
+
+#include "./core/config/morningConfig.class.h"
+
+#include "./core/managers/morningKeyManager.class.h"
+#include "./core/managers/morningMessage.class.h"
+
+#include "./core/network/morningServer.class.h"
+#include "./core/network/morningClient.class.h"
+
+#include "./core/cliMenu/morningMenu.class.h"
+#include "./core/cliMenu/morningClientMenu.class.h"
+#include "./core/cliMenu/morningManagerMenu.class.h"
+#include "./core/cliMenu/morningInboxMenu.class.h"
 
 #include "./core/morningMessenger.class.h"
 

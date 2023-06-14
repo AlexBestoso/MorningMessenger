@@ -11,11 +11,15 @@ You can now view and share messages with other people using this software, assum
 
 ### Changes in this version.
 1. Received Messages are now encrypted before being stored.
+2. Refactored the locations of all the header files.
 
 ### Messages From Morning Star
 1. Version `0.4.1 alpha`
 2. I'll be looking into creating a notification system so that you don't need to manually refresh the message cache.
 3. I'll also be looking into isolating the server code into a seperate binary so that it can be run as a service on system startup.
 4. Will test TOR compatibility soon..
-6. Once communications are properly established, I will be modifying the key management to enable mutual authentication.
+6. Need to restructure the system to make messaging trusted keys easier / seperate request and message code.
 7. Need to implement the live chat feature now that AF UNIX support was added.
+8. Add mutual authentication.
+9. need to add system for managing and revoking trusted keys.
+10. Implement a gui ;)
