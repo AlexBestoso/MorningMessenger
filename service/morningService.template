@@ -1,0 +1,14 @@
+[Unit] 
+Description=Morning Messenger Server
+
+[Service] 
+Type=forking
+WorkingDirectory=
+ExecStart=/usr/bin/bash /etc/init.d/morningService start
+ExecStop=/usr/bin/bash /etc/init.d/morningService stop
+KillMode=mixed
+PrivateTmp=true
+Restart=on-abort
+
+[Install] 
+WantedBy=multi-user.target
