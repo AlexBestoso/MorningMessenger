@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *version = "0.4.3 Alpha";
+		const char *version = "0.4.4 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;

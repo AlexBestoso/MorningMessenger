@@ -1,6 +1,6 @@
 # MorningMessenger
 <p>
-Version `0.4.2 alpha` (Messaging temporarally disabled.)<br>
+Version `0.4.4 alpha` (Messaging temporarally disabled.)<br>
 This commandline application allows you to send p2p encrypted messages using RSA and AES-256-CTR.
 </p>
 
@@ -27,3 +27,6 @@ This commandline application allows you to send p2p encrypted messages using RSA
 6. Add mutual authentication.
 7. need to add system for managing and revoking trusted keys.
 8. Implement a gui ;)
+
+### More super duper important information
+I'm updating the code to use MySQL. This may take me a couple of moments to build out, but once it is, it will be much easier to manage the daemon service concurrently.

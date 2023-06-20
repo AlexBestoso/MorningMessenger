@@ -1,0 +1,6 @@
+class MorningService{
+	private:
+
+	public:
+	
+}

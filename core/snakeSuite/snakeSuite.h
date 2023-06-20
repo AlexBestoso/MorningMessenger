@@ -2,3 +2,4 @@
 #include "./netsnake.class.h"
 #include "./xmlSnake.class.h"
 #include "./fileSnake.class.h"
+#include "./sqlSnake.class.h"

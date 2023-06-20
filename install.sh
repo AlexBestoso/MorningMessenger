@@ -24,6 +24,17 @@ else
 	echo "[+] Successfully installed libxm2-dev"
 fi
 
+dpkg -l libmysql++-dev > /dev/null
+if [ "$?" == "0" ]; then
+	echo "[+] libmysql++-dev found!"
+else
+	echo "[-] libmysql++-dev not found! Attempting to install."
+	sudo apt-get install libmysql++-dev -y
+	if [ "$?" == "1"];
+		echo "[ERROR] Failed to install libmysql++-dev. Aborting"
+		exit 1
+	fi
+
 dpkg -l libssl-dev >/dev/null
 if [ "$?" == "0" ]; then
         echo "[+] libssl-dev found!"

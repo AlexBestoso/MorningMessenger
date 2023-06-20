@@ -17,6 +17,8 @@ PATH="/var/morningService"
 PID="${PATH}/morningservice.pid"
 
 do_start(){
+	echo "Enter username > "
+	read user
 	sudo -u MorningNoLogin start-stop-daemon --start --background -m --oknodo --pidfile "${PID}" --exec "${PATH}/${DAEMON}"
 }
 

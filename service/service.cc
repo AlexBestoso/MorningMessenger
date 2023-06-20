@@ -37,10 +37,15 @@ using namespace std;
 
 #include "../core/morningMessenger.class.h"
 
+#include "./serviceCore/morningService.class.h"
+
 int main(int argc, char *argv[]){
-	while(1){
-		printf("hello\n");
-		sleep(3);
+	try{
+		MorningService ms;
+			
+	}catch(exception &e){
+		MroningIO io;
+		io.outf(MORNING_IO_ERROR, "in main - %s\n", e.what());
 	}
 	exit(EXIT_SUCCESS);
 }
