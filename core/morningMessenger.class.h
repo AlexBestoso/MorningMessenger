@@ -1,9 +1,10 @@
 class MorningMessenger{
 	private:
-		const char *version = "0.4.4 Alpha";
+		const char *version = "0.4.5 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
+		MorningUser user;
 
 		MorningMenu menu;
 		MorningClientMenu clientMenu;
@@ -58,16 +59,40 @@ class MorningMessenger{
 		try{
 			if(!fileSnake.fileExists(config.getConfigLoc())){
 				io.out(MORNING_IO_NONE, "\n\n======== Morning Messenger Setup ========\n\n");
-				config.setupMessenger(solicitUsername(), solicitPassword(true), solicitPin());
+				morningconfig_t cfg;
+				cfg.sqlHost = io.inString(MORNING_IO_INPUT, "Enter MySql server hostname / ip > ");
+				cfg.sqlPort = (unsigned int)atoi(io.inString(MORNING_IO_INPUT, "Enter MySql port (3306) > ").c_str());
+				cfg.sqlUser = io.inString(MORNING_IO_INPUT, "Enter MySql username > ");
+				cfg.sqlPass = io.inString(MORNING_IO_INPUT, "Enter MySql password > ");
+				cfg.sqlDatabase = io.inString(MORNING_IO_INPUT, "Enter your desired database name (mornmessenger) > ");
+				cfg.serviceHost = io.inString(MORNING_IO_INPUT, "Enter messenger service hostname (127.0.0.1) > ");
+				cfg.servicePort = atoi(io.inString(MORNING_IO_INPUT, "Enter messenger service port (21345) > ").c_str());
+				config.setupMessenger(cfg);
+
+				io.out(MORNING_IO_GENERAL, "Adding new user.\n");
+				string username = solicitUsername();
+				string password = solicitPassword(true);
+				if(!user.newUser(config.getSql(), username, password))
+					throw MorningException(user.getError());
+				io.out(MORNING_IO_SUCCESS, "User created successfully!\n");
+
+				io.out(MORNING_IO_GENERAL, "Logging into your new account!\n");
+				if(!user.login(config.getSql(), username, password))
+					throw MorningException("Authentication Failure : %s", user.getError());
+
+				io.out(MORNING_IO_SUCCESS, "Successfully logged in!\n");
+				//config.setupMessenger(solicitUsername(), solicitPassword(true), solicitPin());
 			}else{
 				io.out(MORNING_IO_NONE, "\n\n======== Morning Messenger Login ========\n\n");
-				solicitUsername();
-                        	solicitPassword(false);
-                        	solicitPin();
-				config.setSessionCreds(username, password, pin);
+				string username = solicitUsername();
+                                string password = solicitPassword(false);
+				 if(!user.login(config.getSql(), username, password))
+                                        throw MorningException("Authentication Failure : %s", user.getError());
+
+                                io.out(MORNING_IO_SUCCESS, "Successfully logged in!\n");
 			}
-			authenticateMessenger();
-			server.clearLockFile();
+			//authenticateMessenger();
+			//server.clearLockFile();
 		}catch(exception &e){
 			string what = e.what();
 			what = "Failed to start up Morning Messenger.\nCaught in MorningMessenger::MorningMessenger() | " + what;

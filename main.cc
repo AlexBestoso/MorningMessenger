@@ -20,6 +20,8 @@ using namespace std;
 
 #include "./core/algo/morningAlgorithms.class.h"
 
+#include "./core/user/morningUser.class.h"
+
 #include "./core/config/morningConfig.class.h"
 
 #include "./core/managers/morningKeyManager.class.h"

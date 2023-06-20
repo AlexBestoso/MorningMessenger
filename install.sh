@@ -30,10 +30,11 @@ if [ "$?" == "0" ]; then
 else
 	echo "[-] libmysql++-dev not found! Attempting to install."
 	sudo apt-get install libmysql++-dev -y
-	if [ "$?" == "1"];
+	if [ "$?" == "1"]; then
 		echo "[ERROR] Failed to install libmysql++-dev. Aborting"
 		exit 1
 	fi
+fi
 
 dpkg -l libssl-dev >/dev/null
 if [ "$?" == "0" ]; then
@@ -105,3 +106,4 @@ else
 fi
 
 exit 0
+

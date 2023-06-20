@@ -9,18 +9,31 @@ struct morning_config_xml{
 };
 typedef struct morning_config_xml mornconf;
 
+struct morning_config{
+	string sqlHost = "";
+	unsigned int sqlPort= 3306;
+	string sqlUser = "";
+	string sqlPass = "";
+	string sqlDatabase = "mornmessage";
+	string serviceHost = "";
+	int servicePort = 21345;
+};
+typedef struct morning_config morningconfig_t;
+
 class MorningConfig{
 	private:
 		/* Variables  */
 		XmlSnake xml;
 		EncryptionSnake encryptionSnake;
 		FileSnake fileSnake;
+		SqlSnake sqlSnake;
 
 		MorningIO io;
 		MorningAlgorithms algorithms;
+		MorningUser user;
 		
 		mornconf config;
-
+		morningconfig_t sqlconf;
 
 		const char *storageLocation = "./MMS_Storage";
 		const char *serverLockFile = "server.lock";
@@ -321,7 +334,7 @@ class MorningConfig{
                         io.out(MORNING_IO_SUCCESS, "Encrypted private key successfuly!\n");
                 }
 
-		void generateDefaultConfig(void){
+		__attribute__((deprecated("obselete function is being removed in future versions.")))void generateDefaultConfig(void){
                         io.out(MORNING_IO_GENERAL, "Generating default config file.\n");
 
                         mornconf c;
@@ -338,6 +351,27 @@ class MorningConfig{
                                 io.outf(MORNING_IO_SUCCESS, "Successfully wrote the default configurationt to '%s'\n", getConfigLoc().c_str());
                         }
                 }
+		void setupDatabase(){
+			if(!sqlSnake.init(sqlconf.sqlHost, sqlconf.sqlPort, sqlconf.sqlUser, sqlconf.sqlPass, sqlconf.sqlDatabase)){
+				throw MorningException(sqlSnake.getError());
+			}
+			if(!sqlSnake.createDatabase(sqlconf.sqlDatabase)){
+				sqlSnake.close();
+				throw MorningException(sqlSnake.getError());
+
+			}
+			if(!sqlSnake.useDatabase(sqlconf.sqlDatabase)){
+				sqlSnake.close();
+				throw MorningException(sqlSnake.getError());
+			}
+
+			MorningUser usr;
+			if(!sqlSnake.createTable(usr.buildTable())){
+				sqlSnake.close();
+				throw MorningException(sqlSnake.getError());
+			}
+			sqlSnake.close();
+		}
 
 	public:
 		string username = "";
@@ -346,6 +380,10 @@ class MorningConfig{
 
 		mornconf getConfig(void){
 			return config;
+		}
+
+		SqlSnake getSql(void){
+			return sqlSnake;
 		}
 
 		string getConfigLoc(void){
@@ -378,7 +416,20 @@ class MorningConfig{
 			this->pin = pin;
 		}
 
-		void setupMessenger(string username, string password, string pin){
+
+		void setupMessenger(morningconfig_t cfg){
+			try{
+				generateConfig(cfg);
+				setupDatabase();
+
+			}catch(exception &e){
+				string what = e.what();
+                                what = "Faild to setup Morning Messenger.\nCaught in MorningMessenger::setupMessenger() | " + what;
+                                throw MorningException(what);
+			}	
+		}
+
+		__attribute__((deprecated("Obselete function being removed in future versions.")))void setupMessenger(string username, string password, string pin){
                 	try{
 				this->username = username;
 			       	this->password = password;
@@ -396,7 +447,42 @@ class MorningConfig{
                 	}
         	}
 
-		bool newConfig(string fileName, mornconf config){
+		bool generateConfig(morningconfig_t config){
+			string fileName = getConfigLoc();
+			sqlconf = config;
+			if(!xml.openFileWriter(fileName))
+				throw MorningException("Failed to open '%s' for writing.", fileName.c_str());
+			if(!xml.startWritingFile())
+                                throw MorningException("Failed to start writing config file.");
+                        if(!xml.startWritingElement("root"))
+                                throw MorningException("Failed to create <root> element.");
+
+
+			if(!xml.writeElement("sqlhost", sqlconf.sqlHost))
+				throw MorningException("Failed to write sql host to config file.");
+			if(!xml.writeElement("sqlport", to_string(sqlconf.sqlPort)))
+				throw MorningException("Failed to write sql port to config file.");
+			if(!xml.writeElement("sqluser", sqlconf.sqlUser))
+				throw MorningException("Failed to write sql user to config file.");
+			if(!xml.writeElement("sqlpass", sqlconf.sqlPass))
+				throw MorningException("Failed to write sql password to config file.");
+			if(!xml.writeElement("sqldatabase", sqlconf.sqlDatabase))
+				throw MorningException("Failed to write sql database to config file.");
+			if(!xml.writeElement("serverhost", sqlconf.serviceHost))
+                                throw MorningException("Failed to write service host to config file.");
+                        if(!xml.writeElement("serverport", to_string(sqlconf.servicePort)))
+                                throw MorningException("Failed to write service port to config file.");
+
+			if(!xml.stopWritingElement())
+                                throw MorningException("Failed to stop writing trusted keys storage location to config file.");
+                        if(!xml.stopWritingFile())
+                                throw MorningException("Failed to stop writing file.");
+                        xml.closeFileWriter();
+
+			return true;
+		}
+
+		__attribute__((deprecated("obselete config function is being removed in future versions."))) bool newConfig(string fileName, mornconf config){
 			this->config = config;
 
 			if(!xml.openFileWriter(fileName))
@@ -437,7 +523,7 @@ class MorningConfig{
 			return true;
 		}
 
-		bool loadConfig(void){
+		__attribute__((deprecated("obselete config load function is being removed in future versions.")))bool loadConfig(void){
 			string fileName = getConfigLoc();
 			unlockConfig();
 			if(!xml.openFileReader(fileName)){
