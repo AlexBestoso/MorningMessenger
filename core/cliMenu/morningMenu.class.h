@@ -42,7 +42,7 @@ class MorningMenu{
 	}
 
 	virtual void info(){
-		int count = keyManager.untrustedKeyCount();
+		int count = 0;//keyManager.untrustedKeyCount();
 		if(count > 0){
 			if(count == 1)
 				io.outf(MORNING_IO_GENERAL, "\tThere is 1 untrusted key\n");

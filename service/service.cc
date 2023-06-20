@@ -21,6 +21,8 @@ using namespace std;
 
 #include "../core/algo/morningAlgorithms.class.h"
 
+#include "../core/user/morningUser.class.h"
+
 #include "../core/config/morningConfig.class.h"
 
 #include "../core/managers/morningKeyManager.class.h"
@@ -34,6 +36,7 @@ using namespace std;
 #include "../core/cliMenu/morningManagerMenu.class.h"
 #include "../core/cliMenu/morningInboxMenu.class.h"
 #include "../core/cliMenu/morningConfigMenu.class.h"
+#include "../core/cliMenu/morningServerMenu.class.h"
 
 #include "../core/morningMessenger.class.h"
 
@@ -44,7 +47,7 @@ int main(int argc, char *argv[]){
 		MorningService ms;
 			
 	}catch(exception &e){
-		MroningIO io;
+		MorningIO io;
 		io.outf(MORNING_IO_ERROR, "in main - %s\n", e.what());
 	}
 	exit(EXIT_SUCCESS);

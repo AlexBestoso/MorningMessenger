@@ -1,10 +1,35 @@
+struct morning_server_config{
+	int id = -1;
+	string publicKey = "";
+	string privateKey = "";
+	string keyPassword = "";
+	string serverName = "";
+};
+typedef struct morning_server_config serverconfig_t;
+
 class MorningServer{
 	private:
+		serverconfig_t serverConfig;
+		string tableName = "morn_server";
+		string colNames[5] = {
+			"server_id",
+			"server_pubkey",
+			"server_prikey",
+			"server_keypass",
+			"server_name"
+		};
+		int sql_id = 0;
+		int sql_pubkey = 1;
+		int sql_prikey = 2;
+		int sql_keypass = 3;
+		int sql_name = 4;
+
 		NetSnake netSnake;
 		FileSnake fileSnake;
 		EncryptionSnake encryptionSnake;
 		EncryptionSnake remoteCerts;
 		XmlSnake xmlSnake;
+		SqlSnake sqlSnake;
 	
 		MorningAlgorithms algorithm;
 		MorningConfig config;
@@ -381,5 +406,98 @@ class MorningServer{
 			what = "MorningServer::launchServer() | Critical Failure.\n" + what;
 			throw MorningException(what);
 		}
+
 	}	
+	
+	sqltable_t generateTable(void){
+		sqltable_t ret;
+		ret.name = tableName;
+		ret.colCount = 5;
+		ret.cols = new sqlcolumn_t[5];
+		ret.cols[sql_id] = sqlSnake.generatePrimaryColumn(colNames[sql_id], "INT", "NOT NULL AUTO_INCREMENT");
+		ret.cols[sql_pubkey] = sqlSnake.generateColumn(colNames[sql_pubkey], "TEXT", "NOT NULL");
+                ret.cols[sql_prikey] = sqlSnake.generateColumn(colNames[sql_prikey], "TEXT", "NOT NULL");
+                ret.cols[sql_keypass] = sqlSnake.generateColumn(colNames[sql_keypass], "VARCHAR(100)", "NOT NULL");
+                ret.cols[sql_name] = sqlSnake.generateColumn(colNames[sql_name], "VARCHAR(25)", "NOT NULL");
+		return ret;
+	}
+
+	sqlinsert_t generateInsert(string pubkey, string prikey, string keypass, string name){
+		sqlinsert_t ret;
+		ret.table = tableName;
+		ret.count = 4;
+		ret.cols = new string[4]{
+			colNames[sql_pubkey],
+			colNames[sql_prikey],
+			colNames[sql_keypass],
+			colNames[sql_name]
+		};
+		ret.values = new string[4]{
+			pubkey,
+			prikey,
+			keypass,
+			name
+		};
+		return ret;
+	}
+
+	void setupServerTable(SqlSnake sqlSnake){
+		if(fileSnake.fileExists(config.getServerPubKeyLoc()))
+			fileSnake.removeFile(config.getServerPubKeyLoc());
+		if(fileSnake.fileExists(config.getServerPriKeyLoc()))
+			fileSnake.removeFile(config.getServerPriKeyLoc());
+
+		string keypass = encryptionSnake.sha256(encryptionSnake.randomPrivate(100), 100, false);
+		if(encryptionSnake.didFail()){
+			encryptionSnake.printError();
+			throw MorningException("Failed to generate private key password.");
+		}
+	
+		encryptionSnake.generateRsaKeyPairToFile(8192, false, config.getServerPubKeyLoc(), config.getServerPriKeyLoc(), keypass);
+		if(encryptionSnake.didFail()){
+			encryptionSnake.printError();
+			throw MorningException("Failed to generate server key pairs.");
+		}
+
+		sqltable_t t = generateTable();
+		if(!sqlSnake.createTable(t)){
+			fileSnake.removeFile(config.getServerPubKeyLoc());
+			fileSnake.removeFile(config.getServerPriKeyLoc());
+			throw MorningException(sqlSnake.getError());
+		}
+
+		string pkey = "";
+		size_t pkey_size = fileSnake.getFileSize(config.getServerPubKeyLoc());
+		char *pkey_buf = new char[pkey_size];
+		if(!fileSnake.readFile(config.getServerPubKeyLoc(), pkey_buf, pkey_size)){
+			fileSnake.removeFile(config.getServerPubKeyLoc());
+			fileSnake.removeFile(config.getServerPriKeyLoc());
+			throw MorningException("Failed to load in generated public key.");
+		}else{
+			for(int i=0; i<pkey_size; i++)
+				pkey += pkey_buf[i];
+			fileSnake.removeFile(config.getServerPubKeyLoc());
+		}
+		delete[] pkey_buf;
+
+		string prkey = "";
+		size_t prkey_size = fileSnake.getFileSize(config.getServerPriKeyLoc());
+		char *prkey_buf = new char[prkey_size];
+		if(!fileSnake.readFile(config.getServerPriKeyLoc(), prkey_buf, prkey_size)){
+			fileSnake.removeFile(config.getServerPriKeyLoc());
+			throw MorningException("Failed to load in generated private key.");
+		}else{
+			for(int i=0; i<prkey_size; i++)
+				prkey += prkey_buf[i];
+			fileSnake.removeFile(config.getServerPriKeyLoc());
+		}
+		delete[] prkey_buf;
+
+		string sname = "anonymous";
+	
+		sqlinsert_t insert = generateInsert(pkey, prkey, keypass, sname); 
+		if(!sqlSnake.secureInsert(insert)){
+			throw MorningException(sqlSnake.getError());
+		}
+	}
 };

@@ -53,17 +53,6 @@ class MorningConfig{
                         return stem + "/" + dire;
                 }
 
-                string getServerPubKeyLoc(void){
-                        string keyFile = serverPubkey;
-                        string keyLoc = getServerKeysDirLoc();
-                        return keyLoc + "/" + keyFile;
-                }
-
-                string getServerPriKeyLoc(void){
-                        string keyFile = serverPrikey;
-                        string keyLoc = getServerKeysDirLoc();
-                        return keyLoc + "/" + keyFile;
-                }
 
                 string getMessagesLoc(void){
                         string stem = storageLocation;
@@ -220,7 +209,7 @@ class MorningConfig{
                         delete[] priBuff;
                 }
 
-		void setupServerKeysDir(void){
+		__attribute__((deprecated("Obsolete function will be removed in newer versions")))void setupServerKeysDir(void){
                         // Setup server keys dir
                         io.out(MORNING_IO_GENERAL, "Setting up server keys directory\n");
                         if(!fileSnake.fileExists(getServerKeysDirLoc())){
@@ -311,7 +300,7 @@ class MorningConfig{
                         }
                 }
 
-		void generateServerKeys(string usr, string pass, string p){
+		__attribute__((deprecated("Obsolete function being removed in new versions.")))void generateServerKeys(string usr, string pass, string p){
                         io.out(MORNING_IO_GENERAL, "Generating RSA Key Pair.\n");
                         io.outf(MORNING_IO_GENERAL, "Saving public key to '%s'\n", getServerPubKeyLoc().c_str());
                         io.outf(MORNING_IO_GENERAL, "Saving private key to '%s'\n", getServerPriKeyLoc().c_str());
@@ -409,6 +398,17 @@ class MorningConfig{
                         string dire = untrustedKeysDir;
                         return stem + "/" + dire;
                 }
+                string getServerPubKeyLoc(void){
+                        string keyFile = serverPubkey;
+                        string keyLoc = getServerKeysDirLoc();
+                        return keyLoc + "/" + keyFile;
+                }
+
+                string getServerPriKeyLoc(void){
+                        string keyFile = serverPrikey;
+                        string keyLoc = getServerKeysDirLoc();
+                        return keyLoc + "/" + keyFile;
+                }
 
 		void setSessionCreds(string u, string p, string pin){
 			username = u;
@@ -421,6 +421,7 @@ class MorningConfig{
 			try{
 				generateConfig(cfg);
 				setupDatabase();
+				setupServerKeysDir();
 
 			}catch(exception &e){
 				string what = e.what();

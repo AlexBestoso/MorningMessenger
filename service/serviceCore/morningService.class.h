@@ -3,4 +3,4 @@ class MorningService{
 
 	public:
 	
-}
+};

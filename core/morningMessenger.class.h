@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *version = "0.4.6 Alpha";
+		const char *version = "0.4.7 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -11,6 +11,7 @@ class MorningMessenger{
 		MorningManagerMenu managerMenu;
 		MorningInboxtMenu inboxMenu;
 		MorningConfigMenu configMenu;
+		MorningServerMenu serverMenu;
 		
 		MorningServer server;
 		MorningClient client;
@@ -76,6 +77,10 @@ class MorningMessenger{
 					throw MorningException(user.getError());
 				io.out(MORNING_IO_SUCCESS, "User created successfully!\n");
 
+				io.out(MORNING_IO_GENERAL, "Generating server key pair. Please be patient.\n");
+				server.setupServerTable(config.getSql());
+				io.out(MORNING_IO_SUCCESS, "Server table successfully set up!\n");
+
 				io.out(MORNING_IO_GENERAL, "Logging into your new account!\n");
 				if(!user.login(config.getSql(), username, password))
 					throw MorningException("Authentication Failure : %s", user.getError());
@@ -91,7 +96,6 @@ class MorningMessenger{
 
                                 io.out(MORNING_IO_SUCCESS, "Successfully logged in!\n");
 			}
-			//authenticateMessenger();
 			server.clearLockFile();
 		}catch(exception &e){
 			string what = e.what();
@@ -104,7 +108,7 @@ class MorningMessenger{
 		return menu.getCoreContext();
 	}
 
-	bool launchServer(void){
+	__attribute__((deprecated("Obsolete function will be removed in future versions")))bool launchServer(void){
 		if(server.obtainLockFile()){
 			server.pid = fork();
 			if(server.pid == 0){
@@ -302,11 +306,15 @@ class MorningMessenger{
 		}
 	}
 
+	void runServerMenu(void){
+		menu = serverMenu.runMenu(menu);
+	}
+
 	bool runMainMenu(){
 		return menu.runMenu(version);
 	}
 
-	void authenticateMessenger(void){
+	__attribute__((depricated("Obsolete function will be removed in future versions.")))void authenticateMessenger(void){
 		try{
 			config.loadConfig();	
 			io.out(MORNING_IO_SUCCESS, "Configuration loaded.\n");

@@ -72,21 +72,23 @@ class SqlSnake{
 				return "";
 			}
 
-                        char *to = new char[dirty.length()]; memset(to, '\0', dirty.length());
+                        char *to = new char[dirty.length()*2+1]; memset(to, '\0', dirty.length()*2+1);
 
-                        mysql_real_escape_string_quote(this->connection, to, dirty.c_str(), dirty.length(), '\'');
-                        dirty = to;
-                        to = new char[dirty.length()]; memset(to, '\0', dirty.length());
+                        unsigned long s= mysql_real_escape_string_quote(this->connection, to, dirty.c_str(), dirty.length(), '\'');
+			dirty = to;
+			delete[] to;
+			char *to_2 = new char[s*2+1]; memset(to_2, '\0', s*2+1);
 
-                        mysql_real_escape_string_quote(this->connection, to, dirty.c_str(), dirty.length(), '"');
-                        dirty = to;
-                        to = new char[dirty.length()]; memset(to, '\0', dirty.length());
+                        s = mysql_real_escape_string_quote(this->connection, to_2, dirty.c_str(), s, '"');
+			dirty = to_2;
+			delete[] to_2;
 
-                        mysql_real_escape_string_quote(this->connection, to, dirty.c_str(), dirty.length(), '.');
-                        string ret = to;
+			char *to_3 = new char[s*2+1]; memset(to_3, '\0', s*2+1);
+                        mysql_real_escape_string_quote(this->connection, to_3, dirty.c_str(), s, '.');
+                        
 
                         this->close();
-                        return ret;
+                        return (const char *)to_3;
                 }
 
 		void close(){
@@ -463,6 +465,7 @@ class SqlSnake{
 				error = "No columns provided.";
 				return false;
 			}
+			printf("\tFart : 1\n");
 			string q = "INSERT INTO " + ins.table + "(";
 			// add columns to query
 			for(int i=0; i<ins.count; i++){
@@ -471,6 +474,7 @@ class SqlSnake{
 					q += ",";
 			}
 			
+			printf("\tFart : 2\n");
 			q += ") VALUES (";
 			// add sanitized values
 			for(int i=0; i<ins.count; i++){
@@ -479,6 +483,7 @@ class SqlSnake{
 					q += ",";
 			}
 			
+			printf("\tFart : 3\n");
 			q += ");";
 			return newQuery(q);
 		}
