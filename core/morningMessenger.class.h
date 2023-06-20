@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *version = "0.4.5 Alpha";
+		const char *version = "0.4.6 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -81,9 +81,9 @@ class MorningMessenger{
 					throw MorningException("Authentication Failure : %s", user.getError());
 
 				io.out(MORNING_IO_SUCCESS, "Successfully logged in!\n");
-				//config.setupMessenger(solicitUsername(), solicitPassword(true), solicitPin());
 			}else{
 				io.out(MORNING_IO_NONE, "\n\n======== Morning Messenger Login ========\n\n");
+				config.loadConfig();
 				string username = solicitUsername();
                                 string password = solicitPassword(false);
 				 if(!user.login(config.getSql(), username, password))
@@ -92,7 +92,7 @@ class MorningMessenger{
                                 io.out(MORNING_IO_SUCCESS, "Successfully logged in!\n");
 			}
 			//authenticateMessenger();
-			//server.clearLockFile();
+			server.clearLockFile();
 		}catch(exception &e){
 			string what = e.what();
 			what = "Failed to start up Morning Messenger.\nCaught in MorningMessenger::MorningMessenger() | " + what;

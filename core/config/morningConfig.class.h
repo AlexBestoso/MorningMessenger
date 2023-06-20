@@ -523,38 +523,46 @@ class MorningConfig{
 			return true;
 		}
 
-		__attribute__((deprecated("obselete config load function is being removed in future versions.")))bool loadConfig(void){
+		bool loadConfig(void){
 			string fileName = getConfigLoc();
-			unlockConfig();
+			//unlockConfig();
 			if(!xml.openFileReader(fileName)){
-				lockConfig();
+			//	lockConfig();
 				throw MorningException("Failed to open config file '%s'", fileName.c_str());
 			}
+
 			string previous = "";
 			while(xml.readLineReader()){
-				if(xml.readResult.name == "#text" && previous == "messages"){
-					config.messages = xml.readResult.value;
+				if(xml.readResult.name == "#text" && previous == "sqlport"){
+					 sqlconf.sqlPort = (unsigned int)atoi(xml.readResult.value.c_str());
 				}
-				if(xml.readResult.name == "#text" && previous == "prikey"){
-					config.prikey = xml.readResult.value;
+				if(xml.readResult.name == "#text" && previous == "sqluser"){
+					sqlconf.sqlUser = xml.readResult.value;
 				}
-				if(xml.readResult.name == "#text" && previous == "pubkey"){
-					config.pubkey = xml.readResult.value;
+				if(xml.readResult.name == "#text" && previous == "sqlpass"){
+					sqlconf.sqlPass = xml.readResult.value;
 				}
-				if(xml.readResult.name == "#text" && previous == "serverhost"){
-					config.serverhost = xml.readResult.value;
+				if(xml.readResult.name == "#text" && previous == "sqlhost"){
+					sqlconf.sqlHost = xml.readResult.value;
 				}
-				if(xml.readResult.name == "#text" && previous == "serverport"){
-					config.serverport = atoi(xml.readResult.value.c_str());
+				if(xml.readResult.name == "#text" && previous == "sqldatabase"){
+					sqlconf.sqlDatabase = xml.readResult.value.c_str();
 				}
-				if(xml.readResult.name == "#text" && previous == "trustedkeys"){
-					config.trustedkeys = xml.readResult.value;
+				if(xml.readResult.name == "#text" && previous == "servicehost"){
+					sqlconf.serviceHost = xml.readResult.value;
+				}
+				if(xml.readResult.name == "#text" && previous == "serviceport"){
+					sqlconf.servicePort = atoi(xml.readResult.value.c_str());
 				}
 
 				previous = xml.readResult.name;
 			}
 			xml.closeReader();
-			lockConfig();
+			
+			if(!sqlSnake.init(sqlconf.sqlHost, sqlconf.sqlPort, sqlconf.sqlUser, sqlconf.sqlPass, sqlconf.sqlDatabase)){
+                                throw MorningException(sqlSnake.getError());
+                        }
+			sqlSnake.close();
 			return true;
 		}
 
