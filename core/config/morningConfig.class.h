@@ -367,9 +367,14 @@ class MorningConfig{
 		string password = "";
 		string pin = "";
 
-		mornconf getConfig(void){
+		__attribute__((deprecated("Obselete function being removed in future verions.")))mornconf getConfig(void){
 			return config;
 		}
+
+		morningconfig_t getSqlConfig(){
+			return sqlconf;
+		}
+		
 
 		SqlSnake getSql(void){
 			return sqlSnake;
@@ -469,9 +474,9 @@ class MorningConfig{
 				throw MorningException("Failed to write sql password to config file.");
 			if(!xml.writeElement("sqldatabase", sqlconf.sqlDatabase))
 				throw MorningException("Failed to write sql database to config file.");
-			if(!xml.writeElement("serverhost", sqlconf.serviceHost))
+			if(!xml.writeElement("servicehost", sqlconf.serviceHost))
                                 throw MorningException("Failed to write service host to config file.");
-                        if(!xml.writeElement("serverport", to_string(sqlconf.servicePort)))
+                        if(!xml.writeElement("serviceport", to_string(sqlconf.servicePort)))
                                 throw MorningException("Failed to write service port to config file.");
 
 			if(!xml.stopWritingElement())

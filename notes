@@ -1,6 +1,8 @@
 Current tasks:
-1) Update the load config function to load the new config format and authenticate with the database.
-	- Add randomly generated salt and peppers into the config file.
+1) Refactir server code.
+	- update client side server controls to allow for start, stop, and status of service.
+	- make first start generate the encryption keys from the client side.
+	- 
 2) Refactor message storage to use mysql tables instead of folder locations.
 3) Build out the morning service code.
 4) Build in the missing features in the morning client code.

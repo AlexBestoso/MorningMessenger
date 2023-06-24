@@ -91,6 +91,25 @@ class SqlSnake{
                         return (const char *)to_3;
                 }
 
+		string desanitize(string clean){
+			string ret = "";
+			for(int i=0; i<clean.length(); i++){
+				ret += clean[i];
+				if(ret.length() >= 3){
+					string grabber = "";
+					grabber += ret[ret.length()-3];
+					grabber += ret[ret.length()-2];
+					grabber += ret[ret.length()-1];
+					if(grabber == "\\\\n"){
+						for(int j=0; j<3; j++)
+							ret.pop_back();
+						ret += 0x0a;
+					}
+				}
+			}
+			return ret;
+		}
+
 		void close(){
                         if(this->results != NULL){
                                 mysql_free_result(this->results);
@@ -465,7 +484,6 @@ class SqlSnake{
 				error = "No columns provided.";
 				return false;
 			}
-			printf("\tFart : 1\n");
 			string q = "INSERT INTO " + ins.table + "(";
 			// add columns to query
 			for(int i=0; i<ins.count; i++){
@@ -474,7 +492,6 @@ class SqlSnake{
 					q += ",";
 			}
 			
-			printf("\tFart : 2\n");
 			q += ") VALUES (";
 			// add sanitized values
 			for(int i=0; i<ins.count; i++){
@@ -483,7 +500,6 @@ class SqlSnake{
 					q += ",";
 			}
 			
-			printf("\tFart : 3\n");
 			q += ");";
 			return newQuery(q);
 		}
@@ -615,9 +631,9 @@ class SqlSnake{
 				return false;
 			}
 
-			string q = "UPDATE TABLE "+sanitize(update.table) + " SET ";
+			string q = "UPDATE "+sanitize(update.table) + " SET ";
 			for(int i=0; i<update.valueCount; i++){
-				q += sanitize(update.cols[i]) + "=" + sanitize(update.values[i]);
+				q += sanitize(update.cols[i]) + "=" + "'"+sanitize(update.values[i])+"'";
 				if((i+1) < update.valueCount){
 					q += ",";
 				}
@@ -626,7 +642,7 @@ class SqlSnake{
 			if(update.wheres.whereCount > 0){
 				q += " WHERE " + generateWhereString(update.wheres);
 			}
-			return true;
+			return newQuery(q);
 		}
 
 

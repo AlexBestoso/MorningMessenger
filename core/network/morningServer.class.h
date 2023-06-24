@@ -4,6 +4,8 @@ struct morning_server_config{
 	string privateKey = "";
 	string keyPassword = "";
 	string serverName = "";
+	string serverHost = "";
+	int serverPort = -1;
 };
 typedef struct morning_server_config serverconfig_t;
 
@@ -441,6 +443,59 @@ class MorningServer{
 		return ret;
 	}
 
+	serverconfig_t generateNewKeyPair(void){
+		SqlSnake sqlSnake = config.getSql();
+		if(fileSnake.fileExists(config.getServerPubKeyLoc()))
+                        fileSnake.removeFile(config.getServerPubKeyLoc());
+                if(fileSnake.fileExists(config.getServerPriKeyLoc()))
+                        fileSnake.removeFile(config.getServerPriKeyLoc());
+
+                string keypass = encryptionSnake.sha256(encryptionSnake.randomPrivate(100), 100, false);
+                if(encryptionSnake.didFail()){
+                        encryptionSnake.printError();
+                        throw MorningException("Failed to generate private key password.");
+                }
+
+                encryptionSnake.generateRsaKeyPairToFile(8192, false, config.getServerPubKeyLoc(), config.getServerPriKeyLoc(), keypass);
+                if(encryptionSnake.didFail()){
+                        encryptionSnake.printError();
+                        throw MorningException("Failed to generate server key pairs.");
+                }
+
+		string pkey = "";
+                size_t pkey_size = fileSnake.getFileSize(config.getServerPubKeyLoc());
+                char *pkey_buf = new char[pkey_size];
+                if(!fileSnake.readFile(config.getServerPubKeyLoc(), pkey_buf, pkey_size)){
+                        fileSnake.removeFile(config.getServerPubKeyLoc());
+                        fileSnake.removeFile(config.getServerPriKeyLoc());
+                        throw MorningException("Failed to load in generated public key.");
+                }else{
+                        for(int i=0; i<pkey_size; i++)
+                                pkey += pkey_buf[i];
+                        fileSnake.removeFile(config.getServerPubKeyLoc());
+                }
+                delete[] pkey_buf;
+
+                string prkey = "";
+                size_t prkey_size = fileSnake.getFileSize(config.getServerPriKeyLoc());
+                char *prkey_buf = new char[prkey_size];
+                if(!fileSnake.readFile(config.getServerPriKeyLoc(), prkey_buf, prkey_size)){
+                        fileSnake.removeFile(config.getServerPriKeyLoc());
+                        throw MorningException("Failed to load in generated private key.");
+                }else{
+                        for(int i=0; i<prkey_size; i++)
+                                prkey += prkey_buf[i];
+                        fileSnake.removeFile(config.getServerPriKeyLoc());
+                }
+                delete[] prkey_buf;
+
+		serverconfig_t newCfg = serverConfig;
+		newCfg.publicKey = pkey;
+		newCfg.privateKey = prkey;
+		newCfg.keyPassword = keypass;
+		return newCfg;
+	}
+
 	void setupServerTable(SqlSnake sqlSnake){
 		if(fileSnake.fileExists(config.getServerPubKeyLoc()))
 			fileSnake.removeFile(config.getServerPubKeyLoc());
@@ -499,5 +554,75 @@ class MorningServer{
 		if(!sqlSnake.secureInsert(insert)){
 			throw MorningException(sqlSnake.getError());
 		}
+
+		loadConfigs(sqlSnake);
+	}
+
+	void loadConfigs(SqlSnake sqlSnake){
+		sqlselect_t select;
+		select.table = tableName;
+		select.cols = colNames;
+		select.colCount = 5;
+		if(!sqlSnake.secureSelect(select)){
+			throw MorningException(sqlSnake.getError());
+		}
+
+		sqlresults_t res = sqlSnake.getResults();
+		if(res.resultCount <= 0){
+			throw MorningException("Server configuration not set up.");
+		}
+
+		if(res.fieldCount != 5)
+			throw MorningException("Server configuration table has invalid field count.");
+
+		serverConfig.id = atoi(res.results[0].values[sql_id].c_str());
+		serverConfig.publicKey = sqlSnake.desanitize(res.results[0].values[sql_pubkey]);
+		serverConfig.privateKey = sqlSnake.desanitize(res.results[0].values[sql_prikey]);
+		serverConfig.keyPassword = res.results[0].values[sql_keypass];
+		serverConfig.serverName = res.results[0].values[sql_name];
+
+		config.loadConfig();
+		morningconfig_t cfg = config.getSqlConfig();
+		serverConfig.serverHost = cfg.serviceHost;
+		serverConfig.serverPort = cfg.servicePort;
+		
+	}
+
+	void updateConfig(serverconfig_t newCfg){
+		config.loadConfig();
+		SqlSnake sqlSnake = config.getSql();
+
+		sqlupdate_t update;
+		update.table = tableName;
+		update.valueCount = 4;
+		update.cols = new string[4]{
+			colNames[sql_pubkey],
+                	colNames[sql_prikey],
+                	colNames[sql_keypass],
+                	colNames[sql_name],
+		};
+		update.values = new string[4]{
+			newCfg.publicKey,
+        		newCfg.privateKey,
+        		newCfg.keyPassword,
+        		newCfg.serverName
+		};
+
+		update.wheres = sqlSnake.addToWhere(update.wheres, 
+				sqlSnake.generateWhere(colNames[sql_id], "!=", "-1", true), 
+				""
+		);
+		if(!sqlSnake.secureUpdate(update)){
+			throw MorningException("Failed to updated server config : %s", sqlSnake.getError());
+		}
+
+		morningconfig_t cfg = config.getSqlConfig();
+		cfg.serviceHost = newCfg.serverHost;
+		cfg.servicePort = newCfg.serverPort;
+		config.generateConfig(cfg);
+	}
+
+	serverconfig_t getServerConfig(){
+		return serverConfig;
 	}
 };

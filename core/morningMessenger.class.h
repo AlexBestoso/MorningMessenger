@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *version = "0.4.7 Alpha";
+		const char *version = "0.4.8 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -307,7 +307,7 @@ class MorningMessenger{
 	}
 
 	void runServerMenu(void){
-		menu = serverMenu.runMenu(menu);
+		menu = serverMenu.runMenu(menu, config.getSql());
 	}
 
 	bool runMainMenu(){
