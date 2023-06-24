@@ -35,7 +35,7 @@ class MorningConfig{
 		mornconf config;
 		morningconfig_t sqlconf;
 
-		const char *storageLocation = "./MMS_Storage";
+		const char *storageLocation = "/var/morningService/MMS_Storage";
 		const char *serverLockFile = "server.lock";
                 const char *configFile = "MMS_config.exml";
                 const char *serverKeysDir = "serverKeys";
@@ -61,9 +61,9 @@ class MorningConfig{
                 }
 
 		void unlockConfig(void){
-                        size_t confSize = fileSnake.getFileSize(getConfigLoc());
+                        size_t confSize = fileSnake.getFileSize(getConfigLoc(false));
                         char *buff = new char[confSize];
-                        fileSnake.readFile(getConfigLoc(), buff, confSize);
+                        fileSnake.readFile(getConfigLoc(false), buff, confSize);
 
                         string _key = algorithms.deriveConfigEncryptionKey(username, password);
                         unsigned char aesKey[32];
@@ -91,7 +91,7 @@ class MorningConfig{
                         for(int i=0; i<encryptionResult; i++){
                                 buff[i] = configEncrypted[i];
                         }
-                        if(!fileSnake.writeFileTrunc(getConfigLoc(), buff, encryptionResult)){
+                        if(!fileSnake.writeFileTrunc(getConfigLoc(false), buff, encryptionResult)){
                                 throw MorningException("Failed to write decrypted config to file system.");
                         }
                         delete[] buff;
@@ -136,9 +136,9 @@ class MorningConfig{
                 }
 
 		void lockConfig(void){
-                        size_t confSize = fileSnake.getFileSize(getConfigLoc());
+                        size_t confSize = fileSnake.getFileSize(getConfigLoc(false));
                         char *buff = new char[confSize];
-                        fileSnake.readFile(getConfigLoc(), buff, confSize);
+                        fileSnake.readFile(getConfigLoc(false), buff, confSize);
 
                         string _key = algorithms.deriveConfigEncryptionKey(username, password);
                         unsigned char aesKey[32];
@@ -166,7 +166,7 @@ class MorningConfig{
                         for(int i=0; i<encryptionResult; i++){
                                 buff[i] = configEncrypted[i];
                         }
-                        if(!fileSnake.writeFileTrunc(getConfigLoc(), buff, encryptionResult)){
+                        if(!fileSnake.writeFileTrunc(getConfigLoc(false), buff, encryptionResult)){
                                 throw MorningException("Failed to write encrypted config to file system.");
                         }
                         delete[] buff;
@@ -334,10 +334,10 @@ class MorningConfig{
                         c.serverhost = "0.0.0.0";
                         c.serverport = 21345;
 
-                        if(!newConfig(getConfigLoc(), c)){
-                                throw MorningException("Failed to create default config file '%s'", getConfigLoc().c_str());
+                        if(!newConfig(getConfigLoc(false), c)){
+                                throw MorningException("Failed to create default config file '%s'", getConfigLoc(false).c_str());
                         }else{
-                                io.outf(MORNING_IO_SUCCESS, "Successfully wrote the default configurationt to '%s'\n", getConfigLoc().c_str());
+                                io.outf(MORNING_IO_SUCCESS, "Successfully wrote the default configurationt to '%s'\n", getConfigLoc(false).c_str());
                         }
                 }
 		void setupDatabase(){
@@ -377,10 +377,14 @@ class MorningConfig{
 		
 
 		SqlSnake getSql(void){
+			loadConfig();
 			return sqlSnake;
 		}
 
-		string getConfigLoc(void){
+		string getConfigLoc(){
+			return getConfigLoc(false);
+		}
+		__attribute__((deprecated("Bool is being removed in future versions")))string getConfigLoc(bool serverMode){
                         string dire = storageLocation;
                         string fil = configFile;
                         return dire + "/" + fil;
@@ -424,6 +428,7 @@ class MorningConfig{
 
 		void setupMessenger(morningconfig_t cfg){
 			try{
+				sqlconf = cfg;
 				generateConfig(cfg);
 				setupDatabase();
 				setupServerKeysDir();
@@ -454,7 +459,7 @@ class MorningConfig{
         	}
 
 		bool generateConfig(morningconfig_t config){
-			string fileName = getConfigLoc();
+			string fileName = getConfigLoc(false);
 			sqlconf = config;
 			if(!xml.openFileWriter(fileName))
 				throw MorningException("Failed to open '%s' for writing.", fileName.c_str());
@@ -529,7 +534,7 @@ class MorningConfig{
 			return true;
 		}
 
-		bool loadConfig(void){
+		bool loadConfig(){
 			string fileName = getConfigLoc();
 			//unlockConfig();
 			if(!xml.openFileReader(fileName)){

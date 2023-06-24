@@ -6,6 +6,7 @@ class MorningClient{
 		EncryptionSnake remoteCerts;
                 MorningConfig config;
 		MorningIO io;
+		MorningServer server;
 
                 string cmd_newUser = "a235210cd5476dfa0a045d60244e5cc6aebbc21e406fba344ce5d154b6337f5b";
                 string cmd_existingUser = "f0773273589a87e67e71f402c08c93b464ff307846de3e7567dc1e423d65baf9";
@@ -148,31 +149,16 @@ class MorningClient{
                 }
 
 		void sendPublicKey(){
-                        mornconf cfg = config.getConfig();
-                        size_t size = fileSnake.getFileSize(cfg.pubkey);
-                        if(size <= 0)
-				throw MorningException("sendPublicKey: Failed to find the public key for this instance.");
+			server.loadConfigs();
+			serverconfig_t cfg = server.getServerConfig();
+                        string key = cfg.publicKey;
 
-			char *buffer = new char[size];
-                        memset(buffer, 0x00, size);
-
-                        if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
-                                netSnake.closeSocket();
-                                delete[] buffer;
-                                throw MorningException("sendPublicKey: Failed to read public key from file.");
-                        }
-
-                        string key = "";
-                        for(int i=0; i<size; i++)
-                                key += buffer[i];
-                        delete[] buffer;
-
-                        if(!netSnake.sendInetClient(key.c_str(), size)){
+                        if(!netSnake.sendInetClient(key.c_str(), key.length())){
                                 netSnake.closeSocket();
                                 throw MorningException("sendPublicKey: Failed to send public key to target server.");
                         }
 
-                        if(netSnake.sendSize != size){
+                        if(netSnake.sendSize != key.length()){
                                 netSnake.closeSocket();
                                 throw MorningException("Failed to send the server your entire key.\n");
                         }
@@ -205,6 +191,7 @@ class MorningClient{
                                         serverPublicKey += buffer[i];
                                 remaining = remaining - netSnake.recvSize;
                         }
+
 
                         encryptionSnake.cleanOutPublicKey();
                         encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), serverPublicKey.length(), "");
@@ -294,6 +281,17 @@ class MorningClient{
 		
 		bool requestAccess(string host, int port){
 			try{
+				server.loadConfigs();
+				serverconfig_t cfg = server.getServerConfig();
+				encryptionSnake.cleanOutPrivateKey();
+				encryptionSnake.cleanOutPublicKey();
+				encryptionSnake.fetchRsaKeyFromString(true, false, cfg.privateKey, cfg.privateKey.length(), cfg.keyPassword);
+				if(encryptionSnake.didFail())
+					throw MorningException("Failed to load client private key.\n");
+				encryptionSnake.fetchRsaKeyFromString(false, false, cfg.publicKey, cfg.publicKey.length(), "");
+                                if(encryptionSnake.didFail())
+                                        throw MorningException("Failed to load client public key.\n");
+
 				this->connectClient(host, port);
 				this->sendAccessRequest();
 				this->keyExchange();
@@ -305,6 +303,12 @@ class MorningClient{
 				msg = ctrRecv();
                                 string reason = io.inWithSpace(MORNING_IO_NONE, msg);
                                 this->ctrSend(reason, reason.length());
+				sleep(1);
+				this->ctrSend(cfg.serverHost, cfg.serverHost.length());
+				sleep(1);
+				this->ctrSend(to_string(cfg.serverPort), to_string(cfg.serverPort).length());
+				sleep(1);
+				this->ctrSend(cfg.serverName, cfg.serverName.length());
 
 				// check with server to see if successful.
 				msg = ctrRecv();

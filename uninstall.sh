@@ -1,6 +1,6 @@
 #!/bin/bash
 ServiceUser="MorningNoLogin"
-StorageLocation="$(pwd)/MMS_Storage"
+StorageLocation="/var/morningService"
 
 echo "[INFO] Deleting application storage directory."
 sudo rm -rf $StorageLocation

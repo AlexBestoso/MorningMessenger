@@ -76,6 +76,46 @@ class MorningServerMenu : public MorningMenu{
                         io.outf(MORNING_IO_SUCCESS, "Updated server key pair\n");
 			setSubContext(0);
 		}
+
+		void startService(){
+			io.out(MORNING_IO_GENERAL, "Starting Service...\n");
+			if(fork() == 0){
+				char *args[] = {
+					"/usr/sbin/service",
+					"morningService",
+					"start",
+					NULL
+				};
+				execvp(args[0], args);
+				exit(0);
+			}
+		}
+		void stopService(){
+			io.out(MORNING_IO_GENERAL, "Stopping Service...\n");    
+                        if(fork() == 0){
+                                char *args[] = {
+                                        "/usr/sbin/service",
+					"morningService",
+                                        "stop",
+                                        NULL
+                                };
+                                execvp(args[0], args);
+				exit(0);
+                        }
+		}
+		void statusService(){
+			io.out(MORNING_IO_GENERAL, "Getting Service Status...\n");    
+                        if(fork() == 0){
+                                char *args[] = {
+                                        "/usr/sbin/service",
+					"morningService",
+                                        "status",
+                                        NULL
+                                };
+                                execvp(args[0], args);
+				exit(0);
+                        }
+		}
 	public:
 		virtual void printBanner(void){
         	        string banner = "=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=\n";
@@ -144,7 +184,7 @@ class MorningServerMenu : public MorningMenu{
                 			setCoreContext(ctx);
 					break;
 				case MORNING_SERVER_MENU_CONFIG:
-					server.loadConfigs(sqlSnake);
+					server.loadConfigs();
 					cfg = server.getServerConfig();
 					if(stx == 0){
 						io.outf(MORNING_IO_NONE, "server host : %s:%d\n\nPublic Key :\n%s\n\nServer Name: %s\n\n", 
@@ -163,6 +203,18 @@ class MorningServerMenu : public MorningMenu{
 						setCoreContext(MORNING_SERVER_MENU_MAIN);
 						setSubContext(0);
 					}
+					break;
+				case MORNING_SERVER_MENU_START:
+					startService();
+					setCoreContext(0);
+					break;
+				case MORNING_SERVER_MENU_STOP:
+					stopService();
+					setCoreContext(0);
+					break;
+				case MORNING_SERVER_MENU_STATUS:
+					statusService();
+					setCoreContext(0);
 					break;
 				case MORNING_SERVER_MENU_BACK:
 					setShowBanner(true);

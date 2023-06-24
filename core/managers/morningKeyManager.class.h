@@ -4,16 +4,54 @@ struct morning_key_file{
 	string message = "";
 };
 typedef struct morning_key_file keyfile;
+
+struct morning_key_record{
+	int id = -1;
+	bool trusted = false;
+	string alias = "";
+	string cbip = "";
+	string cbhost = "";
+	int cbport = -1;
+	string date = "";
+	string pubkey = "";
+	string justification = "";
+};
+typedef struct morning_key_record friendkey_t;
+
 class MorningKeyManager{
 	private:
 		string fileName = "";
 		string publicKey = "";
 		string alias = "";
 		string message = "";
+
+		string tableName = "morn_friends";
+		string colNames[9] = {
+			"id",
+			"trusted",
+			"alias",
+			"cbip",
+			"cbhost",
+			"cbport",
+			"date",
+			"pubkey",
+			"justification"
+		};
+		int sql_id = 0;
+                int sql_trusted = 1;
+                int sql_alias = 2;
+		int sql_cbip = 3;
+                int sql_cbhost = 4;
+                int sql_cbport = 5;
+                int sql_date = 6;
+                int sql_key = 7;
+		int sql_justification = 8;
+
 		
 		EncryptionSnake encryptionSnake;
 		XmlSnake xmlSnake;
 		FileSnake fileSnake;
+		SqlSnake sqlSnake;
 
 		MorningConfig config;
 		MorningIO io;
@@ -124,48 +162,82 @@ class MorningKeyManager{
 		delete[] files;
 		return untrustedKeys;
 	}
-	bool createUntrusted(string pub, string name, string msg){
-		fileName = "";
-		if(pub == ""){
+
+	sqltable_t generateTable(void){
+                sqltable_t ret;
+                ret.name = tableName;
+                ret.colCount = 9;
+                ret.cols = new sqlcolumn_t[9];
+                ret.cols[sql_id] = sqlSnake.generatePrimaryColumn(colNames[sql_id], "INT", "NOT NULL AUTO_INCREMENT");
+		ret.cols[sql_trusted] = sqlSnake.generateColumn(colNames[sql_trusted], "INT(1)", "NOT NULL DEFAULT 0");
+		ret.cols[sql_alias] = sqlSnake.generateColumn(colNames[sql_alias], "VARCHAR(50)", "NOT NULL");
+		ret.cols[sql_cbip] = sqlSnake.generateColumn(colNames[sql_cbip], "VARCHAR(20)", "NOT NULL");
+		ret.cols[sql_cbhost] = sqlSnake.generateColumn(colNames[sql_cbhost], "VARCHAR(300)", "NOT NULL");
+		ret.cols[sql_cbport] = sqlSnake.generateColumn(colNames[sql_cbport], "VARCHAR(6)", "NOT NULL");
+		ret.cols[sql_date] = sqlSnake.generateColumn(colNames[sql_date], "TIMESTAMP", "DEFAULT CURRENT_TIMESTAMP");
+                ret.cols[sql_key] = sqlSnake.generateColumn(colNames[sql_key], "TEXT", "NOT NULL");
+		ret.cols[sql_justification] = sqlSnake.generateColumn(colNames[sql_justification], "VARCHAR(200)", "");
+                return ret;
+        }
+
+	void setupTable(void){
+		sqlSnake = config.getSql();
+		sqltable_t t = generateTable();
+                if(!sqlSnake.createTable(t)){
+                        throw MorningException(sqlSnake.getError());
+                }
+	}
+
+	bool createUntrusted(friendkey_t friendKey){
+		if(friendKey.pubkey == ""){
 			io.out(MORNING_IO_ERROR, "No public key\n");
 			return false;
 		}
-		size_t pubkeySize = pub.length();
-		if(pubkeySize > 1024)
-			pubkeySize = 1024;
-		fileName = config.getUntrustedKeysLoc() + "/" + encryptionSnake.sha256(pub, pubkeySize, false);
-		if(encryptionSnake.didFail()){
+		sqlSnake = config.getSql();
+
+		sqlselect_t select;
+		select.table = tableName;
+		select.colCount = 1;
+		select.cols = new string[1]{
+			colNames[sql_id]
+		};	
+		select.hasWhere = true;
+		select.wheres = sqlSnake.addToWhere(
+				select.wheres, 
+				sqlSnake.generateWhere(colNames[sql_key], "=", friendKey.pubkey, true), 
+				""
+		);
+		if(!sqlSnake.secureSelect(select)){
+			throw MorningException("Failed to run key management integrity check : %s\n", sqlSnake.getError().c_str());
+		}
+		sqlresults_t result;
+		result = sqlSnake.getResults();
+		if(result.resultCount > 0){
 			return false;
 		}
-		if(fileSnake.fileExists(fileName)){
-			io.out(MORNING_IO_ERROR, "Key is already in the untrusted store.\n");
-			return false;
+
+		sqlinsert_t insert;
+		insert.table = tableName;
+		insert.count = 6;
+		insert.cols = new string[6]{
+			colNames[sql_key],
+			colNames[sql_alias],
+			colNames[sql_justification],
+			colNames[sql_cbip],
+			colNames[sql_cbhost],
+			colNames[sql_cbport]
+		};
+		insert.values = new string[6]{
+			friendKey.pubkey,
+			friendKey.alias,
+			friendKey.justification,
+			friendKey.cbip,
+			friendKey.cbhost,
+			to_string(friendKey.cbport)
+		};
+		if(!sqlSnake.secureInsert(insert)){
+			throw MorningException("Failed to store untrusted key.\n");
 		}
-
-		publicKey = pub;
-		alias = name;
-		message = msg;
-
-		if(!xmlSnake.openFileWriter(fileName))
-                        throw MorningException("Failed to open '%s' for writing.", fileName.c_str());
-                if(!xmlSnake.startWritingFile())
-                        throw MorningException("Failed to start writing config file.");
-                if(!xmlSnake.startWritingElement("root"))
-                        throw MorningException("Failed to create <root> element.");
-		
-		if(!xmlSnake.writeElement("alias", alias))
-                	throw MorningException("Failed to write alias to key file.");
-		if(!xmlSnake.writeElement("message", message))
-			throw MorningException("Failed to write message to key file.");
-		if(!xmlSnake.writeElement("publickey", publicKey))
-			throw MorningException("Failed to write public key to key file.");
-
-		if(!xmlSnake.stopWritingElement())
-                        throw MorningException("Failed to stop writing trusted keys storage location to config file.");
-                if(!xmlSnake.stopWritingFile())
-                	throw MorningException("Failed to stop writing file.");
-                xmlSnake.closeFileWriter();
-
 		return true;
 	}
 };

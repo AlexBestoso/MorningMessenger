@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *version = "0.4.8 Alpha";
+		const char *version = "0.4.9 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -81,7 +81,13 @@ class MorningMessenger{
 				server.setupServerTable(config.getSql());
 				io.out(MORNING_IO_SUCCESS, "Server table successfully set up!\n");
 
+				io.out(MORNING_IO_GENERAL, "Setting up trusted keys table.\n");
+				MorningKeyManager keyManager;
+				keyManager.setupTable();
+				io.out(MORNING_IO_SUCCESS, "Trusted key table created!\n");
+
 				io.out(MORNING_IO_GENERAL, "Logging into your new account!\n");
+				config.loadConfig();
 				if(!user.login(config.getSql(), username, password))
 					throw MorningException("Authentication Failure : %s", user.getError());
 

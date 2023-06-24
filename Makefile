@@ -20,8 +20,8 @@ install:
 uninstall:
 	./uninstall.sh
 first_build:
-	g++ main.cc -lxml2 -lcrypto $(shell mysql_config --cflags) -o $(BinaryName) $(shell mysql_config --libs)
 	./install.sh
+	g++ main.cc -lxml2 -lcrypto $(shell mysql_config --cflags) -o $(BinaryName) $(shell mysql_config --libs)
 	make -C ./service/ all
 	make -C ./service/ install
 

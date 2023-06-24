@@ -501,6 +501,7 @@ class SqlSnake{
 			}
 			
 			q += ");";
+
 			return newQuery(q);
 		}
 
@@ -605,6 +606,7 @@ class SqlSnake{
 				q += " WHERE " + generateWhereString(sel.wheres);
 			}
 			q += ";";
+
 
 			return newQuery(q);
 		}

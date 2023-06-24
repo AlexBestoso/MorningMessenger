@@ -1,6 +1,6 @@
 # MorningMessenger
 <p>
-Version `0.4.8 alpha` (Messaging temporarally disabled.)<br>
+Version `0.4.9 alpha` (Messaging temporarally disabled.)<br>
 This commandline application allows you to send p2p encrypted messages using RSA and AES-256-CTR.
 </p>
 
@@ -20,17 +20,17 @@ This commandline application allows you to send p2p encrypted messages using RSA
 5. Added database-based user authentication.
 6. Added server config table.
 7. Added ability to reconfigure all service variables, key pairs, alias, hostname, and port name.
+8. Service now runs independant of the client and can be configured to run on system startup.
+9. received untrusted keys are now stored in the database.
 
 ### Messages From Morning Star
 1. I'll be looking into creating a notification system so that you don't need to manually refresh the message cache.
-2. I'll also be looking into isolating the server code into a seperate binary so that it can be run as a service on system startup.
-3. Will test TOR compatibility soon..
-4. Need to refactor the config file, server code, and send/recv message code.
-5. Need to implement the live chat feature now that AF UNIX support was added.
-6. Add mutual authentication.
-7. need to add system for managing and revoking trusted keys.
-8. Implement a gui ;)
+2. Will test TOR compatibility soon..
+3. Need to implement the live chat feature now that AF UNIX support was added.
+4. Add mutual authentication.
+5. need to add system for managing and revoking trusted keys.
+6. Implement a gui ;)
 
 ### More super duper important information
-In the process of moving all the file-based operations from the file system and into the database.<br>
-Generated server keys are now stored in the database.
+Now that the server stores untrusted keys in the database, I need to update the key manager menu to allow you to properly manage your received keys.<br>
+After this is done, I'll be finally getting to refactoring the actual messenger, which will operate much more smooth than version 0.3.x alpha.

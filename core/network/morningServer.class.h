@@ -43,6 +43,8 @@ class MorningServer{
 		string cmd_streamChat = "6c0df3e03ccc8a63b41937acc7169cabad337da6bc7bb36a19245548d6eef2a3";
 		string cmd_chat = "7b5a3431691d02a5f335235bae96e65301311115d3688e2306c0a664ab29bfbe";
 		
+		friendkey_t friendKey;
+
 		string clientPublicKey = "";
 		string clientName = "";
 		string clientMsg = "";
@@ -93,9 +95,9 @@ class MorningServer{
 				return false;
 			}
 			
-			clientPublicKey = "";
+			friendKey.pubkey = "";
 			for(int i=0; i<netSnake.server_recvSize; i++)
-				clientPublicKey += buffer[i];
+				friendKey.pubkey += buffer[i];
 
 			// Ensure full key is received.
                         int remaining = keySize - netSnake.server_recvSize;
@@ -107,37 +109,26 @@ class MorningServer{
                                 }
 
                                 for(int i=0; i<netSnake.server_recvSize; i++)
-                                        clientPublicKey += buffer[i];
+                                        friendKey.pubkey += buffer[i];
                                 remaining = remaining - netSnake.server_recvSize;
                         }
 
 			encryptionSnake.cleanOutPublicKey();
-			encryptionSnake.fetchRsaKeyFromString(false, false, clientPublicKey, clientPublicKey.length(), "");
+			encryptionSnake.fetchRsaKeyFromString(false, false, friendKey.pubkey, friendKey.pubkey.length(), "");
 			if(encryptionSnake.didFail()){
 				encryptionSnake.printError();
 				netSnake.closeConnection();
-				clientPublicKey = "";
+				friendKey.pubkey = "";
 				return false;
 			}
 			return true;
 		}
 
 		bool sendPublicKey(void){
-			mornconf cfg = config.getConfig();
-                        size_t size = fileSnake.getFileSize(cfg.pubkey);
+			loadConfigs();
+			string key = serverConfig.publicKey;
 
-                        char *buffer = new char[size];
-                        if(!fileSnake.readFile(cfg.pubkey, buffer, size)){
-                                netSnake.closeConnection();
-                                delete[] buffer;
-                                return false;
-                        }
-			string key = "";
-                        for(int i=0; i<size; i++)
-                                key += buffer[i];
-                        delete[] buffer;
-
-                        if(!netSnake.serverSend(key.c_str(), size)){
+                        if(!netSnake.serverSend(key.c_str(), key.length())){
                                 netSnake.closeConnection();
                                 return false;
                         }
@@ -262,7 +253,7 @@ class MorningServer{
 
 		bool storeMessageRequest(void){
 			try{
-				bool ret = keyManager.createUntrusted(clientPublicKey, clientName, clientMsg);
+				bool ret = keyManager.createUntrusted(friendKey);
 				return ret;
 			}catch(exception &e){
 				return false;
@@ -303,8 +294,9 @@ class MorningServer{
 
 	void launchServer(){
 		try{
-			mornconf cfg = config.getConfig();
-			if(!netSnake.createInetServer(cfg.serverport)){
+			config.loadConfig();
+			loadConfigs();
+			if(!netSnake.createInetServer(serverConfig.serverPort)){
 				throw MorningException(netSnake.errorMessage());
 			}
 		
@@ -329,8 +321,8 @@ class MorningServer{
 							exit(EXIT_FAILURE);
 						}
 						
-						clientName = ctrRecv();
-						if(clientName == ""){
+						friendKey.alias = ctrRecv();
+						if(friendKey.alias == ""){
 							netSnake.closeConnection();
 							exit(EXIT_FAILURE);
 						}
@@ -341,14 +333,34 @@ class MorningServer{
                                                         exit(EXIT_FAILURE);
                                                 }
 
-						clientMsg = ctrRecv();
-						if(clientMsg == ""){
+						friendKey.justification = ctrRecv();
+						if(friendKey.justification == ""){
                                                         netSnake.closeConnection();
                                                         exit(EXIT_FAILURE);
                                                 }
 
+						
+						friendKey.cbhost = ctrRecv();
+						if(friendKey.cbhost == ""){
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}
 
-						if(!storeMessageRequest()){
+						friendKey.cbport = atoi(ctrRecv().c_str());
+						if(!(friendKey.cbport > 0 && friendKey.cbport <= 65535)){
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}
+						friendKey.alias = ctrRecv();
+						if(friendKey.alias == ""){
+							netSnake.closeConnection();
+							exit(EXIT_FAILURE);
+						}
+
+						friendKey.cbip = netSnake.getClientIp();
+						friendKey.trusted = false;
+						friendKey.date = "";
+						if(storeMessageRequest() == false){
 							msg = "NO";
 							ctrSend(msg, msg.length());
 							netSnake.closeConnection();
@@ -379,18 +391,19 @@ class MorningServer{
 						}
 							
 						try{
-						morningMessage.setConfig(config);
-						if(!morningMessage.storeClientMessage(clientMessage, clientPublicKey)){
-							string resp = "[E] Failed to store your message.";
-							ctrSend(resp, resp.length());
-							netSnake.closeConnection();
-							exit(EXIT_FAILURE);
-						}else{
-							string resp = "[+] Succefully received your message.";
-							ctrSend(resp, resp.length());
-							netSnake.closeConnection();
-							exit(EXIT_SUCCESS);
-						}}catch(exception &e){
+							morningMessage.setConfig(config);
+							if(!morningMessage.storeClientMessage(clientMessage, clientPublicKey)){
+								string resp = "[E] Failed to store your message.";
+								ctrSend(resp, resp.length());
+								netSnake.closeConnection();
+								exit(EXIT_FAILURE);
+							}else{
+								string resp = "[+] Succefully received your message.";
+								ctrSend(resp, resp.length());
+								netSnake.closeConnection();
+								exit(EXIT_SUCCESS);
+							}
+						}catch(exception &e){
 							string resp = e.what();
 							resp = "[E]" + resp;	
                                                         ctrSend(resp, resp.length());
@@ -555,10 +568,11 @@ class MorningServer{
 			throw MorningException(sqlSnake.getError());
 		}
 
-		loadConfigs(sqlSnake);
+		loadConfigs();
 	}
 
-	void loadConfigs(SqlSnake sqlSnake){
+	void loadConfigs(){
+		SqlSnake sqlSnake = config.getSql();
 		sqlselect_t select;
 		select.table = tableName;
 		select.cols = colNames;
@@ -580,6 +594,7 @@ class MorningServer{
 		serverConfig.privateKey = sqlSnake.desanitize(res.results[0].values[sql_prikey]);
 		serverConfig.keyPassword = res.results[0].values[sql_keypass];
 		serverConfig.serverName = res.results[0].values[sql_name];
+
 
 		config.loadConfig();
 		morningconfig_t cfg = config.getSqlConfig();

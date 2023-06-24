@@ -1,7 +1,7 @@
 #!/bin/bash
 ServiceUser="MorningNoLogin"
 NoLoginPath=$(which nologin)
-StorageLocation="$(pwd)/MMS_Storage"
+StorageLocation="/var/morningService/MMS_Storage"
 
 mkdir ./bin 1>&2 > /dev/null
 
@@ -30,7 +30,7 @@ if [ "$?" == "0" ]; then
 else
 	echo "[-] libmysql++-dev not found! Attempting to install."
 	sudo apt-get install libmysql++-dev -y
-	if [ "$?" == "1"]; then
+	if [ "$?" == "1" ]; then
 		echo "[ERROR] Failed to install libmysql++-dev. Aborting"
 		exit 1
 	fi
@@ -78,7 +78,7 @@ fi
 echo "[INFO] Making storage directory '$StorageLocation'"
 test -d $StorageLocation
 if [ "$?" != "0" ]; then
-	mkdir $StorageLocation 2>/dev/null
+	sudo mkdir -p $StorageLocation 2>/dev/null
 	if [ "$?" != "0" ];then
 		echo "[ERROR] Failed to create storage directory. Aborting."
 		exit 1
@@ -88,7 +88,7 @@ else
 fi
 
 echo "[INFO] Configuring ownership of the storage file."
-sudo chown -R $ServiceUser:$ServiceUser $StorageLocation
+sudo chown -R $ServiceUser:$ServiceUser /var/morningService
 if [ "$?" == "0" ];then
 	echo "[+] Successfully configured storage ownership!"
 else
@@ -97,7 +97,7 @@ else
 fi
 
 echo "[INFO] Configuring storage permissions."
-sudo chmod 700 $StorageLocation
+sudo chmod 700 /var/morningService
 if [ "$?" == "0" ];then
 	echo "[+] Successfully configured storage permissions."
 else

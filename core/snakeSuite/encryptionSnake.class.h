@@ -346,13 +346,13 @@ class EncryptionSnake{
 
 				const unsigned char *doublePointer  = data;
                                 if(!OSSL_DECODER_from_data(decoderCtx, &doublePointer, &keyLen)){
+					printError();
                                         fetchRsaKeyFromStringFree();
                                         failed = true;
 					delete[] data;
                                         return "";
                                 }
 
-				delete doublePointer;
 				delete[] data;
                                 OSSL_DECODER_CTX_free(decoderCtx);
                                 decoderCtx = NULL;

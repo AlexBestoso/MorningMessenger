@@ -45,6 +45,7 @@ using namespace std;
 int main(int argc, char *argv[]){
 	try{
 		MorningService ms;
+		ms.runServer();
 			
 	}catch(exception &e){
 		MorningIO io;

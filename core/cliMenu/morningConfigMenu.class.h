@@ -140,7 +140,7 @@ class MorningConfigMenu : public MorningMenu{
 						val = io.inString(MORNING_IO_INPUT, "(deprecated) Enter message storage location");
 						c.messages = val;
 						try{
-							config.newConfig(config.getConfigLoc(), c);
+							config.newConfig(config.getConfigLoc(false), c);
 							io.out(MORNING_IO_SUCCESS, "Updated message storage location.\n");
 						}catch(exception &e){
 							io.outf(MORNING_IO_FAILURE, "%s\n", e.what());
@@ -150,7 +150,7 @@ class MorningConfigMenu : public MorningMenu{
 						val = io.inString(MORNING_IO_INPUT, "Enter private key storage location");
 						c.prikey = val;
 						try{
-                                                        config.newConfig(config.getConfigLoc(), c);
+                                                        config.newConfig(config.getConfigLoc(false), c);
                                                         io.out(MORNING_IO_SUCCESS, "Updated private key location.\n");
                                                 }catch(exception &e){
                                                         io.outf(MORNING_IO_FAILURE, "%s\n", e.what());
@@ -160,7 +160,7 @@ class MorningConfigMenu : public MorningMenu{
 						val = io.inString(MORNING_IO_INPUT, "Enter publickey storage location");
 						c.pubkey = val;
 						try{
-                                                        config.newConfig(config.getConfigLoc(), c);
+                                                        config.newConfig(config.getConfigLoc(false), c);
                                                         io.out(MORNING_IO_SUCCESS, "Updated publickey location.\n");
                                                 }catch(exception &e){
                                                         io.outf(MORNING_IO_FAILURE, "%s\n", e.what());
@@ -170,7 +170,7 @@ class MorningConfigMenu : public MorningMenu{
 						val = io.inString(MORNING_IO_INPUT, "Enter server host name");
 						c.serverhost = val;
 						try{
-                                                        config.newConfig(config.getConfigLoc(), c);
+                                                        config.newConfig(config.getConfigLoc(false), c);
                                                         io.out(MORNING_IO_SUCCESS, "Updated server host name.\n");
                                                 }catch(exception &e){
                                                         io.outf(MORNING_IO_FAILURE, "%s\n", e.what());
@@ -180,7 +180,7 @@ class MorningConfigMenu : public MorningMenu{
 						val_int = atoi(io.inString(MORNING_IO_INPUT, "Enter server listen port").c_str());
 						c.serverport = val_int;
 						try{
-                                                        config.newConfig(config.getConfigLoc(), c);
+                                                        config.newConfig(config.getConfigLoc(false), c);
                                                         io.out(MORNING_IO_SUCCESS, "Updated server listen port.\n\tDon't forget to restart the service.\n");
                                                 }catch(exception &e){
                                                         io.outf(MORNING_IO_FAILURE, "%s\n", e.what());
@@ -190,7 +190,7 @@ class MorningConfigMenu : public MorningMenu{
 						val = io.inString(MORNING_IO_INPUT, "Enter trusted key storage location");
 						c.trustedkeys = val;
 						try{
-                                                        config.newConfig(config.getConfigLoc(), c);
+                                                        config.newConfig(config.getConfigLoc(false), c);
                                                         io.out(MORNING_IO_SUCCESS, "Updated trusted keys location.\n");
                                                 }catch(exception &e){
                                                         io.outf(MORNING_IO_FAILURE, "%s\n", e.what());
