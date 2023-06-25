@@ -33,5 +33,4 @@ This commandline application allows you to send p2p encrypted messages using RSA
 5. Implement a gui ;)
 
 ### More super duper important information
-Now that the server stores untrusted keys in the database, I need to update the key manager menu to allow you to properly manage your received keys.<br>
-After this is done, I'll be finally getting to refactoring the actual messenger, which will operate much more smooth than version 0.3.x alpha.
+I'm finally getting to refactoring the actual messenger, which will operate much more smooth than version 0.3.x alpha.
