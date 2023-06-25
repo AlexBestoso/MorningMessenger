@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *version = "0.4.9 Alpha";
+		const char *version = "0.4.10 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -240,8 +240,14 @@ class MorningMessenger{
 
 		}else if(menuCtx == MORNING_MANAGER_MENU_UNTRUSTED && subCtx > 0){
 			return managerMenu.manageUntrustedKey();
-		}else if(menuCtx == MORNING_MANAGER_MENU_TRUSTED){
-			throw MorningException("Trusted key management has not been programmed yet");
+		}else if(menuCtx == MORNING_MANAGER_MENU_TRUSTED && subCtx == 0){
+			managerMenu.showTrustedKeyOptions();
+                        if(managerMenu.getCoreContext() == MORNING_MANAGER_MENU_MAIN){
+                                managerMenu.setSubContext(0);
+                                return true;
+                        }
+		}else if(menuCtx == MORNING_MANAGER_MENU_TRUSTED && subCtx > 0){
+			return managerMenu.manageTrustedKey();
 		}else{
                         throw MorningException("Illegal manager menu context. Option ID %d\n", menuCtx);
                 }

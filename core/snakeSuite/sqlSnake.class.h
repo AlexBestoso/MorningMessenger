@@ -18,6 +18,7 @@ class SqlSnake{
 
                 string warning = "";
                 string error = "";
+		string failedQuery = "";
 
                 MYSQL *connection = NULL;
                 MYSQL_RES *results = NULL;
@@ -51,6 +52,9 @@ class SqlSnake{
 		string getError(){
                         return this->error;
                 }
+		string getFailedQuery(){
+			return this->failedQuery;
+		}
 
                 bool dbIsSelected(){
                         return this->dbSelected;
@@ -142,11 +146,14 @@ class SqlSnake{
                 }
 
 		bool query(string q){
+			failedQuery = "";
                         if(!this->connect()){
+				failedQuery = q;
                                 return false;
                         }
                         if(mysql_query(this->connection, q.c_str())){
                                 this->error = mysql_error(this->connection);
+				failedQuery = q;
                                 return false;
                         }
                         this->results = mysql_store_result(this->connection);

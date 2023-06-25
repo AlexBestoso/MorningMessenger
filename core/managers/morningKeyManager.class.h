@@ -1,14 +1,8 @@
-struct morning_key_file{
-	string publickey = "";
-	string alias = "";
-	string message = "";
-};
-typedef struct morning_key_file keyfile;
-
 struct morning_key_record{
 	int id = -1;
 	bool trusted = false;
 	string alias = "";
+	string serverAlias = "";
 	string cbip = "";
 	string cbhost = "";
 	int cbport = -1;
@@ -18,6 +12,14 @@ struct morning_key_record{
 };
 typedef struct morning_key_record friendkey_t;
 
+struct morning_key_file{
+	int id = 0;
+	string publickey = "";
+	string alias = "";
+	string message = "";
+};
+typedef struct morning_key_file keyfile;
+
 class MorningKeyManager{
 	private:
 		string fileName = "";
@@ -26,10 +28,11 @@ class MorningKeyManager{
 		string message = "";
 
 		string tableName = "morn_friends";
-		string colNames[9] = {
+		string colNames[10] = {
 			"id",
 			"trusted",
 			"alias",
+			"server_alias",
 			"cbip",
 			"cbhost",
 			"cbport",
@@ -37,15 +40,17 @@ class MorningKeyManager{
 			"pubkey",
 			"justification"
 		};
+		size_t colCount = 10;
 		int sql_id = 0;
                 int sql_trusted = 1;
                 int sql_alias = 2;
-		int sql_cbip = 3;
-                int sql_cbhost = 4;
-                int sql_cbport = 5;
-                int sql_date = 6;
-                int sql_key = 7;
-		int sql_justification = 8;
+                int sql_server_alias = 3;
+		int sql_cbip = 4;
+                int sql_cbhost = 5;
+                int sql_cbport = 6;
+                int sql_date = 7;
+                int sql_key = 8;
+		int sql_justification = 9;
 
 		
 		EncryptionSnake encryptionSnake;
@@ -57,120 +62,231 @@ class MorningKeyManager{
 		MorningIO io;
 	public:
 	
+	size_t recentAllocSize = 0;
+
 	int untrustedKeyCount(void){
 		int ret = 0;
-		string *files = fileSnake.listDir(config.getUntrustedKeysLoc());
-		for(int i=0; files[i] != ""; i++){
-			if(files[i] != ""){
-				ret++;
-			}
-		}
-		delete[] files;
+		string q = "SELECT COUNT(*) FROM "+tableName+" WHERE "+colNames[sql_trusted]+"=0;";
+		sqlSnake = config.getSql();
+		if(!sqlSnake.newQuery(q))
+			throw MorningException("Failed to get key count : %s", sqlSnake.getError().c_str());
+
+		sqlresults_t res = sqlSnake.getResults();
+		if(res.resultCount <= 0)
+			throw MorningException("Failed to get key count : No sql results.\n");
+		
+		if(res.fieldCount <= 0)
+			throw MorningException("Failed to get key count : No Sql Fields.\n");
+
+		ret = atoi(res.results[0].values[0].c_str());
 		return ret;
 	}
 
+	int trustedKeyCount(void){
+                int ret = 0;
+                string q = "SELECT COUNT(*) FROM "+tableName+" WHERE "+colNames[sql_trusted]+"=1;";
+                sqlSnake = config.getSql();
+                if(!sqlSnake.newQuery(q))
+                        throw MorningException("Failed to get key count : %s", sqlSnake.getError().c_str());
+
+                sqlresults_t res = sqlSnake.getResults();
+                if(res.resultCount <= 0)
+                        throw MorningException("Failed to get key count : No sql results.\n");
+
+                if(res.fieldCount <= 0)
+                        throw MorningException("Failed to get key count : No Sql Fields.\n");
+
+                ret = atoi(res.results[0].values[0].c_str());
+                return ret;
+        }
+
 	bool denyUntrustedKey(int id){
-		int keyCount = untrustedKeyCount();
-		if(keyCount <= 0 || id >= keyCount)
+		sqlwherelist_t wheres;
+		wheres = sqlSnake.addToWhere(
+				wheres, 
+				sqlSnake.generateWhere(colNames[sql_id], "=", to_string(id), true), 
+				""
+		);
+		sqlSnake = config.getSql();
+		if(!sqlSnake.secureDelete(tableName, wheres)){
 			return false;
-		string *files = fileSnake.listDir(config.getUntrustedKeysLoc());
-		string target = config.getUntrustedKeysLoc() + "/" + files[id];
-		if(!fileSnake.removeFile(target)){
-			return false;
-		}
-		delete[] files;
+		}		
 		return true;
 	}
 
+	bool deleteTrustedKey(int id){
+		return denyUntrustedKey(id);
+	}
+
 	bool isKeyTrusted(string pubkey){
-		size_t pubkeySize = pubkey.length();
-                if(pubkeySize > 1024)
-                        pubkeySize = 1024;
-		string keyHash = encryptionSnake.sha256(pubkey, pubkeySize, false);
-		string dirLoc = config.getTrustedKeysLoc() + "/" +keyHash;
-		if(fileSnake.fileExists(dirLoc) && fileSnake.getFileType(dirLoc) == FILE_SNAKE_DIR){
-			return true;
+		sqlselect_t select;
+		select.table = tableName;
+		select.colCount = 1;
+		select.cols = new string[1]{
+			colNames[sql_trusted]
+		};
+		select.hasWhere = true;
+		select.wheres = sqlSnake.addToWhere(
+			select.wheres,
+			sqlSnake.generateWhere(colNames[sql_key], "=", pubkey, true),
+			""
+		);
+		sqlSnake = config.getSql();
+		if(!sqlSnake.secureSelect(select))
+			throw MorningException("Failed to check if key is trusted : %s", sqlSnake.getError().c_str());
+
+		sqlresults_t res = sqlSnake.getResults();
+		if(res.fieldCount <= 0)
+			throw MorningException("Failed to check if key is trusted : No fields in result.");
+
+		if(res.resultCount <= 0){
+			return false;
 		}
+
+		int trusted = atoi(res.results[0].values[0].c_str());
+		if(trusted == 1)
+			return true;
+
 		return false;
 	}
 
 	bool approveUntrustedKey(int id){
-		int keyCount = untrustedKeyCount();
-                if(keyCount <= 0 || id >= keyCount)
-                        return false;
-                string *files = fileSnake.listDir(config.getUntrustedKeysLoc());
-                string target = config.getUntrustedKeysLoc() + "/" + files[id];
-		string newLoc = config.getTrustedKeysLoc() + "/" + files[id];
-		delete[] files;
-
-		if(!fileSnake.makeDir(newLoc)){
-			fileSnake.removeDirRecursive(newLoc);
-			io.outf(MORNING_IO_ERROR, "Failed to make directory '%s'\n", newLoc.c_str());
-			return false;
-		}
-
-		newLoc = newLoc + "/user.xml";
-		size_t fileSize = fileSnake.getFileSize(target);
-		char *buf = new char[fileSize];
-		if(!fileSnake.readFile(target, buf, fileSize)){
-			io.outf(MORNING_IO_ERROR, "Failed to read file '%s'\n", target.c_str());
-			return false;
-		}
-
-		if(!fileSnake.writeFileTrunc(newLoc, buf, fileSize)){
-			io.outf(MORNING_IO_ERROR, "Failed to write file '%s'\n", newLoc.c_str());
-			return false;
-		}
-		delete[] buf;
-
-		if(!fileSnake.removeFile(target)){
-                        return false;
-                }
+		sqlupdate_t update;
+		update.table = tableName;
+		update.valueCount = 1;
+		update.cols = new string[1]{
+			colNames[sql_trusted]
+		};
+		update.values = new string[1]{
+			"1"
+		};
+		update.wheres = sqlSnake.addToWhere(
+			update.wheres,
+			sqlSnake.generateWhere(colNames[sql_id], "=", to_string(id)),
+			""
+		);
+		sqlSnake = config.getSql();
+		if(!sqlSnake.secureUpdate(update))
+			throw MorningException("Failed to approve key : %s", sqlSnake.getError().c_str());
 
 		return true;
 	}
 
+	bool revokeTrustedKey(int id){
+                sqlupdate_t update;
+                update.table = tableName;
+                update.valueCount = 1;
+                update.cols = new string[1]{
+                        colNames[sql_trusted]
+                };
+                update.values = new string[1]{
+                        "0"
+                };
+                update.wheres = sqlSnake.addToWhere(
+                        update.wheres,
+                        sqlSnake.generateWhere(colNames[sql_id], "=", to_string(id)),
+                        ""
+                );
+                sqlSnake = config.getSql();
+                if(!sqlSnake.secureUpdate(update))
+                        throw MorningException("Failed to revoke key : %s", sqlSnake.getError().c_str());
+
+                return true;
+        }
+
 	keyfile *fetchUntrustedKeys(){
+		sqlSnake = config.getSql();
+
+		sqlselect_t select;
+		select.table = tableName;
+		select.colCount = colCount;
+		select.cols = colNames;
+		select.hasWhere = true;
+		
+		select.wheres = sqlSnake.addToWhere(
+			select.wheres,
+			sqlSnake.generateWhere(colNames[sql_trusted], "=", "0", false),
+			""
+		);
+		if(!sqlSnake.secureSelect(select)){
+			throw MorningException("Failed to fetch untrusted keys : %s", sqlSnake.getError().c_str());
+		}
+
+		sqlresults_t res = sqlSnake.getResults();
+
+		if(res.fieldCount <= 0){
+			throw MorningException("Failed to fetch untrusted keys : No fields in result.");
+		}
+
 		keyfile *untrustedKeys = NULL;
-		size_t keyCount = untrustedKeyCount();
+		size_t keyCount = res.resultCount;
 		if(keyCount <= 0){
 			return NULL;
 		}
 		untrustedKeys = new keyfile[keyCount];
-		string *files = fileSnake.listDir(config.getUntrustedKeysLoc());
-		for(int i=0; i<keyCount; i++){
-			string fileName = config.getUntrustedKeysLoc() + "/" + files[i];
-			if(!xmlSnake.openFileReader(fileName)){
-                                throw MorningException("Failed to open key file '%s'", fileName.c_str());
-                        }
-                        string previous = "";
-                        while(xmlSnake.readLineReader()){
-                                if(xmlSnake.readResult.name == "#text" && previous == "alias"){
-                                        untrustedKeys[i].alias = xmlSnake.readResult.value;
-                                }
-                                if(xmlSnake.readResult.name == "#text" && previous == "message"){
-                                        untrustedKeys[i].message = xmlSnake.readResult.value;
-                                }
-                                if(xmlSnake.readResult.name == "#text" && previous == "publickey"){
-                                        untrustedKeys[i].publickey = xmlSnake.readResult.value;
-                                }
 
-                                previous = xmlSnake.readResult.name;
-                        }
-                        xmlSnake.closeReader();
-		}	
-		delete[] files;
+		for(int i=0; i<keyCount; i++){
+			untrustedKeys[i].id = atoi(res.results[i].values[sql_id].c_str());
+			untrustedKeys[i].alias = res.results[i].values[sql_alias];
+			untrustedKeys[i].message = res.results[i].values[sql_justification];
+			untrustedKeys[i].publickey = sqlSnake.desanitize(res.results[i].values[sql_key]);
+		}
+
+		recentAllocSize = keyCount;
 		return untrustedKeys;
+	}
+
+	keyfile *fetchTrustedKeys(){
+                sqlSnake = config.getSql();
+
+                sqlselect_t select;
+                select.table = tableName;
+                select.colCount = colCount;
+                select.cols = colNames;
+                select.hasWhere = true;
+
+                select.wheres = sqlSnake.addToWhere(
+                        select.wheres,
+                        sqlSnake.generateWhere(colNames[sql_trusted], "=", "1", false),
+                        ""
+                );
+                if(!sqlSnake.secureSelect(select)){
+                        throw MorningException("Failed to fetch trusted keys : %s", sqlSnake.getError().c_str());
+                }
+
+                sqlresults_t res = sqlSnake.getResults();
+
+                if(res.fieldCount <= 0){
+                        throw MorningException("Failed to fetch trusted keys : No fields in result.");
+                }
+
+                keyfile *trustedKeys = NULL;
+                size_t keyCount = res.resultCount;
+                if(keyCount <= 0){
+                        return NULL;
+                }
+                trustedKeys = new keyfile[keyCount];
+
+                for(int i=0; i<keyCount; i++){
+                        trustedKeys[i].id = atoi(res.results[i].values[sql_id].c_str());
+                        trustedKeys[i].alias = res.results[i].values[sql_alias];
+                        trustedKeys[i].message = res.results[i].values[sql_justification];
+                        trustedKeys[i].publickey = sqlSnake.desanitize(res.results[i].values[sql_key]);
+                }
+
+                recentAllocSize = keyCount;
+                return trustedKeys;
 	}
 
 	sqltable_t generateTable(void){
                 sqltable_t ret;
                 ret.name = tableName;
-                ret.colCount = 9;
-                ret.cols = new sqlcolumn_t[9];
+                ret.colCount = colCount;
+                ret.cols = new sqlcolumn_t[colCount];
                 ret.cols[sql_id] = sqlSnake.generatePrimaryColumn(colNames[sql_id], "INT", "NOT NULL AUTO_INCREMENT");
 		ret.cols[sql_trusted] = sqlSnake.generateColumn(colNames[sql_trusted], "INT(1)", "NOT NULL DEFAULT 0");
 		ret.cols[sql_alias] = sqlSnake.generateColumn(colNames[sql_alias], "VARCHAR(50)", "NOT NULL");
+		ret.cols[sql_server_alias] = sqlSnake.generateColumn(colNames[sql_server_alias], "VARCHAR(50)", "NOT NULL");
 		ret.cols[sql_cbip] = sqlSnake.generateColumn(colNames[sql_cbip], "VARCHAR(20)", "NOT NULL");
 		ret.cols[sql_cbhost] = sqlSnake.generateColumn(colNames[sql_cbhost], "VARCHAR(300)", "NOT NULL");
 		ret.cols[sql_cbport] = sqlSnake.generateColumn(colNames[sql_cbport], "VARCHAR(6)", "NOT NULL");
@@ -218,18 +334,20 @@ class MorningKeyManager{
 
 		sqlinsert_t insert;
 		insert.table = tableName;
-		insert.count = 6;
-		insert.cols = new string[6]{
+		insert.count = 7;
+		insert.cols = new string[7]{
 			colNames[sql_key],
 			colNames[sql_alias],
+			colNames[sql_server_alias],
 			colNames[sql_justification],
 			colNames[sql_cbip],
 			colNames[sql_cbhost],
 			colNames[sql_cbport]
 		};
-		insert.values = new string[6]{
+		insert.values = new string[7]{
 			friendKey.pubkey,
 			friendKey.alias,
+			friendKey.serverAlias,
 			friendKey.justification,
 			friendKey.cbip,
 			friendKey.cbhost,

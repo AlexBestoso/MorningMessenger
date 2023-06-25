@@ -81,9 +81,9 @@ class MorningServerMenu : public MorningMenu{
 			io.out(MORNING_IO_GENERAL, "Starting Service...\n");
 			if(fork() == 0){
 				char *args[] = {
-					"/usr/sbin/service",
-					"morningService",
-					"start",
+					(char *)"/usr/sbin/service",
+					(char *)"morningService",
+					(char *)"start",
 					NULL
 				};
 				execvp(args[0], args);
@@ -94,9 +94,9 @@ class MorningServerMenu : public MorningMenu{
 			io.out(MORNING_IO_GENERAL, "Stopping Service...\n");    
                         if(fork() == 0){
                                 char *args[] = {
-                                        "/usr/sbin/service",
-					"morningService",
-                                        "stop",
+                                        (char *)"/usr/sbin/service",
+					(char *)"morningService",
+                                        (char *)"stop",
                                         NULL
                                 };
                                 execvp(args[0], args);
@@ -107,9 +107,9 @@ class MorningServerMenu : public MorningMenu{
 			io.out(MORNING_IO_GENERAL, "Getting Service Status...\n");    
                         if(fork() == 0){
                                 char *args[] = {
-                                        "/usr/sbin/service",
-					"morningService",
-                                        "status",
+                                        (char *)"/usr/sbin/service",
+					(char *)"morningService",
+                                        (char *)"status",
                                         NULL
                                 };
                                 execvp(args[0], args);

@@ -303,6 +303,7 @@ class MorningClient{
 				msg = ctrRecv();
                                 string reason = io.inWithSpace(MORNING_IO_NONE, msg);
                                 this->ctrSend(reason, reason.length());
+				io.out(MORNING_IO_GENERAL, "Processing request...\n");
 				sleep(1);
 				this->ctrSend(cfg.serverHost, cfg.serverHost.length());
 				sleep(1);

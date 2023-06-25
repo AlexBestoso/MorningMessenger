@@ -351,8 +351,8 @@ class MorningServer{
 							netSnake.closeConnection();
 							exit(EXIT_FAILURE);
 						}
-						friendKey.alias = ctrRecv();
-						if(friendKey.alias == ""){
+						friendKey.serverAlias = ctrRecv();
+						if(friendKey.serverAlias == ""){
 							netSnake.closeConnection();
 							exit(EXIT_FAILURE);
 						}
