@@ -1,24 +1,34 @@
 # MorningMessenger
-You can now view and share messages with other people using this software, assuming that you've shared your public keys with each other. Which is done automatically by the system.
+Version `0.4.11 alpha`<br>
+This commandline application allows you to send p2p encrypted messages using RSA and AES-256-CTR.
 
 ## Install Procedure
-1. Run the command `make install` and the requirements for the application will be installed and configured. Authentication may be requred.
-2. Run the command `make` and the application will compile.
-3. launch the application by running `./run` from the terminal.
+1. Install mysql server and make sure you have credentials you can use
+2. To install and compile both client and server, run `make first_build`
+3. Launch the application by running `./run` from the terminal and follow the instructions to setup the database.
+4. From inside the application, go to the server menu via the `serverctrl` command or by entering `1`
+5. Start the messenger service by then running `start`, which activates the service by using systemctrl.
+6. You should be able to use the application from here, and can even configure the back end to start on system boot.
 
 ## Uninstall Procedure
-1. Run the command `make uninstall` and all processes, folders, and users created by the installer will be removed. You can optionally remove the installed dependancies if you desire; but by default this is skipped.
+1. Run the command `make full_uninstall` and all processes, folders, and users, and system configurations created by the installer will be removed. You can optionally remove the installed dependancies if you desire; but by default this is skipped.
 
 ### Changes in this version.
-1. You can now send messages to servers.
-2. Added inbox menu
-3. You can now view, save, and delete messages that you receive from people.
+1. Refactored the locations of all the header files.
+2. Refactored access requests, added "findFriends" menu option.
+3. You can now update and view the config file directly in the application.
+4. Added database-based user authentication.
+5. Added server config table.
+6. Added ability to reconfigure all service variables, key pairs, alias, hostname, and port name.
+7. Service now runs independant of the client and can be configured to run on system startup.
+8. Received untrusted keys are now stored in the database.
+9. Updated key management to use the database.
+10. Added menu for managing trusted keys.
+11. overhauled the messenger inbox system.
 
 ### Messages From Morning Star
-1. Version `0.3.3 alpha`
-2. I'll be looking into creating a notification system so that you don't need to manually refresh the message cache.
-3. I'll also be looking into isolating the server code into a seperate binary so that it can be run as a service on system startup.
-4. Will test TOR compatibility soon..
-5. I'm going to add base64 to encryption snake so that we can encrypt and store data within xml files themselves.
-6. Once communications are properly established, I will be modifying the key management to enable mutual authentication.
-7. Before I can implement a live chat, which will allow the server hoster to join chats via the forked server connection, I need to update my netsnake code to support `AF_UNIX` clients and servers. 
+1. I'll be looking into creating a notification system so that you don't need to manually refresh the message cache.
+2. Will test TOR compatibility soon..
+3. Need to implement the live chat feature now that AF UNIX support was added.
+4. Add mutual authentication.
+5. Implement a gui ;)

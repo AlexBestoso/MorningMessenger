@@ -87,6 +87,10 @@ class EncryptionSnake{
 			pkeyCtx = NULL;
 		}
 
+		/*
+		 * Encoding variables and functions
+		 * */
+		EVP_ENCODE_CTX *encodeCtx = NULL;
 
 		/*
 		 * Misclanious variables and functions
@@ -342,13 +346,13 @@ class EncryptionSnake{
 
 				const unsigned char *doublePointer  = data;
                                 if(!OSSL_DECODER_from_data(decoderCtx, &doublePointer, &keyLen)){
+					printError();
                                         fetchRsaKeyFromStringFree();
                                         failed = true;
 					delete[] data;
                                         return "";
                                 }
 
-				delete doublePointer;
 				delete[] data;
                                 OSSL_DECODER_CTX_free(decoderCtx);
                                 decoderCtx = NULL;
@@ -526,9 +530,7 @@ class EncryptionSnake{
                         }
 
 			if(keyPassword != ""){
-				printf("Failing here.\n");
 				OSSL_ENCODER_CTX_set_passphrase(encoderCtx, (const unsigned char *)keyPassword.c_str(), keyPassword.length());
-				printf("nig\n");
                         }
 
                         if(!OSSL_ENCODER_to_fp(encoderCtx, fp)){
@@ -807,6 +809,9 @@ class EncryptionSnake{
 			return digest;
 		}	
 
+		/*
+		 * Random number generation
+		 * */
 		string randomPublic(size_t byteCount){
 			failed = false;
 			if(byteCount <= 0)
@@ -842,4 +847,90 @@ class EncryptionSnake{
                         delete[] buf;
                         return ret;
                 }
+
+		/*
+		 * Base64 Encoding
+		 * */
+
+		string base64(bool encode, string in, size_t size){
+			failed = false;
+			if(size <= 0){
+				failed = true;
+				return "";
+			}
+
+			string ret = "";
+			if(encode){
+				unsigned char *inbuf = new unsigned char[size];
+				size_t outBufCalculated = ((size/48) * 66) + 66;
+				unsigned char *outbuf = new unsigned char[outBufCalculated];
+
+				for(int i=0; i<size; i++)
+					inbuf[i] = in[i];
+
+				encodeCtx = EVP_ENCODE_CTX_new();
+				EVP_EncodeInit(encodeCtx);
+				if(encodeCtx == NULL){
+					failed = true;
+					delete[] inbuf;
+					delete[] outbuf;
+					return "";
+				}
+				
+				int outCount = 0;
+				if(EVP_EncodeUpdate(encodeCtx, outbuf, &outCount, (const unsigned char *)inbuf, size) != 1){
+					failed = true;
+					delete[] inbuf;
+					delete[] outbuf;
+					EVP_ENCODE_CTX_free(encodeCtx);
+					return "";
+				}
+				resultLen = outCount;
+				EVP_EncodeFinal(encodeCtx, outbuf+resultLen, &outCount);
+				resultLen += outCount;
+				
+				for(int i=0; i<resultLen; i++)
+					ret += outbuf[i];
+				delete[] inbuf;
+				delete[] outbuf;
+				EVP_ENCODE_CTX_free(encodeCtx);
+			}else{
+				unsigned char *inbuf = new unsigned char[size];
+                                size_t outBufCalculated = ((size/48) * 66) + 66;
+                                unsigned char *outbuf = new unsigned char[outBufCalculated];
+
+                                for(int i=0; i<size; i++)
+                                        inbuf[i] = in[i];
+
+                                encodeCtx = EVP_ENCODE_CTX_new();
+                                EVP_DecodeInit(encodeCtx);
+                                if(encodeCtx == NULL){
+                                        failed = true;
+                                        delete[] inbuf;
+                                        delete[] outbuf;
+                                        return "";
+                                }
+
+                                int outCount = 0;
+                                if(EVP_DecodeUpdate(encodeCtx, outbuf, &outCount, (const unsigned char *)inbuf, size) == -1){
+                                        failed = true;
+                                        delete[] inbuf;
+                                        delete[] outbuf;
+                                        EVP_ENCODE_CTX_free(encodeCtx);
+					encodeCtx = NULL;
+                                        return "";
+                                }
+                                resultLen = outCount;
+                                EVP_DecodeFinal(encodeCtx, outbuf+resultLen, &outCount);
+                                resultLen += outCount;
+                                
+                                for(int i=0; i<resultLen; i++)
+                                        ret += outbuf[i];
+                                delete[] inbuf;
+                                delete[] outbuf;
+                                EVP_ENCODE_CTX_free(encodeCtx);
+				encodeCtx = NULL;
+			}
+			return ret;
+		}
 };

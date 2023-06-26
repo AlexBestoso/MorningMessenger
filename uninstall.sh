@@ -1,6 +1,6 @@
 #!/bin/bash
 ServiceUser="MorningNoLogin"
-StorageLocation="$(pwd)/MMS_Storage"
+StorageLocation="/var/morningService"
 
 echo "[INFO] Deleting application storage directory."
 sudo rm -rf $StorageLocation
@@ -15,7 +15,7 @@ sudo userdel -f $ServiceUser
 echo "[INFO] Removing service user group."
 sudo groupdel $ServiceUser 2>/dev/null
 
-echo "Would you like to remove libxml2-dev, libssl-dev, and g++? (N/y)"
+echo "Would you like to remove libxml2-dev, libssl-dev, libmysql++-dev, and g++? (N/y)"
 read UserInput
 
 if [ "$UserInput" == "y" ]; then
@@ -23,6 +23,6 @@ if [ "$UserInput" == "y" ]; then
 	if [ "$?" == "0" ]; then
 		sudo rm /usr/include/libxml
 	fi
-	sudo apt-get remove libxml2-dev libssl-dev g++ -y
+	sudo apt-get remove libxml2-dev libssl-dev libmysql++-dev g++ -y
 	sudo apt-get autoclean && sudo apt-get autoremove -y
 fi

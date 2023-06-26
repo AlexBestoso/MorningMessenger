@@ -1,0 +1,45 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          morningservice
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# X-Interactive:     false
+# Short-Description: Example init script
+# Description:       Start/stop an example script
+### END INIT INFO
+
+DESC="Start Script for the morning messenger server."
+NAME=morningservice
+DAEMON=morningservice.out
+PATH="/var/morningService"
+PID="${PATH}/morningservice.pid"
+
+do_start(){
+	echo "Enter username > "
+	read user
+	sudo -u MorningNoLogin start-stop-daemon --start --background -m --oknodo --pidfile "${PID}" --exec "${PATH}/${DAEMON}"
+}
+
+do_stop(){
+	sudo -u MorningNoLogin start-stop-daemon --stop -m --oknodo --pidfile "${PID}" --exec "${PATH}/${DAEMON}" 
+}
+
+
+case "$1" in
+	start)
+		echo "STARTING"
+		do_start
+		;;
+	stop)
+		echo "STOPPING"
+		do_stop
+		;;
+	*)
+		echo "Start up options {start|stop}"
+		;;
+esac
+
+exit 0
+

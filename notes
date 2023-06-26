@@ -1,37 +1,3 @@
-example of trusted key file. Everything must be encrypted with the exception of the uid and the public key location. 
-As these two things will be used to place store the message properly. When you login properly, the names and contact info will be cached in memory.
-<root>
-	<uid>UNIQUE-ID-OF-TRUSTED-PERSON</uid>
-	<pubkey>/location/of/public/key.pem</pubkey>
-	<alias>Name of your Friend</alias>
-	<remoteserverhost>yourFriendsDomain.onion</remoteserverhost>
-	<remoteserverport>21345(default)</remoteserverport>
-</root>
-
-Example of message file. The entire message will be crafted by the client. the message data will be encrypted. Then the rest of the message will be encrypted as well
-to prevent manipulation of the self destruct bit.
-<root>
-	<recptdate>date and time</recptdate>
-	<messagedata>ENCRYPTED DATA<messagedata>
-	<selfdestruct>(0 or 1)</selfdesctruct>
-	
-</root>
-
-
-
-Inbox Menu Layout:
-	- Gather public key directories.
-	- Parse out of each directory the user alias
-	- Get message count for each user
-	- Display alias as menu option and show message count for the user.
-Selected user option:
-	- get path of each message
-	- display date of received message as menu options
-View Message
-	- Show message data
-	- provide option to save message, they will delete on default.
-
-
 Server Communication Protocol: 
 
 if already here
