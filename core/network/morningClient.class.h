@@ -241,7 +241,7 @@ class MorningClient{
 
 		void connectClient(string host, int port){
 			if(!netSnake.createClient(host, port, 0))
-				throw MorningException("connectClient: Failed to create client\nNetSnake::createClient : %s\n", netSnake.errorMessage());
+				throw MorningException("connectClient: Failed to create client\nNetSnake::createClient : %s\n", netSnake.errorMessage().c_str());
 		}
 		void sendAccessRequest(){
 			if(!netSnake.sendInetClient(cmd_newUser.c_str(), cmd_newUser.length())){
@@ -324,6 +324,30 @@ class MorningClient{
 			return true;
 		}
 
+		string sendMessage(string ip, int port, string message){
+			server.loadConfigs();
+                        serverconfig_t cfg = server.getServerConfig();
+                        encryptionSnake.cleanOutPrivateKey();
+                        encryptionSnake.cleanOutPublicKey();
+                        encryptionSnake.fetchRsaKeyFromString(true, false, cfg.privateKey, cfg.privateKey.length(), cfg.keyPassword);
+                        if(encryptionSnake.didFail())
+                                throw MorningException("Failed to load client private key.\n");
+                        encryptionSnake.fetchRsaKeyFromString(false, false, cfg.publicKey, cfg.publicKey.length(), "");
+                        if(encryptionSnake.didFail())
+                                throw MorningException("Failed to load client public key.\n");
+
+			if(!netSnake.createClient(ip, port, 0)){
+                        	return "";
+                        }
+			sendAuthRequest();
+			keyExchange();
+		
+			ctrSend(message, message.length());
+
+			string response = ctrRecv();
+			netSnake.closeSocket();
+			return response;
+		}
 		__attribute__((deprecated("This function is being replaced")))bool connectToServer(void){
 			string ip = io.inString(MORNING_IO_INPUT, "Enter Host Name > ");
 			int port = atoi(io.inString(MORNING_IO_INPUT, "Enter Port Number (Default : 21345) > ").c_str());

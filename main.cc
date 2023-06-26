@@ -26,6 +26,7 @@ using namespace std;
 
 #include "./core/managers/morningKeyManager.class.h"
 #include "./core/managers/morningMessage.class.h"
+#include "./core/managers/morningGroupManager.class.h"
 
 #include "./core/network/morningServer.class.h"
 #include "./core/network/morningClient.class.h"
@@ -34,7 +35,7 @@ using namespace std;
 #include "./core/cliMenu/morningClientMenu.class.h"
 #include "./core/cliMenu/morningManagerMenu.class.h"
 #include "./core/cliMenu/morningInboxMenu.class.h"
-#include "./core/cliMenu/morningConfigMenu.class.h"
+//#include "./core/cliMenu/morningConfigMenu.class.h"
 #include "./core/cliMenu/morningServerMenu.class.h"
 
 #include "./core/morningMessenger.class.h"
@@ -54,13 +55,13 @@ int main(void){
 				case MORNING_MENU_FINDFRIENDS:
 					MM.findFriends();
 					break;
-				case MORNING_MENU_CONFIG:
+			/*	case MORNING_MENU_CONFIG:
 					if(!MM.manageConfigFile()){
 					
 					}else{
 					
 					}
-					break;
+					break;*/
 				case MORNING_MENU_MANAGE:
 					MM.keyManager();
 					break;
@@ -72,7 +73,7 @@ int main(void){
 					MM.quitMessenger();
 					break;
 				default:
-					throw MorningException("Illegal Menu Context.");
+					throw MorningException("Illegal Menu Context : %d", MM.getMenuContext());
 			}
 		}
 	}catch(exception& e){

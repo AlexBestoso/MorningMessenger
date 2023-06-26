@@ -119,6 +119,7 @@ class MorningKeyManager{
 	}
 
 	bool isKeyTrusted(string pubkey){
+		sqlSnake = config.getSql();
 		sqlselect_t select;
 		select.table = tableName;
 		select.colCount = 1;
@@ -131,7 +132,6 @@ class MorningKeyManager{
 			sqlSnake.generateWhere(colNames[sql_key], "=", pubkey, true),
 			""
 		);
-		sqlSnake = config.getSql();
 		if(!sqlSnake.secureSelect(select))
 			throw MorningException("Failed to check if key is trusted : %s", sqlSnake.getError().c_str());
 
@@ -278,13 +278,96 @@ class MorningKeyManager{
                 return trustedKeys;
 	}
 
+	int getIdByKey(string pubkey){
+		int ret = 0;
+		sqlSnake = config.getSql();
+
+                sqlselect_t select;
+                select.table = tableName;
+                select.colCount = colCount;
+                select.cols = colNames;
+                select.hasWhere = true;
+
+                select.wheres = sqlSnake.addToWhere(
+                        select.wheres,
+                        sqlSnake.generateWhere(colNames[sql_trusted], "=", "1", false),
+                        ""
+                );
+		select.wheres = sqlSnake.addToWhere(
+			select.wheres,
+			sqlSnake.generateWhere(colNames[sql_key], "=", pubkey, true),
+			"AND"
+		);
+                if(!sqlSnake.secureSelect(select)){
+                        throw MorningException("Failed to fetch trusted keys : %s", sqlSnake.getError().c_str());
+                }
+
+                sqlresults_t res = sqlSnake.getResults();
+
+                if(res.fieldCount <= 0){
+                        throw MorningException("Failed to fetch trusted keys : No fields in result.");
+                }
+		if(res.resultCount <= 0){
+			return -1;
+		}
+
+		return atoi(res.results[0].values[sql_id].c_str());
+	}
+
+	size_t queryKeys(bool trusted, friendkey_t * ret, int max){
+		sqlSnake = config.getSql();
+
+                sqlselect_t select;
+                select.table = tableName;
+                select.colCount = colCount;
+                select.cols = colNames;
+                select.hasWhere = true;
+
+                select.wheres = sqlSnake.addToWhere(
+                        select.wheres,
+                        sqlSnake.generateWhere(colNames[sql_trusted], "=", (trusted) ? "1" : "0", false),
+                        ""
+                );
+                if(!sqlSnake.secureSelect(select)){
+                        throw MorningException("Failed to fetch trusted keys : %s", sqlSnake.getError().c_str());
+                }
+
+                sqlresults_t res = sqlSnake.getResults();
+
+		if(res.resultCount <= 0){
+			return 0;
+		}
+                if(res.fieldCount <= 0){
+                        throw MorningException("Failed to fetch trusted keys : No fields in result.");
+                }
+
+		for(int i=0; i<res.resultCount; i++){
+			if(i>max){
+				res.resultCount = max;
+				io.out(MORNING_IO_GENERAL, "Max return value hit.\n");
+				break;
+			}
+			ret[i].id = atoi(res.results[i].values[sql_id].c_str());
+        		ret[i].trusted = (res.results[i].values[sql_trusted] == "1") ? true : false; 
+        		ret[i].alias = res.results[i].values[sql_alias];
+        		ret[i].serverAlias = res.results[i].values[sql_server_alias];
+        		ret[i].cbip = res.results[i].values[sql_cbip];
+        		ret[i].cbhost = res.results[i].values[sql_cbhost];
+        		ret[i].cbport = atoi(res.results[i].values[sql_cbport].c_str());
+        		ret[i].date = res.results[i].values[sql_date];
+        		ret[i].pubkey = res.results[i].values[sql_key];
+	        	ret[i].justification = res.results[i].values[sql_justification];
+		}
+		return (size_t)res.resultCount;
+	}
+
 	sqltable_t generateTable(void){
                 sqltable_t ret;
                 ret.name = tableName;
                 ret.colCount = colCount;
                 ret.cols = new sqlcolumn_t[colCount];
                 ret.cols[sql_id] = sqlSnake.generatePrimaryColumn(colNames[sql_id], "INT", "NOT NULL AUTO_INCREMENT");
-		ret.cols[sql_trusted] = sqlSnake.generateColumn(colNames[sql_trusted], "INT(1)", "NOT NULL DEFAULT 0");
+		ret.cols[sql_trusted] = sqlSnake.generateColumn(colNames[sql_trusted], "INT", "NOT NULL DEFAULT 0");
 		ret.cols[sql_alias] = sqlSnake.generateColumn(colNames[sql_alias], "VARCHAR(50)", "NOT NULL");
 		ret.cols[sql_server_alias] = sqlSnake.generateColumn(colNames[sql_server_alias], "VARCHAR(50)", "NOT NULL");
 		ret.cols[sql_cbip] = sqlSnake.generateColumn(colNames[sql_cbip], "VARCHAR(20)", "NOT NULL");

@@ -27,18 +27,10 @@ using namespace std;
 
 #include "../core/managers/morningKeyManager.class.h"
 #include "../core/managers/morningMessage.class.h"
+#include "../core/managers/morningGroupManager.class.h"
 
 #include "../core/network/morningServer.class.h"
 #include "../core/network/morningClient.class.h"
-
-#include "../core/cliMenu/morningMenu.class.h"
-#include "../core/cliMenu/morningClientMenu.class.h"
-#include "../core/cliMenu/morningManagerMenu.class.h"
-#include "../core/cliMenu/morningInboxMenu.class.h"
-#include "../core/cliMenu/morningConfigMenu.class.h"
-#include "../core/cliMenu/morningServerMenu.class.h"
-
-#include "../core/morningMessenger.class.h"
 
 #include "./serviceCore/morningService.class.h"
 

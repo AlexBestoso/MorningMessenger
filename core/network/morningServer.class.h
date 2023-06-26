@@ -376,24 +376,56 @@ class MorningServer{
                                                         exit(EXIT_FAILURE);
                                                 }
 						
-						if(!keyManager.isKeyTrusted(clientPublicKey)){
+						if(!keyManager.isKeyTrusted(friendKey.pubkey)){
 							netSnake.closeConnection();
 							exit(EXIT_FAILURE);
 						}
 
 						mornmsg clientMessage;
-						clientMessage.clientHost = netSnake.getClientIp();
-						clientMessage.messageDate = morningMessage.getCurrentDateTime();
-						clientMessage.messageBody = ctrRecv();
-						if(clientMessage.messageBody == ""){
-							netSnake.closeConnection();
-							exit(EXIT_FAILURE);
+
+						string xmlResponse = ctrRecv();
+						if(xmlResponse == ""){
+							string resp = "[E] failed to receive your response.";
+                                                        ctrSend(resp, resp.length());
+                                                        netSnake.closeConnection();
+                                                        exit(EXIT_FAILURE);
 						}
 							
+						if(!xmlSnake.openStringReader(xmlResponse)){
+							string resp = "[E] failed to process your message.";
+                                                        ctrSend(resp, resp.length());
+                                                        netSnake.closeConnection();
+                                                        exit(EXIT_FAILURE);
+						}
+						string previous = "";
+						while(xmlSnake.readLineReader()){
+							if(xmlSnake.readResult.name == "#text" && previous == "selfDestruct"){
+                                        			clientMessage.selfDestruct = (xmlSnake.readResult.value == "true") ? true : false;
+                                			}
+							if(xmlSnake.readResult.name == "#text" && previous == "subject"){
+								clientMessage.subject = xmlSnake.readResult.value;
+							}
+							if(xmlSnake.readResult.name == "#text" && previous == "message"){
+								clientMessage.message = xmlSnake.readResult.value;
+							}
+							if(xmlSnake.readResult.name == "#text" && previous == "messageSize"){
+								clientMessage.messageSize = atoi(xmlSnake.readResult.value.c_str());
+							}
+                                			previous = xmlSnake.readResult.name;
+
+						}
+						xmlSnake.closeReader();
+						
+						clientMessage.keyId = keyManager.getIdByKey(friendKey.pubkey);
+						if(clientMessage.keyId <= 0){
+							string resp = "[E] Your key's not in the database.";
+                                                        ctrSend(resp, resp.length());
+                                                        netSnake.closeConnection();
+                                                        exit(EXIT_FAILURE);
+						}
 						try{
-							morningMessage.setConfig(config);
-							if(!morningMessage.storeClientMessage(clientMessage, clientPublicKey)){
-								string resp = "[E] Failed to store your message.";
+							if(!morningMessage.storeClientMessage(clientMessage)){
+								string resp = "[E] Failed to store your message : \n"+morningMessage.err;
 								ctrSend(resp, resp.length());
 								netSnake.closeConnection();
 								exit(EXIT_FAILURE);
@@ -405,7 +437,7 @@ class MorningServer{
 							}
 						}catch(exception &e){
 							string resp = e.what();
-							resp = "[E]" + resp;	
+							resp = "[E] UNKNOWN ERROR: " + resp;	
                                                         ctrSend(resp, resp.length());
                                                         netSnake.closeConnection();
                                                         exit(EXIT_FAILURE);

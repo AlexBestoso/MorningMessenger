@@ -17,6 +17,8 @@ class XmlSnake{
 	private:
 	xmlTextWriterPtr writer = NULL;
 	xmlTextReaderPtr reader = NULL;
+	xmlBufferPtr writer_output = NULL;
+
 	string encodingVersion = "ISO-8859-1";
 	int readerDescriptor = -1;
 
@@ -47,12 +49,28 @@ class XmlSnake{
 		return true;
 	}
 
+	bool openStringWriter(void){
+		writer_output = xmlBufferCreate();
+		writer = xmlNewTextWriterMemory(writer_output, 0);
+		if(writer == NULL){
+			return false;
+		}
+		return true;
+	}
+
 	bool startWritingFile(void){
 		if(xmlTextWriterStartDocument(writer, NULL, encodingVersion.c_str(), NULL) < 0){
 			return false;
 		}
 		return true;
 	}
+
+	bool startWritingString(void){
+                if(xmlTextWriterStartDocument(writer, NULL, encodingVersion.c_str(), NULL) < 0){
+                        return false;
+                }
+                return true;
+        }
 
 	bool startWritingElement(string name){
 		if(xmlTextWriterStartElement(writer, (const xmlChar*)name.c_str()) < 0){
@@ -82,15 +100,48 @@ class XmlSnake{
 	}
 
 	void closeFileWriter(void){
-		if(writer != NULL)
+		if(writer != NULL){
 			xmlFreeTextWriter(writer);
+			writer = NULL;
+		}
 	}
 
+	void closeWriter(){
+		closeFileWriter();
+	}
+
+	void freeWriterOutput(){
+		if(writer_output != NULL){
+			xmlBufferFree(writer_output);
+			writer_output = NULL;
+		}
+	}
+
+	string getCreatedString(){
+		if(writer_output == NULL){
+			return "";
+		}
+		string ret = (const char *)writer_output->content;
+		return ret;
+	}
 	/*
 	 * Reader functions
 	 * */
 	bool openFileReader(string fileName){
 		reader = xmlReaderForFile(fileName.c_str(), NULL, 0);
+		if(reader == NULL){
+			return false;
+		}
+		return true;
+	}
+
+	bool openStringReader(string content){
+		size_t size = content.length();
+		char *data = new char[size];
+		for(int i=0; i<size; i++){
+			data[i] = content[i];
+		}
+		reader = xmlReaderForMemory(data, (int)size, NULL, NULL, 0);
 		if(reader == NULL){
 			return false;
 		}
@@ -149,6 +200,7 @@ class XmlSnake{
 		if(reader != NULL){
 			xmlFreeTextReader(reader);
 			xmlCleanupParser();
+			reader = NULL;
 		}
 	}
 	void cleanReader(){

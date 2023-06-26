@@ -3,17 +3,19 @@
 #define MORNING_SERVER_MENU_START 2
 #define MORNING_SERVER_MENU_STOP 3
 #define MORNING_SERVER_MENU_STATUS 4
-#define MORNING_SERVER_MENU_BACK 5
+#define MORNING_SERVER_MENU_RESTART 5
+#define MORNING_SERVER_MENU_BACK 6
 class MorningServerMenu : public MorningMenu{
 	private:
 		MorningIO io;
 		MorningServer server;
-		size_t menuCount = 5;
-                string menuOptions[5] = {
+		size_t menuCount = 6;
+                string menuOptions[6] = {
                         "config",
                         "start",
 			"stop",
 			"status",
+			"restart",
                         "back"
                 };
 
@@ -116,6 +118,20 @@ class MorningServerMenu : public MorningMenu{
 				exit(0);
                         }
 		}
+
+		void restartService(){
+                        io.out(MORNING_IO_GENERAL, "Restarting Service...\n");
+                        if(fork() == 0){
+                                char *args[] = {
+                                        (char *)"/usr/sbin/service",
+                                        (char *)"morningService",
+                                        (char *)"restart",
+                                        NULL
+                                };
+                                execvp(args[0], args);
+                                exit(0);
+                        }
+                }
 	public:
 		virtual void printBanner(void){
         	        string banner = "=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=*=+=\n";
@@ -216,6 +232,9 @@ class MorningServerMenu : public MorningMenu{
 					statusService();
 					setCoreContext(0);
 					break;
+				case MORNING_SERVER_MENU_RESTART:
+					restartService();
+					setCoreContext(0);
 				case MORNING_SERVER_MENU_BACK:
 					setShowBanner(true);
                         		mainMenu.setShowBanner(true);

@@ -1,10 +1,9 @@
 #define MORNING_MENU_MAIN 0
 #define MORNING_MENU_LAUNCH 1
 #define MORNING_MENU_FINDFRIENDS 2
-#define MORNING_MENU_CONFIG 3
-#define MORNING_MENU_MANAGE 4
-#define MORNING_MENU_INBOX 5
-#define MORNING_MENU_QUIT 6
+#define MORNING_MENU_MANAGE 3
+#define MORNING_MENU_INBOX 4
+#define MORNING_MENU_QUIT 5
 class MorningMenu{
 	private:
 		int coreContext = 0;
@@ -16,11 +15,10 @@ class MorningMenu{
 		MorningKeyManager keyManager;
 
 		string userInput = "";
-		size_t menuCount = 6;
-		string menuOptions[6] = {
+		size_t menuCount = 5;
+		string menuOptions[5] = {
 			"serverctrl",
 			"findFriends",
-			"config",
 			"manage",
 			"inbox",
 			"quit"

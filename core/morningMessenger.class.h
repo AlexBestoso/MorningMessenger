@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *version = "0.4.10 Alpha";
+		const char *version = "0.4.11 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -10,7 +10,7 @@ class MorningMessenger{
 		MorningClientMenu clientMenu;
 		MorningManagerMenu managerMenu;
 		MorningInboxtMenu inboxMenu;
-		MorningConfigMenu configMenu;
+	//	MorningConfigMenu configMenu;
 		MorningServerMenu serverMenu;
 		
 		MorningServer server;
@@ -86,10 +86,20 @@ class MorningMessenger{
 				keyManager.setupTable();
 				io.out(MORNING_IO_SUCCESS, "Trusted key table created!\n");
 
+				io.out(MORNING_IO_GENERAL, "Setting up group table.\n");
+				MorningGroupManager groupManager;
+				groupManager.setupTable();
+				io.out(MORNING_IO_SUCCESS, "Created group table!\n");
+
+				io.out(MORNING_IO_GENERAL, "Setting up message table.\n");
+				MorningMessage mornMessage;
+				mornMessage.setupTable();
+				io.out(MORNING_IO_SUCCESS, "Created message table!\n");
+
 				io.out(MORNING_IO_GENERAL, "Logging into your new account!\n");
 				config.loadConfig();
 				if(!user.login(config.getSql(), username, password))
-					throw MorningException("Authentication Failure : %s", user.getError());
+					throw MorningException("Authentication Failure : %s", user.getError().c_str());
 
 				io.out(MORNING_IO_SUCCESS, "Successfully logged in!\n");
 			}else{
@@ -98,7 +108,7 @@ class MorningMessenger{
 				string username = solicitUsername();
                                 string password = solicitPassword(false);
 				 if(!user.login(config.getSql(), username, password))
-                                        throw MorningException("Authentication Failure : %s", user.getError());
+                                        throw MorningException("Authentication Failure : %s", user.getError().c_str());
 
                                 io.out(MORNING_IO_SUCCESS, "Successfully logged in!\n");
 			}
@@ -114,35 +124,6 @@ class MorningMessenger{
 		return menu.getCoreContext();
 	}
 
-	__attribute__((deprecated("Obsolete function will be removed in future versions")))bool launchServer(void){
-		if(server.obtainLockFile()){
-			server.pid = fork();
-			if(server.pid == 0){
-				/* Launch the server */
-				server.setConfig(config);
-				server.setEncryptionSnake(encryptionSnake);
-				try{
-					server.launchServer();
-				}catch(exception &e){
-					server.clearLockFile();
-					string what = e.what();
-					what = "MorningMessenger::launchServer | Failure From Child Process.\n" + what;
-					throw MorningException(what);
-				}
-			}else{
-				io.out(MORNING_IO_SUCCESS, "Server has been started.\n");
-			}
-                }else{
-			string choice = io.inString(MORNING_IO_QUESTION, "Would you lke to stop the server? > ");
-			if(choice == "yes"){
-				server.killProcess();
-				io.out(MORNING_IO_SUCCESS, "Server has been stopped.\n");
-			}
-                }
-		menu.setCoreContext(MORNING_MENU_MAIN);
-		return true;
-	}
-	
 	bool findFriends(void){
 		menu.setCoreContext(MORNING_MENU_MAIN);
 		client.setConfig(config);
@@ -159,7 +140,9 @@ class MorningMessenger{
 		}
 	}
 
-	__attribute__((deprecated("connecToServer is getting replaced."))) bool connectToServer(void){
+/*	Keeping this function to keep track of how I was sending messages, for the time being.
+ *
+ *	__attribute__((deprecated("connecToServer is getting replaced."))) bool connectToServer(void){
 		int menuCtx = clientMenu.getCoreContext();
 		if(menuCtx == MORNING_CLIENT_MENU_MAIN){
 			if(clientMenu.getShowBanner()){
@@ -194,9 +177,9 @@ class MorningMessenger{
 			throw MorningException("Illegal chat menu context.\n");
 		}
 		return true;
-	}
+	}*/
 
-	bool manageConfigFile(void){
+	/*bool manageConfigFile(void){
 		if(configMenu.getCoreContext() == MORNING_CONFIG_MENU_BACK){
 			config.loadConfig();
 			configMenu.setShowBanner(true);
@@ -208,7 +191,7 @@ class MorningMessenger{
 		}
 		
 		return configMenu.runMenu(config, encryptionSnake);
-	}
+	}*/
 	
 	bool keyManager(void){
 		int menuCtx = managerMenu.getCoreContext();
@@ -255,60 +238,8 @@ class MorningMessenger{
 	}
 
 	bool inbox(void){
-		int menuCtx = inboxMenu.getCoreContext();
-                int subCtx = inboxMenu.getSubContext();
-		inboxMenu.setConfig(config);
-                if(menuCtx == MORNING_INBOX_MENU_MAIN){
-			if(inboxMenu.getShowBanner()){
-                                inboxMenu.printBanner();
-                        }
-                        inboxMenu.showMenuOptions();
-                        inboxMenu.getUserInput();
-                        int ret = inboxMenu.parseSelectedOption();
-                        if(ret == -1){
-                                io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
-                        }else{
-                                inboxMenu.setCoreContext(ret);
-                        }
-		}else if(menuCtx == MORNING_INBOX_MENU_BACK){
-                        inboxMenu.setShowBanner(true);
-                        menu.setShowBanner(true);
-                        inboxMenu.setCoreContext(MORNING_INBOX_MENU_MAIN);
-                        inboxMenu.setSubContext(0);
-                        menu.setCoreContext(MORNING_MENU_MAIN);
-                }else if(subCtx == 0){
-			inboxMenu.showSubMenuOptions();
-                        inboxMenu.getUserInput();
-			int ret = inboxMenu.parseSelectedSubOption();
-			if(ret == -1){
-                                io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
-                        }else if(ret == 1){
-				inboxMenu.setCoreContext(MORNING_INBOX_MENU_MAIN);
-			}else{
-                                inboxMenu.setSubContext(ret);
-                        }
-		}else if(subCtx > 1){
-			inboxMenu.showMessage();
-			inboxMenu.getUserInput();
-			int ret = inboxMenu.parseSelectedViewOption();
-			if(ret == -1){
-                                io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
-                        }else if(ret == 3){
-                                inboxMenu.setSubContext(0);
-			}else if(ret == 1){
-				// save message
-				if(inboxMenu.saveMessage())
-					io.out(MORNING_IO_SUCCESS, "Message saved.\n");
-                                inboxMenu.setSubContext(0);
-			}else if(ret == 2){
-				// delete message
-				if(inboxMenu.deleteMessage())
-					io.out(MORNING_IO_SUCCESS, "Message delete.\n");
-                                inboxMenu.setSubContext(0);
-			}
-		}else{
-			throw MorningException("Illegal inbox menu context.");
-		}
+		inboxMenu.setEncryptionSnake(encryptionSnake);
+		menu = inboxMenu.runMenu(menu);
 		return true;
 	}
 
@@ -325,25 +256,4 @@ class MorningMessenger{
 	bool runMainMenu(){
 		return menu.runMenu(version);
 	}
-
-	__attribute__((depricated("Obsolete function will be removed in future versions.")))void authenticateMessenger(void){
-		try{
-			config.loadConfig();	
-			io.out(MORNING_IO_SUCCESS, "Configuration loaded.\n");
-			mornconf c = config.getConfig();
-			
-			io.outf(MORNING_IO_GENERAL, "Loading public key '%s'\n", c.pubkey.c_str());
-			config.fetchPublicKey(encryptionSnake);
-			
-			io.outf(MORNING_IO_GENERAL, "Unlocking and loading private key from '%s'\n", c.prikey.c_str());
-			encryptionSnake = config.fetchPrivateKey(encryptionSnake);
-			io.outf(MORNING_IO_SUCCESS, "Welcome Home, %s. You're authenticated.\n\n\n", username.c_str());
-
-		}catch(exception &e){
-			string what = e.what();
-			what = "Authentication failure\nCaugth in MorningMessenger::authenticateMessenger() | " + what ;
-			throw MorningException(what);
-		}
-	}
-
 };
