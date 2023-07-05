@@ -1,4 +1,9 @@
 #!/bin/bash
+if [ "$0" == "tor" ]; then
+	sudo tor --runasdaemon 1
+	exit
+fi
+
 ServiceUser="MorningNoLogin"
 if id "$ServiceUser" > /dev/null 2>&1; then
 	test -e ./bin/MorningMessenger
