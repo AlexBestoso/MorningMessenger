@@ -17,12 +17,16 @@ else
                 exit 1
         fi
         echo "[+] Successfully installed tor"
+	sudo service start tor;
+	sudo service stop tor;
 fi
 
 TorRc="/etc/tor/torrc"
 
 ServiceDir="HiddenServiceDir /var/morningService/hiddenService"
 ServicePort="HiddenServicePort 21345 127.0.0.1:21345"
+ServiceDirSql="HiddenServiceDir /var/morningService/hiddenMysql"
+ServicePortSql="HiddenServicePort 3306 127.0.0.1:3306"
 ServiceVersion="HiddenServiceVersion 3"
 
 sudo mkdir /var/morningService/hiddenService
@@ -34,6 +38,16 @@ if [ "$UserInput" == "y" ]; then
 	sudo chmod o+w $TorRc
 	echo "$ServiceDir" >> $TorRc
 	echo "$ServicePort" >> $TorRc
+	echo "$ServiceVersion" >> $TorRc
+	sudo chmod o-w $TorRc
+fi
+
+echo -en "To get the mysql service running you have to add the following three lines to the $TorRc file\n\n$ServiceDirSql\n$ServiceVersion\n$ServicePortSql\n\nWould you like me to do it for you? [y/n]\n"
+read UserInput
+if [ "$UserInput" == "y" ]; then
+	sudo chmod o+w $TorRc
+	echo "$ServiceDirSql" >> $TorRc
+	echo "$ServicePortSql" >> $TorRc
 	echo "$ServiceVersion" >> $TorRc
 	sudo chmod o-w $TorRc
 fi

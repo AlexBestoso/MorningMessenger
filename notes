@@ -19,3 +19,20 @@ if already here
 else
 	close connection. They a bad guy.
 	
+
+
+fix DoS bug. 
+	SQL will crash the application if the received message subject is too long.
+
+Add mysql server to install process
+	allow install process to create it's own restricted mysql user.
+
+fix compile process for first install to fix shared object bug
+	This can currently be circumvented by just running the compilation process again.
+
+Figure out a way to add dns proxying to the applicaiton so that we can increase the speed and ease of use for the tor enabled mode.
+
+update the message code so that we desanitize text when it's pulled from the message table
+	this will reduce messages from having an unneccisary number of escape characters to them as they move between read and unread.
+
+Add size checks for the subject field, and maybe even get rid of it, or make it optional to use.

@@ -1,5 +1,5 @@
 #!/bin/bash
-if [ "$0" == "tor" ]; then
+if [ "$1" == "torservice" ]; then
 	sudo tor --runasdaemon 1
 	exit
 fi
@@ -8,7 +8,11 @@ ServiceUser="MorningNoLogin"
 if id "$ServiceUser" > /dev/null 2>&1; then
 	test -e ./bin/MorningMessenger
 	if [ "$?" == "0" ]; then
-		sudo -u $ServiceUser ./bin/MorningMessenger
+		if [ "$1" == "tor" ]; then
+			sudo -u $ServiceUser torsocks ./bin/MorningMessenger
+		else
+			sudo -u $ServiceUser ./bin/MorningMessenger
+		fi
 	else
 		echo "[ERROR] Binary not found. Run 'make'"
 	fi
