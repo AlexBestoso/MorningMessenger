@@ -43,7 +43,7 @@ if [ "$UserInput" == "y" ]; then
 	sudo chmod o-w $TorRc
 fi
 
-sudo sed -i 's/#RunAsDaemon 1/RunAsDaemon 1/g' $TorRc
+#sudo sed -i 's/#RunAsDaemon 1/RunAsDaemon 1/g' $TorRc
 
 echo "Copying libtorsocks.so to the morningService dir."
 SharedObjLoc=$(find / -name "libtorsocks.so" 2>/dev/null)

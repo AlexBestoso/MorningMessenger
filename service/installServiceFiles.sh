@@ -38,7 +38,7 @@ sed -i "$REPLACE" ./morningService.tmp
 sudo mv ./morningService.tmp /etc/init.d/morningService
 
 # update permissions
-sudo chown -R MorningNoLogin:MorningNoLogin /var/morningService
+#sudo chown -R MorningNoLogin:MorningNoLogin /var/morningService
 
 # reload daemon cache
 sudo systemctl daemon-reload

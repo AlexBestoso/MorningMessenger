@@ -16,6 +16,7 @@ class TorSnake{
 
 		void closeSo(void){
 			dlclose(soFd);
+			soFd = NULL;
 		}
 
 		void *loadSymbol(string sym){
