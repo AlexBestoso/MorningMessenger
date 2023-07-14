@@ -20,7 +20,13 @@ else
 	close connection. They a bad guy.
 	
 
+--/-/-/-/-/
+New structure plans:
 
+1) Run setup check, determine if first install or not.
+2) Fork into two processes. One for menu control, one for notifications.
+
+--/-/-/-/-/
 fix DoS bug. 
 	SQL will crash the application if the received message subject is too long.
 

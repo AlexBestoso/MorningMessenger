@@ -629,7 +629,7 @@ class MorningServer{
 
 
 		config.loadConfig();
-		morningconfig_t cfg = config.getSqlConfig();
+		morningconfig_t cfg = config.getConfig();
 		serverConfig.serverHost = cfg.serviceHost;
 		serverConfig.serverPort = cfg.servicePort;
 		
@@ -663,7 +663,7 @@ class MorningServer{
 			throw MorningException("Failed to updated server config : %s", sqlSnake.getError());
 		}
 
-		morningconfig_t cfg = config.getSqlConfig();
+		morningconfig_t cfg = config.getConfig();
 		cfg.serviceHost = newCfg.serverHost;
 		cfg.servicePort = newCfg.serverPort;
 		config.generateConfig(cfg);

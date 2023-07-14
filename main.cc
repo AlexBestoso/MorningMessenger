@@ -11,7 +11,9 @@
 #include <iostream>
 #include <signal.h>
 #include <time.h>
+
 using namespace std;
+
 #include "./core/snakeSuite/snakeSuite.h"
 
 #include "./core/io/morningIO.class.h"
@@ -37,6 +39,8 @@ using namespace std;
 #include "./core/cliMenu/morningInboxMenu.class.h"
 //#include "./core/cliMenu/morningConfigMenu.class.h"
 #include "./core/cliMenu/morningServerMenu.class.h"
+
+#include "./core/setup/morningSetup.class.h"
 
 #include "./core/morningMessenger.class.h"
 

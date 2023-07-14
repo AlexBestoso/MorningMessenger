@@ -17,6 +17,7 @@ else
                 exit 1
         fi
         echo "[+] Successfully installed tor"
+	sudo service stop tor;
 	sudo service start tor;
 	sudo service stop tor;
 fi
@@ -25,12 +26,12 @@ TorRc="/etc/tor/torrc"
 
 ServiceDir="HiddenServiceDir /var/morningService/hiddenService"
 ServicePort="HiddenServicePort 21345 127.0.0.1:21345"
-ServiceDirSql="HiddenServiceDir /var/morningService/hiddenMysql"
-ServicePortSql="HiddenServicePort 3306 127.0.0.1:3306"
 ServiceVersion="HiddenServiceVersion 3"
 
 sudo mkdir /var/morningService/hiddenService
 sudo chmod 700 /var/morningService/hiddenService
+sudo chown debian-tor:debian-tor /var/morningService/hiddenService
+sudo usermod -a -G MorningNoLogin debian-tor
 echo -en "To get the service running you have to add the following three lines to the $TorRc file\n\n$ServiceDir\n$ServiceVersion\n$ServicePort\n\nWould you like me to do it for you? [y/n]\n"
 
 read UserInput
@@ -42,24 +43,20 @@ if [ "$UserInput" == "y" ]; then
 	sudo chmod o-w $TorRc
 fi
 
-echo -en "To get the mysql service running you have to add the following three lines to the $TorRc file\n\n$ServiceDirSql\n$ServiceVersion\n$ServicePortSql\n\nWould you like me to do it for you? [y/n]\n"
-read UserInput
-if [ "$UserInput" == "y" ]; then
-	sudo chmod o+w $TorRc
-	echo "$ServiceDirSql" >> $TorRc
-	echo "$ServicePortSql" >> $TorRc
-	echo "$ServiceVersion" >> $TorRc
-	sudo chmod o-w $TorRc
-fi
-
 sudo sed -i 's/#RunAsDaemon 1/RunAsDaemon 1/g' $TorRc
 
-sudo tor --runasdaemon 1
+echo "Copying libtorsocks.so to the morningService dir."
+SharedObjLoc=$(find / -name "libtorsocks.so" 2>/dev/null)
+for shl in $SharedObjLoc
+do
+	sudo cp $shl /var/morningService/libtorsocks.so
+	echo "copied shared object to /var/morningService/libtorsocks.so"
+	break
+done
+
+sudo -u debian-tor tor
 
 echo -en "\nThe service appears to be up.\n"
 
 sudo cat /var/morningService/hiddenService/hostname
-
 echo -en "\n----^ set this as the host name in morning messenger. You can find it again in the file /var/morningService/hiddenService/hostname\n"
-
-echo "You can also enable tor by running './run tor'"

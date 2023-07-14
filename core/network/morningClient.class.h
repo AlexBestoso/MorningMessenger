@@ -1,9 +1,11 @@
 class MorningClient{
 	private:
 		NetSnake netSnake;
-                FileSnake fileSnake;
+                TorSnake torSnake;
+		FileSnake fileSnake;
                 EncryptionSnake encryptionSnake;
 		EncryptionSnake remoteCerts;
+
                 MorningConfig config;
 		MorningIO io;
 		MorningServer server;
@@ -17,6 +19,8 @@ class MorningClient{
 
 		size_t rsaBufSize = 1024;
 		size_t ctrBufSize = 5000;
+
+		bool torMode = false;
 
 		size_t levelOneCommandCount = 3;
 		string levelOneCommands[3] = {
@@ -44,17 +48,25 @@ class MorningClient{
 
 		bool validateResponse(){
 			char *okay = new char[2];
-                         if(!netSnake.recvInetClient(okay, 2, 0)){
-                         	netSnake.closeSocket();
-                                io.out(MORNING_IO_ERROR, "Failed to recv command validation\n");
-                                return false;
-                         }
-                         string okayString = "";
-			 for(int i=0; i<netSnake.recvSize; i++)
-				 okayString += okay[i];
-			 if(okayString == "OK"){
-			 	return true;
-			 }
+			if(!torMode){
+                         	if(!netSnake.recvInetClient(okay, 2, 0)){
+                         		netSnake.closeSocket();
+                         	       io.out(MORNING_IO_ERROR, "Failed to recv command validation\n");
+                         	       return false;
+                         	}
+			}else{
+				if(!torSnake.recvClient(okay, 2, 0)){
+                                        torSnake.closeSocket();
+                                       io.out(MORNING_IO_ERROR, "Failed to recv command validation\n");
+                                       return false;
+                                }
+			}
+                        string okayString = "";
+			for(int i=0; i<netSnake.recvSize; i++)
+				okayString += okay[i];
+			if(okayString == "OK"){
+				return true;
+			}
 			 return false;
 		}
 
@@ -90,9 +102,15 @@ class MorningClient{
                         }
                         size_t encryptedMessageLen = encryptionSnake.getResultLen();
 
-                        if(!netSnake.sendInetClient(encryptedMessage.c_str(), encryptedMessageLen)){
-                                return false;
-                        }
+			if(!torMode){
+                        	if(!netSnake.sendInetClient(encryptedMessage.c_str(), encryptedMessageLen)){
+                        	        return false;
+                        	}
+			}else{
+				if(!torSnake.sendClient(encryptedMessage.c_str(), encryptedMessageLen)){
+                                        return false;
+                                }
+			}
 
                         return true;
                 }
@@ -100,9 +118,15 @@ class MorningClient{
                 string rsaRecv(void){
                         string ret = "";
                         char *buf = new char[rsaBufSize];
-                        if(!netSnake.recvInetClient(buf, rsaBufSize, 0)){
-                                return "";
-                        }
+			if(!torMode){
+                        	if(!netSnake.recvInetClient(buf, rsaBufSize, 0)){
+                        	        return "";
+                        	}
+			}else{
+				if(!torSnake.recvClient(buf, rsaBufSize, 0)){
+                                        return "";
+                                }
+			}
                         size_t recvSize = netSnake.recvSize;
                         for(int i=0; i<recvSize; i++)
                                 ret += buf[i];
@@ -118,30 +142,53 @@ class MorningClient{
 		void ctrSend(string msg, size_t msgLen){
                         string encryptedMsg = encryptionSnake.aes256ctr_execute(true, msg, msgLen);
                         if(encryptionSnake.didFail()){
-				netSnake.closeConnection();
+				if(!torMode)
+					netSnake.closeSocket();
+				else
+					torSnake.closeSocket();
 				throw MorningException("ctrSend: Failed to encrypt message sent to server.");
                         }
 
-                        if(!netSnake.sendInetClient(encryptedMsg.c_str(), encryptionSnake.getResultLen())){
-				netSnake.closeConnection();
-				throw MorningException("ctrSend: Failed to send encrypted message to server.");
-                        }
+			if(!torMode){
+                        	if(!netSnake.sendInetClient(encryptedMsg.c_str(), encryptionSnake.getResultLen())){
+					netSnake.closeSocket();
+					throw MorningException("ctrSend: Failed to send encrypted message to server.");
+                        	}
+			}else{
+				if(!torSnake.sendClient(encryptedMsg.c_str(), encryptionSnake.getResultLen())){
+                                        torSnake.closeSocket();
+                                        throw MorningException("ctrSend: Failed to send encrypted message to server.");
+                                }
+			}
                 }
                 string ctrRecv(void){
                         string ret = "";
                         char *recvBuffer = new char[ctrBufSize];
-                        if(!netSnake.recvInetClient(recvBuffer, ctrBufSize, 0)){
-                                delete[] recvBuffer;
-				netSnake.closeConnection();
-                                throw MorningException("ctrRecv: Failed to receive message from server.");
-                        }
+
+			if(!torMode){
+                        	if(!netSnake.recvInetClient(recvBuffer, ctrBufSize, 0)){
+                        	        delete[] recvBuffer;
+					netSnake.closeSocket();
+                        	        throw MorningException("ctrRecv: Failed to receive message from server.");
+                        	}
+			}else{
+				if(!torSnake.recvClient(recvBuffer, ctrBufSize, 0)){
+                                        delete[] recvBuffer;
+                                        torSnake.closeSocket();
+                                        throw MorningException("ctrRecv: Failed to receive message from server.");
+                                }
+			}
+
                         for(int i=0; i<netSnake.recvSize; i++)
                                 ret += recvBuffer[i];
                         delete[] recvBuffer;
 
                         ret = encryptionSnake.aes256ctr_execute(false, ret, netSnake.recvSize);
                         if(encryptionSnake.didFail()){
-                         	netSnake.closeConnection();
+				if(!torMode)
+	                         	netSnake.closeSocket();
+				else
+					torSnake.closeSocket();
 			 	throw MorningException("ctrRecv: Failed to decipher received message from server.");
 			}
 
@@ -153,15 +200,27 @@ class MorningClient{
 			serverconfig_t cfg = server.getServerConfig();
                         string key = cfg.publicKey;
 
-                        if(!netSnake.sendInetClient(key.c_str(), key.length())){
-                                netSnake.closeSocket();
-                                throw MorningException("sendPublicKey: Failed to send public key to target server.");
-                        }
+			if(!torMode){
+                        	if(!netSnake.sendInetClient(key.c_str(), key.length())){
+                        	        netSnake.closeSocket();
+                        	        throw MorningException("sendPublicKey: Failed to send public key to target server.");
+                        	}
 
-                        if(netSnake.sendSize != key.length()){
-                                netSnake.closeSocket();
-                                throw MorningException("Failed to send the server your entire key.\n");
-                        }
+                        	if(netSnake.sendSize != key.length()){
+                        	        netSnake.closeSocket();
+                        	        throw MorningException("Failed to send the server your entire key.\n");
+                        	}
+			}else{
+				if(!torSnake.sendClient(key.c_str(), key.length())){
+                                        torSnake.closeSocket();
+                                        throw MorningException("sendPublicKey: Failed to send public key to target server.");
+                                }
+
+                                if(torSnake.sendSize != key.length()){
+                                        torSnake.closeSocket();
+                                        throw MorningException("Failed to send the server your entire key.\n");
+                                }
+			}
                 }
 
 		void recvPublicKey(){
@@ -170,10 +229,17 @@ class MorningClient{
                         char buffer[1466];
 
                         serverPublicKey = "";
-                        if(!netSnake.recvInetClient(buffer, keySize, 0)){
-                                netSnake.closeSocket();
-				throw MorningException("recvPublicKey: Failed to receive public key from server.");
-                        }
+			if(!torMode){
+                        	if(!netSnake.recvInetClient(buffer, keySize, 0)){
+                        	        netSnake.closeSocket();
+					throw MorningException("recvPublicKey: Failed to receive public key from server.");
+                        	}
+			}else{
+				if(!torSnake.recvClient(buffer, keySize, 0)){
+                                        torSnake.closeSocket();
+                                        throw MorningException("recvPublicKey: Failed to receive public key from server.");
+                                }
+			}
 
                         for(int i=0; i<netSnake.recvSize; i++)
                                 serverPublicKey += buffer[i];
@@ -182,10 +248,17 @@ class MorningClient{
                         int remaining = keySize - netSnake.recvSize;
                         if(remaining > 0){
                                 memset(buffer, 0x00, keySize);
-                                if(!netSnake.recvInetClient(buffer, remaining, 0)){
-                                        netSnake.closeSocket();
-                                        throw MorningException("recvPublicKey: Failed to receive the remainder of the server's public key.");
-                                }
+				if(!torMode){
+                                	if(!netSnake.recvInetClient(buffer, remaining, 0)){
+                                	        netSnake.closeSocket();
+                                	        throw MorningException("recvPublicKey: Failed to receive the remainder of the server's public key.");
+                                	}
+				}else{
+					if(!torSnake.recvClient(buffer, remaining, 0)){
+                                                torSnake.closeSocket();
+                                                throw MorningException("recvPublicKey: Failed to receive the remainder of the server's public key.");
+                                        }
+				}
 
                                 for(int i=0; i<netSnake.recvSize; i++)
                                         serverPublicKey += buffer[i];
@@ -196,7 +269,10 @@ class MorningClient{
                         encryptionSnake.cleanOutPublicKey();
                         encryptionSnake.fetchRsaKeyFromString(false, false, serverPublicKey.c_str(), serverPublicKey.length(), "");
                         if(encryptionSnake.didFail()){
-                                netSnake.closeSocket();
+				if(!torMode)
+	                                netSnake.closeSocket();
+				else
+					torSnake.closeSocket();
                                 serverPublicKey = "";
                                 throw MorningException("recvPublicKey: Failed to parse received RSA public key.\n");
                         }
@@ -231,7 +307,10 @@ class MorningClient{
 				recvPublicKey();
 				recvCtrKey();
 			}catch(exception &e){
-				netSnake.closeSocket();
+				if(!torMode)
+					netSnake.closeSocket();
+				else
+					torSnake.closeSocket();
 				string err = e.what();
 				err = "keyExchange: Failed to process key exchange.\n" + err;
 				throw MorningException(err);
@@ -240,31 +319,57 @@ class MorningClient{
 
 
 		void connectClient(string host, int port){
-			if(!netSnake.createClient(host, port, 0))
-				throw MorningException("connectClient: Failed to create client\nNetSnake::createClient : %s\n", netSnake.errorMessage().c_str());
-		}
-		void sendAccessRequest(){
-			if(!netSnake.sendInetClient(cmd_newUser.c_str(), cmd_newUser.length())){
-				netSnake.closeSocket();
-				throw MorningException("sendAccessRequest : Failed to send command to remote server.\n");
+			if(!torMode){
+				if(!netSnake.createClient(host, port, 0))
+					throw MorningException("connectClient: Failed to create client\nNetSnake::createClient : %s\n", netSnake.errorMessage().c_str());
+			}else{
+				if(!torSnake.createClient(host, port))
+                                        throw MorningException("connectClient: Failed to create client");
 			}
-
+		}
+		void sendAccessRequest(void){
+			if(!torMode){
+				if(!netSnake.sendInetClient(cmd_newUser.c_str(), cmd_newUser.length())){
+					netSnake.closeSocket();
+					throw MorningException("sendAccessRequest : Failed to send command to remote server.\n");
+				}
+			}else{
+				if(!torSnake.sendClient(cmd_newUser.c_str(), cmd_newUser.length())){
+                                        torSnake.closeSocket();
+                                        throw MorningException("sendAccessRequest : Failed to send command to remote server.\n");
+                                }
+			}
 			if(!validateResponse()){
-				netSnake.closeSocket();
+				if(!torMode)
+					netSnake.closeSocket();
+				else
+					torSnake.closeSocket();
 				throw MorningException("sendAccessRequest : Failed to validate command response.\n");
 			}
 		}
 
-		bool sendAuthRequest(){
-			if(!netSnake.sendInetClient(cmd_existingUser.c_str(), cmd_existingUser.length())){
-				netSnake.closeSocket();
-				io.out(MORNING_IO_ERROR, "Failed to send command to remote server\n");
-				return false;
+		bool sendAuthRequest(void){
+			if(!torMode){
+				if(!netSnake.sendInetClient(cmd_existingUser.c_str(), cmd_existingUser.length())){
+					netSnake.closeSocket();
+					io.out(MORNING_IO_ERROR, "Failed to send command to remote server\n");
+					return false;
+				}
+			}else{
+				if(!torSnake.sendClient(cmd_existingUser.c_str(), cmd_existingUser.length())){
+                                        torSnake.closeSocket();
+                                        io.out(MORNING_IO_ERROR, "Failed to send command to remote server\n");
+                                        return false;
+                                }
 			}
-
 			if(!validateResponse()){
-				netSnake.closeSocket();
-				return false;
+				if(!torMode){
+					netSnake.closeSocket();
+					return false;
+				}else{
+					torSnake.closeSocket();
+					return false;
+				}
 			}
 			return true;
 		}
@@ -291,10 +396,18 @@ class MorningClient{
 				encryptionSnake.fetchRsaKeyFromString(false, false, cfg.publicKey, cfg.publicKey.length(), "");
                                 if(encryptionSnake.didFail())
                                         throw MorningException("Failed to load client public key.\n");
+				
+				if(fileSnake.fileExists("/var/morningService/hiddenService/libtorsocks.so")){
+					config.loadConfig();
+					torMode = config.getConfig().torMode;
+					torSnake.setSoLoc("/var/morningService/hiddenService/libtorsocks.so");
+				}else{
+					torMode = false;
+				}
 
-				this->connectClient(host, port);
-				this->sendAccessRequest();
-				this->keyExchange();
+				connectClient(host, port);
+				sendAccessRequest();
+				keyExchange();
 
                                 string msg = this->ctrRecv();
                                 string name = io.inWithSpace(MORNING_IO_NONE, msg);
@@ -336,9 +449,23 @@ class MorningClient{
                         if(encryptionSnake.didFail())
                                 throw MorningException("Failed to load client public key.\n");
 
-			if(!netSnake.createClient(ip, port, 0)){
-                        	return "";
+			if(fileSnake.fileExists("/var/morningService/libtorsocks.so")){
+                        	config.loadConfig();
+                        	torMode = config.getConfig().torMode;
+                        	torSnake.setSoLoc("/var/morningService/libtorsocks.so");
+                        }else{
+                        	torMode = false;
                         }
+
+			if(!torMode){
+				if(!netSnake.createClient(ip, port, 0)){
+                        		return "";
+                        	}
+			}else{
+				if(!torSnake.createClient(ip, port)){
+                                        return "";
+                                }
+			}
 			sendAuthRequest();
 			keyExchange();
 		

@@ -1,5 +1,5 @@
 # MorningMessenger
-Version `0.5.0 alpha`<br>
+Version `0.5.1 alpha`<br>
 This commandline application allows you to send p2p encrypted messages using RSA and AES-256-CTR.
 
 ## Install Procedure
@@ -14,10 +14,12 @@ This commandline application allows you to send p2p encrypted messages using RSA
 1. Run the command `make full_uninstall` and all processes, folders, and users, and system configurations created by the installer will be removed. You can optionally remove the installed dependancies if you desire; but by default this is skipped.
 
 ### Changes in this version.
+1. Added SoundSnake and TorSnake to the application.
+2. Updated server config to allow you to run in tor mode.
+3. SQL connection is no longer forced through tor when running in tormode.
 
 ### Messages From Morning Star
 1. I'll be looking into creating a notification system so that you don't need to manually refresh the message cache.
-2. Will test TOR compatibility soon..
 3. Need to implement the live chat feature now that AF UNIX support was added.
 4. Add mutual authentication.
 5. Implement a gui ;)

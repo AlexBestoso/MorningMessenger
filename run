@@ -1,6 +1,6 @@
 #!/bin/bash
-if [ "$1" == "torservice" ]; then
-	sudo tor --runasdaemon 1
+if [ "$1" == "tor" ]; then
+	sudo -u debian-tor tor
 	exit
 fi
 

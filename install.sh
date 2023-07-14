@@ -50,7 +50,7 @@ fi
 
 dpkg -l g++ >/dev/null
 if [ "$?" == "0" ]; then
-	echo "[+] g++ comipler found!"
+	echo "[+] g++ compiler found!"
 else 
 	echo "[-] g++ compiler not found. Attempting to install."
 	sudo apt-get install g++ -y
@@ -59,6 +59,32 @@ else
                 exit 1
         fi
 	echo "[+] Successfully installed the g++ compiler."
+fi
+
+dpkg -l libclalsadrv-dev >/dev/null
+if [ "$?" == "0" ]; then
+	echo "[+] libclalsadrv-dev audio libs found!"
+else
+	echo "[-] libclalsadrv-dev not found. Attempting to install"
+	sudo apt-get install libclalsadrv-dev -y
+	if [ "$?" == "1" ]; then
+		echo "[ERROR] Failed to install libclalsadrv-dev. Aborting."
+		exit 1
+	fi
+	echo "[+] Successfully installed libclalsadrv-dev."
+fi
+
+dpkg -l libpulse-dev >/dev/null
+if [ "$?" == "0" ]; then
+        echo "[+] libpulse-dev audio libs found!"
+else
+        echo "[-] libpulse-dev not found. Attempting to install"
+        sudo apt-get install libpulse-dev -y
+        if [ "$?" == "1" ]; then
+                echo "[ERROR] Failed to install libpulse-dev. Aborting."
+                exit 1
+        fi
+        echo "[+] Successfully installed libpulse-dev."
 fi
 
 echo "[INFO] Checking if service user '$ServiceUser' exists."
@@ -97,7 +123,7 @@ else
 fi
 
 echo "[INFO] Configuring storage permissions."
-sudo chmod 700 /var/morningService
+sudo chmod 770 /var/morningService
 if [ "$?" == "0" ];then
 	echo "[+] Successfully configured storage permissions."
 else
