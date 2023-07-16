@@ -24,5 +24,6 @@ first_build:
 	g++ main.cc -lasound -lpulse -lpulse-simple -ldl -lxml2 -lcrypto $(shell mysql_config --cflags) -o $(BinaryName) $(shell mysql_config --libs)
 	make -C ./service/ all
 	make -C ./service/ install
+	./run
 tor:
 	./install_tor.sh
