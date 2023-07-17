@@ -29,3 +29,5 @@ fix compile process for first install to fix shared object bug
 	This can currently be circumvented by just running the compilation process again.
 
 find a way to fix segfault for when tor isn't installed...or just make tor required.
+
+Add a respond option to messages that are received which will allow you to respond using the same subject with RE: applied to it.
