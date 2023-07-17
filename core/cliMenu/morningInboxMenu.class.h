@@ -317,15 +317,17 @@ class MorningInboxtMenu : public MorningMenu{
                                 int port = keys[menuCtx-2].cbport;
 				mornmsg message;
         			message.selfDestruct = false;
+				io.setIgnore(true);
 				io.out(MORNING_IO_GENERAL, "Enter message subject\n");
         			message.subject = io.inWithSpace(MORNING_IO_INPUT, "> ");
 				io.out(MORNING_IO_GENERAL, "Enter your message\n");
         			message.message = io.inWithSpace(MORNING_IO_INPUT, "> ");
         			message.messageSize = message.message.length();
 
+				io.out(MORNING_IO_GENERAL, "Sending Message...\n");
 				string response = client.sendMessage(host, port, morningMessage.generateSendString(message));
 			
-				io.outf(MORNING_IO_SUCCESS, "Response Code : %s\n", response.c_str());
+				io.outf(MORNING_IO_NONE, "Response Code : %s\n", response.c_str());
 
 				setSubContext(MORNING_INBOX_SUB_MAIN);
 			}else if(subCtx == MORNING_INBOX_SUB_UNREAD){
