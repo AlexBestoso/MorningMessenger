@@ -383,7 +383,7 @@ class MorningClient{
 			}else{
 				if(!torSnake.sendClient(cmd_existingUser.c_str(), cmd_existingUser.length())){
                                         torSnake.closeSocket();
-                                        io.out(MORNING_IO_ERROR, "Failed to send command to remote server\n");
+                                        io.out(MORNING_IO_ERROR, "Failed to send command to remote server through tor\n");
                                         return false;
                                 }
 			}
@@ -464,7 +464,7 @@ class MorningClient{
 			return true;
 		}
 
-		string sendMessage(string ip, int port, string message){
+		string sendMessage(string host, int port, string message){
 			server.loadConfigs();
                         serverconfig_t cfg = server.getServerConfig();
                         encryptionSnake.cleanOutPrivateKey();
@@ -484,22 +484,17 @@ class MorningClient{
                         	torMode = false;
                         }
 
-			if(!torMode){
-				if(!netSnake.createClient(ip, port, 0)){
-                        		return "";
-                        	}
-			}else{
-				if(!torSnake.createClient(ip, port)){
-                                        return "";
-                                }
-			}
+			connectClient(host, port);
 			sendAuthRequest();
 			keyExchange();
 		
 			ctrSend(message, message.length());
 
 			string response = ctrRecv();
-			netSnake.closeSocket();
+			if(!torMode)
+				netSnake.closeSocket();
+			else
+				torSnake.closeSocket();
 			return response;
 		}
 		__attribute__((deprecated("This function is being replaced")))bool connectToServer(void){

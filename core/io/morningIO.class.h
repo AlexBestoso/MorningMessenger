@@ -63,6 +63,7 @@ class MorningIO{
                         cout.flush();
 			cin.ignore();
 			getline(cin, ret);
+			cin.ignore();
                         return ret;
 		}
 
