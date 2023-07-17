@@ -66,52 +66,6 @@ class MorningInboxtMenu : public MorningMenu{
 				return;
 			}
 		}
-	
-		mornmsg *messages = NULL;
-		string *userMessages = NULL;
-		size_t userMessagesCount = 0;
-		bool getUserMessages(int index){
-			userMessagesCount = 0;
-			if(index < 0 || index >= userFilesCount)
-				return false;
-			string messageLocation = userFiles[index] + "/msg";
-			if(!fileSnake.fileExists(messageLocation) || fileSnake.getFileType(messageLocation) != FILE_SNAKE_DIR){
-				return false;
-			}
-
-			if(userMessages != NULL){
-				delete[] userMessages;
-				userMessages = NULL;
-			}
-
-			userMessages = fileSnake.listDir(messageLocation);
-			if(userMessages == NULL){
-				return false;
-			}
-
-			userMessagesCount = 0;
-			while(userMessages[userMessagesCount] != ""){
-				userMessagesCount++;
-			}
-			if(userMessagesCount <= 0){
-				delete[] userMessages;
-				userMessages = NULL;
-				return false;
-			}
-
-			if(messages != NULL){
-				delete[] messages;
-				messages = NULL;
-			}
-			messages = new mornmsg[userMessagesCount];
-
-			for(int i=0; i<userMessagesCount; i++){
-				string loc = messageLocation + "/" + userMessages[i];
-				messages[i] = morningMessage.getMessageFromFile(loc);
-			}
-
-			return true;
-		}
 
 	public:
 
@@ -185,11 +139,6 @@ class MorningInboxtMenu : public MorningMenu{
                                         return i+1;
                                 }
                         }
-			for(int i=0; i<userMessagesCount; i++){
-                                if(inputInt == i+2){
-                                        return i+2;
-                                }
-                        }
 			return -1;
 		}
 		void showSubMenuOptions(){
@@ -197,84 +146,6 @@ class MorningInboxtMenu : public MorningMenu{
 			for(int i=0; i<subCount; i++){
 				io.outf(MORNING_IO_NONE, "%d) %s\n", i+1, subMenu[i].c_str());
 			}
-
-			if(getUserMessages(choice)){
-				for(int i=0; i<userMessagesCount; i++){
-					io.outf(MORNING_IO_NONE, "%d) %s | From: %s\n", i+2, messages[i].messageDate.c_str(), messages[i].clientHost.c_str());
-				}
-			}
-		}
-
-		int parseSelectedViewOption(){
-			string userInput = getUserInputString();
-                        for(int i=0; i<viewCount; i++){
-                                if(userInput == viewMenu[i]){
-                                        return i+1;
-                                }
-                        }
-
-                        int inputInt = atoi(userInput.c_str());
-                        for(int i=0; i<viewCount; i++){
-                                if(inputInt == i+1){
-                                        return i+1;
-                                }
-                        }
-			return -1;
-		}
-		void showMessage(){
-			int choice = getSubContext() - 2;
-			int user = getCoreContext() - 2;
-			string clientHost = "";
-       	 		string messageDate = "";
-        		string messageBody = "";
-        		string messageLength = "";
-			io.outf(MORNING_IO_NONE, "Message From %s(%s) on %s containing %s encrypted bytes\n\n%s\n\n", 
-						 userNames[user].c_str(),
-						 messages[choice].clientHost.c_str(), 
-						 messages[choice].messageDate.c_str(),
-						 messages[choice].messageLength.c_str(),
-						 messages[choice].messageBody.c_str()
-			);
-			
-			for(int i=0; i<viewCount; i++){
-                                io.outf(MORNING_IO_NONE, "%d) %s\n", i+1, viewMenu[i].c_str());
-                        }
-		}
-
-		bool saveMessage(){
-			int user = getCoreContext() - 2;
-			int choice = getSubContext() - 2;
-			string messageLocation = userFiles[user] + "/msg/" + userMessages[choice];
-			string newLocation = userFiles[user] + "/msg_saved";
-			if(!fileSnake.fileExists(newLocation)){
-				fileSnake.makeDir(newLocation);
-			}
-			newLocation = newLocation + "/" + userMessages[choice];
-			
-			size_t fileSize = fileSnake.getFileSize(messageLocation);
-			if(fileSize <= 0){
-				io.out(MORNING_IO_ERROR, "Failed to save message, files size is 0.\n");
-			}
-			char *buf = new char[fileSize];
-			if(!fileSnake.readFile(messageLocation, buf, fileSize)){
-				io.outf(MORNING_IO_ERROR, "Failed to save message, couldn't read message file '%s'\n", messageLocation.c_str());
-				return false;
-			}
-			if(!fileSnake.writeFileTrunc(newLocation, buf, fileSize)){
-				io.outf(MORNING_IO_ERROR, "Failed to save message, couldn't write message file '%s'\n", newLocation.c_str());
-				return false;
-			}
-			delete[] buf;
-			fileSnake.removeFile(messageLocation);
-			return true;
-		}
-
-		bool deleteMessage(){
-			int user = getCoreContext() - 2;
-			int choice = getSubContext() - 2;
-			string messageLocation = userFiles[user] + "/msg/" + userMessages[choice];
-			fileSnake.removeFile(messageLocation);
-			return true;
 		}
 
 		MorningMenu runMenu(MorningMenu mainMenu){
@@ -320,6 +191,11 @@ class MorningInboxtMenu : public MorningMenu{
 				io.setIgnore(true);
 				io.out(MORNING_IO_GENERAL, "Enter message subject\n");
         			message.subject = io.inWithSpace(MORNING_IO_INPUT, "> ");
+				if(message.subject.length() > 50){
+					string tmp = "";
+					for(int i=0; i<50; i++) tmp += message.subject[i];
+					message.subject = tmp;
+				}
 				io.out(MORNING_IO_GENERAL, "Enter your message\n");
         			message.message = io.inWithSpace(MORNING_IO_INPUT, "> ");
         			message.messageSize = message.message.length();
@@ -453,25 +329,6 @@ class MorningInboxtMenu : public MorningMenu{
 				}
 				setSubContext(MORNING_INBOX_SUB_MAIN);
 						
-			}else if(subCtx > 1){
-                	        showMessage();
-                	        getUserInput();
-                	        int ret = parseSelectedViewOption();
-                	        if(ret == -1){
-                	                io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
-                	        }else if(ret == 3){
-                	                setSubContext(0);
-                		}else if(ret == 1){
-                                	// save message
-                       	        	if(saveMessage())
-                       	        	        io.out(MORNING_IO_SUCCESS, "Message saved.\n");
-                       	        	setSubContext(0);
-                       	 	}else if(ret == 2){
-                       	         	// delete message
-                       	         	if(deleteMessage())
-                       	                 	io.out(MORNING_IO_SUCCESS, "Message delete.\n");
-                       	         	setSubContext(0);
-                       		}
                 	}else{
                	         	throw MorningException("Illegal inbox menu context.");
                 	}

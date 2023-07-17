@@ -497,36 +497,4 @@ class MorningClient{
 				torSnake.closeSocket();
 			return response;
 		}
-		__attribute__((deprecated("This function is being replaced")))bool connectToServer(void){
-			string ip = io.inString(MORNING_IO_INPUT, "Enter Host Name > ");
-			int port = atoi(io.inString(MORNING_IO_INPUT, "Enter Port Number (Default : 21345) > ").c_str());
-			
-			int levelOne = getLevelOne();
-			if(levelOne == -1){
-				return false;
-			}else if(levelOne == 1){ // Access Request Protocol
-
-			}else if(levelOne == 2){ // Try to authenticate with remote server
-				if(!netSnake.createClient(ip, port, 0)){
-					return false;
-				}
-				sendAuthRequest();
-				keyExchange();
-
-				string outMsg = io.inWithSpace(MORNING_IO_NONE, "Enter your message > ");
-				ctrSend(outMsg, outMsg.length());
-
-				string inMsg = ctrRecv();
-
-				io.outf(MORNING_IO_NONE, "%s\n", inMsg.c_str());
-				netSnake.closeSocket();
-				return true;
-			}else if(levelOne == 3){
-				return true;
-			}else{
-				io.out(MORNING_IO_ERROR, "Invalid command attempted.\n");
-				return false;
-			}
-			return true;
-		}
 };
