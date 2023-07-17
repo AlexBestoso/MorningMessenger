@@ -29,9 +29,15 @@ class MorningIO{
 			else
 				return msgStem_general;
 		}
+
+		bool ignoreRequired = true;
 	public:
 		MorningIO(){}
 	
+		void setIgnore(bool val){
+			ignoreRequired = val;
+		}
+
 		void outf(int type, const char *fmt, ...){
 			// Format buffer size
                         va_list args;
@@ -61,7 +67,10 @@ class MorningIO{
                                 out(type, msg);
                         string ret = "";
                         cout.flush();
-			cin.ignore();
+			if(ignoreRequired){
+				cin.ignore(1);
+				ignoreRequired = false;
+			}
 			getline(cin, ret);
                         return ret;
 		}

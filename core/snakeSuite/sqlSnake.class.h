@@ -108,6 +108,9 @@ class SqlSnake{
 						for(int j=0; j<3; j++)
 							ret.pop_back();
 						ret += 0x0a;
+					}else if(grabber == "\\\\\\"){
+						for(int j=0; j<3; j++)
+                                                        ret.pop_back();
 					}
 				}
 			}

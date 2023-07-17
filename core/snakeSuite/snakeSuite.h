@@ -3,3 +3,5 @@
 #include "./xmlSnake.class.h"
 #include "./fileSnake.class.h"
 #include "./sqlSnake.class.h"
+#include "./torSnake.class.h"
+#include "./soundSnake.class.h"

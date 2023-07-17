@@ -42,107 +42,10 @@ class MorningMessage{
 
 		MorningIO io;
 		MorningConfig config;
-		MorningAlgorithms algorithm;
 		
-		EncryptionSnake encryptionSnake;
 		XmlSnake xmlSnake;
-		FileSnake fileSnake;
 		SqlSnake sqlSnake;
 
-		string storageLocation = "";
-
-		size_t encryptionResultLen = 0;
-		string encryptMessage(string msg, size_t msgLen){
-			string _key = algorithm.deriveConfigEncryptionKey(config.username, config.password);
-                        unsigned char aesKey[32];
-                        for(int i=0; i<32; i++)
-                                aesKey[i] = _key[i];
-
-                        string _iv = algorithm.deriveConfigEncryptionIv(config.username, config.password);
-                        unsigned char aesIv[16];
-                        for(int i=0; i<16; i++)
-                                aesIv[i] = _iv[i];
-
-			string ret = encryptionSnake.aes256cbc(true, msg, msgLen, aesKey, aesIv);
-                        if(encryptionSnake.didFail()){
-                                encryptionSnake.printError();
-                                throw MorningException("Failed to encrypt message.");
-                        }
-                        encryptionResultLen = encryptionSnake.getResultLen();
-			return ret;
-		}
-
-		size_t decryptionResultLen = 0;
-		string decryptMessage(string msg, size_t msgLen){
-			string _key = algorithm.deriveConfigEncryptionKey(config.username, config.password);
-                        unsigned char aesKey[32];
-                        for(int i=0; i<32; i++)
-                                aesKey[i] = _key[i];
-
-                        string _iv = algorithm.deriveConfigEncryptionIv(config.username, config.password);
-                        unsigned char aesIv[16];
-                        for(int i=0; i<16; i++)
-                                aesIv[i] = _iv[i];
-
-			string ret = encryptionSnake.aes256cbc(false, msg, msgLen, aesKey, aesIv);
-                        if(encryptionSnake.didFail()){
-                                encryptionSnake.printError();
-                                throw MorningException("Failed to decrypt message.");
-                        }
-                        decryptionResultLen = encryptionSnake.getResultLen();	
-			return ret;
-		}
-
-		string encryptStoredMessage(string target, size_t targetSize){
-			string ret = "";
-			
-			string _key = algorithm.deriveConfigEncryptionKey(config.username, config.password);
-			unsigned char key[32];
-			for(int i=0; i<32; i++)
-				key[i] = _key[i];
-
-			string _iv = algorithm.deriveConfigEncryptionIv(config.username, config.password);
-			unsigned char iv[16];
-			for(int i=0; i<16; i++)
-				iv[i] = _iv[i];
-
-			ret = encryptionSnake.aes256cbc(true, target, targetSize, key, iv);
-			if(encryptionSnake.didFail())
-				throw new MorningException("Failed to encrypt recived message for storage.");
-			size_t eLen = encryptionSnake.getResultLen();
-
-			ret = encryptionSnake.base64(true, ret, eLen);
-			if(encryptionSnake.didFail())
-                                throw new MorningException("Failed to encode recived message for storage.");
-
-			encryptionResultLen = encryptionSnake.getResultLen();
-			return ret;
-		}
-
-		string decryptStoredMessage(string target, size_t targetSize){
-			string ret = "";
-
-			string _key = algorithm.deriveConfigEncryptionKey(config.username, config.password);
-                        unsigned char key[32];
-                        for(int i=0; i<32; i++)
-                                key[i] = _key[i];
-
-                        string _iv = algorithm.deriveConfigEncryptionIv(config.username, config.password);
-                        unsigned char iv[16];
-                        for(int i=0; i<16; i++)
-                                iv[i] = _iv[i];
-
-			ret = encryptionSnake.base64(false, target, targetSize);
-			if(encryptionSnake.didFail())
-                                throw new MorningException("Failed to decode recived message from storage.");
-
-			size_t eLen = encryptionSnake.getResultLen();
-			ret = encryptionSnake.aes256cbc(false, ret, eLen, key, iv);
-                        if(encryptionSnake.didFail())
-                                throw new MorningException("Failed to encrypt recived message for storage.");
-
-			return ret;
-		}
 	public:
 		string err = "";
 
@@ -177,55 +80,13 @@ class MorningMessage{
 		config = conf;
 	}
 
-	int getMessageCount(void){
-		string *files = fileSnake.listDir(storageLocation);
-		if(files == NULL)
-			return 0;
 
-		int ret = 0;
-		while(files[ret] != ""){
-			ret++;
-		}
-		delete[] files;
-		return ret;
-	}
-
-	void setStorageLocation(string loc){
-		storageLocation = loc;
-	}
-	
 	string getCurrentDateTime(void){
 		time_t t = time(NULL);
 		struct tm *tm = localtime(&t);
 		char str[64];
 		strftime(str, sizeof(str), "%c", tm);
 		string ret = str;
-		return ret;
-	}
-
-	mornmsg getMessageFromFile(string path){
-		mornmsg ret;
-		string previous = "";
-		if(!xmlSnake.openFileReader(path)){
-			return ret;
-		}
-		while(xmlSnake.readLineReader()){
-			if(xmlSnake.readResult.name == "#text" && previous == "clientHost"){
-				ret.clientHost = xmlSnake.readResult.value;
-			}
-			if(xmlSnake.readResult.name == "#text" && previous == "messageDate"){
-				ret.messageDate = xmlSnake.readResult.value;
-			}
-			if(xmlSnake.readResult.name == "#text" && previous == "messageBody"){
-				ret.messageBody = xmlSnake.readResult.value;
-			}
-			if(xmlSnake.readResult.name == "#text" && previous == "messageLength"){
-				ret.messageLength = xmlSnake.readResult.value;
-			}
-			previous = xmlSnake.readResult.name;
-		}
-		xmlSnake.closeReader();
-		ret.messageBody = decryptStoredMessage(ret.messageBody, atoi(ret.messageLength.c_str()));
 		return ret;
 	}
 
@@ -297,9 +158,9 @@ class MorningMessage{
 		        messages[i].groupId = atoi(res.results[i].values[sql_group_id].c_str());
 		        messages[i].read = (res.results[i].values[sql_read] == "1") ? true : false;
 		        messages[i].selfDestruct = (res.results[i].values[sql_read] == "1") ? true : false;
-		        messages[i].subject = res.results[i].values[sql_subject];
-		        messages[i].date = res.results[i].values[sql_date];
-		        messages[i].message = res.results[i].values[sql_message];
+		        messages[i].subject = sqlSnake.desanitize(res.results[i].values[sql_subject]);
+		        messages[i].date = sqlSnake.desanitize(res.results[i].values[sql_date]);
+		        messages[i].message = sqlSnake.desanitize(res.results[i].values[sql_message]);
 		        messages[i].messageSize = atoi(res.results[i].values[sql_message_size].c_str());
 		}
 		return ret;
@@ -344,9 +205,9 @@ class MorningMessage{
                         messages[i].groupId = atoi(res.results[i].values[sql_group_id].c_str());
                         messages[i].read = (res.results[i].values[sql_read] == "1") ? true : false;
                         messages[i].selfDestruct = (res.results[i].values[sql_read] == "1") ? true : false;
-                        messages[i].subject = res.results[i].values[sql_subject];
-                        messages[i].date = res.results[i].values[sql_date];
-                        messages[i].message = res.results[i].values[sql_message];
+                        messages[i].subject = sqlSnake.desanitize(res.results[i].values[sql_subject]);
+                        messages[i].date = sqlSnake.desanitize(res.results[i].values[sql_date]);
+                        messages[i].message = sqlSnake.desanitize(res.results[i].values[sql_message]);
                         messages[i].messageSize = atoi(res.results[i].values[sql_message_size].c_str());
                 }
                 return ret;

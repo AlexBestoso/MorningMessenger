@@ -1,4 +1,4 @@
-struct morning_config_xml{
+/*struct morning_config_xml{
 	string messages;
 	string prikey;
 	string pubkey;
@@ -7,7 +7,7 @@ struct morning_config_xml{
 	string trustedkeys;
 	
 };
-typedef struct morning_config_xml mornconf;
+typedef struct morning_config_xml mornconf;*/
 
 struct morning_config{
 	string sqlHost = "";
@@ -17,6 +17,7 @@ struct morning_config{
 	string sqlDatabase = "mornmessage";
 	string serviceHost = "";
 	int servicePort = 21345;
+	bool torMode = false;
 };
 typedef struct morning_config morningconfig_t;
 
@@ -32,12 +33,11 @@ class MorningConfig{
 		MorningAlgorithms algorithms;
 		MorningUser user;
 		
-		mornconf config;
-		morningconfig_t sqlconf;
+		morningconfig_t conf;
 
 		const char *storageLocation = "/var/morningService/MMS_Storage";
 		const char *serverLockFile = "server.lock";
-                const char *configFile = "MMS_config.exml";
+                const char *configFile = "MMS_config.xml";
                 const char *serverKeysDir = "serverKeys";
                 const char *serverPubkey = "server.pub.key";
                 const char *serverPrikey = "server.pri.key";
@@ -82,6 +82,7 @@ class MorningConfig{
                                 io.out(MORNING_IO_SUCCESS, "Successfully configured permissions!\n");
                         }
                 }
+		
                 void setupTrustedKeysDir(void){
                         // Setup trusted keys dir.
                         io.out(MORNING_IO_GENERAL, "Setting up trusted keys directory.\n");
@@ -152,15 +153,15 @@ class MorningConfig{
                 }
 
 		void setupDatabase(){
-			if(!sqlSnake.init(sqlconf.sqlHost, sqlconf.sqlPort, sqlconf.sqlUser, sqlconf.sqlPass, sqlconf.sqlDatabase)){
+			if(!sqlSnake.init(conf.sqlHost, conf.sqlPort, conf.sqlUser, conf.sqlPass, conf.sqlDatabase)){
 				throw MorningException(sqlSnake.getError());
 			}
-			if(!sqlSnake.createDatabase(sqlconf.sqlDatabase)){
+			if(!sqlSnake.createDatabase(conf.sqlDatabase)){
 				sqlSnake.close();
 				throw MorningException(sqlSnake.getError());
 
 			}
-			if(!sqlSnake.useDatabase(sqlconf.sqlDatabase)){
+			if(!sqlSnake.useDatabase(conf.sqlDatabase)){
 				sqlSnake.close();
 				throw MorningException(sqlSnake.getError());
 			}
@@ -178,12 +179,9 @@ class MorningConfig{
 		string password = "";
 		string pin = "";
 
-		__attribute__((deprecated("Obselete function being removed in future verions.")))mornconf getConfig(void){
-			return config;
-		}
-
-		morningconfig_t getSqlConfig(){
-			return sqlconf;
+		morningconfig_t getConfig(){
+			loadConfig();
+			return conf;
 		}
 		
 
@@ -193,13 +191,10 @@ class MorningConfig{
 		}
 
 		string getConfigLoc(){
-			return getConfigLoc(false);
-		}
-		__attribute__((deprecated("Bool is being removed in future versions")))string getConfigLoc(bool serverMode){
-                        string dire = storageLocation;
+			string dire = storageLocation;
                         string fil = configFile;
                         return dire + "/" + fil;
-                }
+		}
 
 		string getServerLockFile(void){
 			string dire = storageLocation;
@@ -239,12 +234,14 @@ class MorningConfig{
 
 		void setupMessenger(morningconfig_t cfg){
 			try{
-				sqlconf = cfg;
+				conf = cfg;
 				generateConfig(cfg);
 				setupDatabase();
 				setupServerKeysDir();
 
 			}catch(exception &e){
+				string fileName = getConfigLoc();
+				fileSnake.removeFile(fileName);
 				string what = e.what();
                                 what = "Faild to setup Morning Messenger.\nCaught in MorningMessenger::setupMessenger() | " + what;
                                 throw MorningException(what);
@@ -252,8 +249,8 @@ class MorningConfig{
 		}
 
 		bool generateConfig(morningconfig_t config){
-			string fileName = getConfigLoc(false);
-			sqlconf = config;
+			string fileName = getConfigLoc();
+			conf = config;
 			if(!xml.openFileWriter(fileName))
 				throw MorningException("Failed to open '%s' for writing.", fileName.c_str());
 			if(!xml.startWritingFile())
@@ -262,20 +259,22 @@ class MorningConfig{
                                 throw MorningException("Failed to create <root> element.");
 
 
-			if(!xml.writeElement("sqlhost", sqlconf.sqlHost))
+			if(!xml.writeElement("sqlhost", conf.sqlHost))
 				throw MorningException("Failed to write sql host to config file.");
-			if(!xml.writeElement("sqlport", to_string(sqlconf.sqlPort)))
+			if(!xml.writeElement("sqlport", to_string(conf.sqlPort)))
 				throw MorningException("Failed to write sql port to config file.");
-			if(!xml.writeElement("sqluser", sqlconf.sqlUser))
+			if(!xml.writeElement("sqluser", conf.sqlUser))
 				throw MorningException("Failed to write sql user to config file.");
-			if(!xml.writeElement("sqlpass", sqlconf.sqlPass))
+			if(!xml.writeElement("sqlpass", conf.sqlPass))
 				throw MorningException("Failed to write sql password to config file.");
-			if(!xml.writeElement("sqldatabase", sqlconf.sqlDatabase))
+			if(!xml.writeElement("sqldatabase", conf.sqlDatabase))
 				throw MorningException("Failed to write sql database to config file.");
-			if(!xml.writeElement("servicehost", sqlconf.serviceHost))
+			if(!xml.writeElement("servicehost", conf.serviceHost))
                                 throw MorningException("Failed to write service host to config file.");
-                        if(!xml.writeElement("serviceport", to_string(sqlconf.servicePort)))
+                        if(!xml.writeElement("serviceport", to_string(conf.servicePort)))
                                 throw MorningException("Failed to write service port to config file.");
+			if(!xml.writeElement("tormode", (conf.torMode) ? "1" : "0"))
+				throw MorningException("Failed to write tor mode to config file.");
 
 			if(!xml.stopWritingElement())
                                 throw MorningException("Failed to stop writing trusted keys storage location to config file.");
@@ -295,32 +294,35 @@ class MorningConfig{
 			string previous = "";
 			while(xml.readLineReader()){
 				if(xml.readResult.name == "#text" && previous == "sqlport"){
-					 sqlconf.sqlPort = (unsigned int)atoi(xml.readResult.value.c_str());
+					conf.sqlPort = (unsigned int)atoi(xml.readResult.value.c_str());
 				}
 				if(xml.readResult.name == "#text" && previous == "sqluser"){
-					sqlconf.sqlUser = xml.readResult.value;
+					conf.sqlUser = xml.readResult.value;
 				}
 				if(xml.readResult.name == "#text" && previous == "sqlpass"){
-					sqlconf.sqlPass = xml.readResult.value;
+					conf.sqlPass = xml.readResult.value;
 				}
 				if(xml.readResult.name == "#text" && previous == "sqlhost"){
-					sqlconf.sqlHost = xml.readResult.value;
+					conf.sqlHost = xml.readResult.value;
 				}
 				if(xml.readResult.name == "#text" && previous == "sqldatabase"){
-					sqlconf.sqlDatabase = xml.readResult.value.c_str();
+					conf.sqlDatabase = xml.readResult.value.c_str();
 				}
 				if(xml.readResult.name == "#text" && previous == "servicehost"){
-					sqlconf.serviceHost = xml.readResult.value;
+					conf.serviceHost = xml.readResult.value;
 				}
 				if(xml.readResult.name == "#text" && previous == "serviceport"){
-					sqlconf.servicePort = atoi(xml.readResult.value.c_str());
+					conf.servicePort = atoi(xml.readResult.value.c_str());
+				}
+				if(xml.readResult.name == "#text" && previous == "tormode"){
+					conf.torMode = (xml.readResult.value == "1") ? true : false;
 				}
 
 				previous = xml.readResult.name;
 			}
 			xml.closeReader();
 			
-			if(!sqlSnake.init(sqlconf.sqlHost, sqlconf.sqlPort, sqlconf.sqlUser, sqlconf.sqlPass, sqlconf.sqlDatabase)){
+			if(!sqlSnake.init(conf.sqlHost, conf.sqlPort, conf.sqlUser, conf.sqlPass, conf.sqlDatabase)){
                                 throw MorningException(sqlSnake.getError());
                         }
 			sqlSnake.close();

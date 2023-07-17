@@ -9,6 +9,8 @@ class MorningServerMenu : public MorningMenu{
 	private:
 		MorningIO io;
 		MorningServer server;
+		MorningConfig conf;
+
 		size_t menuCount = 6;
                 string menuOptions[6] = {
                         "config",
@@ -20,24 +22,25 @@ class MorningServerMenu : public MorningMenu{
                 };
 
 		void handlConfigMenu(void){
-			string subOptions[5] = {
+			string subOptions[6] = {
 				"newkeys",
         			"serverName",
 				"hostname",
 				"port",
+				"torMode",
 				"back"
 			};
 
-			for(int i=0; i<5; i++)
+			for(int i=0; i<6; i++)
                                 io.outf(MORNING_IO_NONE, "%d) %s\n", i+1, subOptions[i].c_str());
 			
 			getUserInput();
-			int newCtx = parseSubOptions(subOptions, 5);
+			int newCtx = parseSubOptions(subOptions, 6);
 			if(newCtx == -1){
 				io.out(MORNING_IO_ERROR, "Invalid menu option.\n");
 				return;
 			}
-			if(newCtx == 5){
+			if(newCtx == 6){
 				setCoreContext(MORNING_SERVER_MENU_MAIN);
 				setSubContext(0);
 				return;
@@ -78,6 +81,15 @@ class MorningServerMenu : public MorningMenu{
                         io.outf(MORNING_IO_SUCCESS, "Updated server key pair\n");
 			setSubContext(0);
 		}
+
+		void processTorMode(){
+			morningconfig_t cfg = conf.getConfig();
+			cfg.torMode = (cfg.torMode) ? false : true;
+			conf.generateConfig(cfg);
+			io.out(MORNING_IO_SUCCESS, "Toggled tor mode.\n");
+			setSubContext(0);
+		}
+
 
 		void startService(){
 			io.out(MORNING_IO_GENERAL, "Starting Service...\n");
@@ -202,9 +214,10 @@ class MorningServerMenu : public MorningMenu{
 				case MORNING_SERVER_MENU_CONFIG:
 					server.loadConfigs();
 					cfg = server.getServerConfig();
+
 					if(stx == 0){
-						io.outf(MORNING_IO_NONE, "server host : %s:%d\n\nPublic Key :\n%s\n\nServer Name: %s\n\n", 
-								cfg.serverHost.c_str(), cfg.serverPort, cfg.publicKey.c_str(), cfg.serverName.c_str());
+						io.outf(MORNING_IO_NONE, "Tor Mode : %d\n\nserver host : %s:%d\n\nPublic Key :\n%s\n\nServer Name: %s\n\n", 
+								(conf.getConfig().torMode) ? 1 : 0, cfg.serverHost.c_str(), cfg.serverPort, cfg.publicKey.c_str(), cfg.serverName.c_str());
 						handlConfigMenu();
 					}else if(stx == 1){
 						processNewKeyPair();
@@ -214,6 +227,8 @@ class MorningServerMenu : public MorningMenu{
 						processNewHost();
 					}else if(stx == 4){
 						processNewPort();
+					}else if(stx == 5){
+						processTorMode();
 					}else{
 						io.outf(MORNING_IO_ERROR, "Invalid menu option.\n");
 						setCoreContext(MORNING_SERVER_MENU_MAIN);
