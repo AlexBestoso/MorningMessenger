@@ -24,6 +24,19 @@ else
 	echo "[+] Successfully installed libxm2-dev"
 fi
 
+dpkg -l freeglut3-dev >/dev/null
+if [ "$?" == "0" ]; then
+        echo "[+] freeglut3-dev found!"
+else
+        echo "[-] freeglut3 not found! Attempting to install."
+        sudo apt-get install freeglut3-dev -y
+        if [ "$?" == "1" ]; then
+                echo "[ERROR] Failed to install freeglut3-dev. Aborting."
+                exit 1
+        fi
+        echo "[+] Successfully installed freeglut3-dev"
+fi
+
 dpkg -l libmysql++-dev > /dev/null
 if [ "$?" == "0" ]; then
 	echo "[+] libmysql++-dev found!"

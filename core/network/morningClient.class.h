@@ -440,6 +440,7 @@ class MorningClient{
                                 string name = io.inWithSpace(MORNING_IO_INPUT, msg);
                                 this->ctrSend(name, name.length());
 
+				io.setIgnore(true);
 				msg = ctrRecv();
                                 string reason = io.inWithSpace(MORNING_IO_INPUT, msg);
                                 this->ctrSend(reason, reason.length());

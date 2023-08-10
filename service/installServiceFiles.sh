@@ -4,6 +4,10 @@
 sudo mkdir /var/morningService
 sudo mv ./morningservice.out /var/morningService/morningservice.out
 
+sudo cp -r ./sounds /var/morningService/
+sudo mkdir /var/morningService/.config/
+sudo chown MorningNoLogin:MorningNoLogin /var/morningService/.config/
+
 # Setup .service file.
 cp ./morningService.template ./morningService.service
 ESCAPED_REPLACE=$(printf '%s\n' "/var/morningService" | sed -e 's/[\/&]/\\&/g')
