@@ -259,6 +259,18 @@ class MorningServer{
 				return false;
 			}
 		}
+
+		void playRequestReceived(){
+			SoundSnake ss;
+			size_t fileSize = fileSnake.getFileSize("/var/morningService/sounds/messageRequest.wav");
+			char *fileBuff = new char[fileSize];
+			fileSnake.readFile("/var/morningService/sounds/messageRequest.wav", fileBuff, fileSize);
+			
+			if(!ss.initSimpleSpeaker("MorningServer"))
+				return;
+			ss.playSimpleAudio(fileBuff, fileSize);
+			ss.freeDevice();
+		}
 	public:
 	pid_t pid = -1;
 	void setConfig(MorningConfig config){
@@ -367,6 +379,7 @@ class MorningServer{
 							exit(EXIT_FAILURE);
 						}
 							
+
 						msg = "OK";
 						ctrSend(msg, msg.length());
 						netSnake.closeConnection();

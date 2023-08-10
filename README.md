@@ -1,5 +1,5 @@
 # MorningMessenger
-Version `0.5.6 alpha`<br>
+Version `0.5.7 alpha`<br>
 This commandline application allows you to send p2p encrypted messages using RSA and AES-256-CTR.<br>
 <b>Tested on Linux Mint</b>
 
