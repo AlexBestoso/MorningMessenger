@@ -215,7 +215,7 @@ class SetupViewForm : public Form{
                         );
                         inputs[srv_pass].setInput("");
 
-			Form::setTextInputs(inputs, 9);
+			Form::setTextInputs(inputs, inputCount);
 
 			// Setup submit button
 			buttons[0].setCoords(

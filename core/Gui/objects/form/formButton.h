@@ -52,6 +52,15 @@ class FormButton : public CoreObject{
 	float getButtonZ(){
 		return z;
 	}
+	float getX(void){
+		return x;
+	}
+	float getY(void){
+		return y;
+	}
+	float getZ(void){
+		return z;
+	}
 	float getButtonW(){
 		return w;
 	}

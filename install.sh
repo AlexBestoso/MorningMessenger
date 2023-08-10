@@ -127,7 +127,8 @@ else
 fi
 
 echo "[INFO] Configuring ownership of the storage file."
-sudo chown -R $ServiceUser:$ServiceUser /var/morningService
+#sudo chown -R $ServiceUser:$ServiceUser /var/morningService
+sudo chown -R $(whoami):$(whoami) /var/morningService
 if [ "$?" == "0" ];then
 	echo "[+] Successfully configured storage ownership!"
 else
@@ -136,7 +137,7 @@ else
 fi
 
 echo "[INFO] Configuring storage permissions."
-sudo chmod 770 /var/morningService
+sudo chmod 774 /var/morningService
 if [ "$?" == "0" ];then
 	echo "[+] Successfully configured storage permissions."
 else

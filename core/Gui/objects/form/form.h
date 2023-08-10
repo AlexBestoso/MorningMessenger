@@ -1,5 +1,6 @@
 #include "./formBackground.h"
 #include "./formTitle.h"
+#include "./formText.h"
 #include "./formButton.h"
 #include "./formTextInput.h"
 #include "./formDropDown.h"
@@ -11,6 +12,9 @@ class Form : public CoreObject{
 	
 	FormTitle title;
 	
+	FormText *texts = NULL;
+	size_t textCount = 0;
+
 	FormButton *buttons = NULL;
 	size_t buttonCount = 0;
 	
@@ -84,6 +88,11 @@ class Form : public CoreObject{
 		this->buttonCount = buttonCount;
 	}
 
+	void setTexts(FormText *texts, size_t textCount){
+		this->texts = texts;
+		this->textCount = textCount;
+	}
+
 	void setTextInputs(FormTextInput *inputs, size_t inputCount){
 		this->textInputCount = inputCount;
 		this->textInputs = inputs;
@@ -117,6 +126,10 @@ class Form : public CoreObject{
 		}
 		for(int i=0; i<selectListCount; i++){
 			selectLists[i].run();
+		}
+		for(int i=0; i<textCount; i++){
+			if(!texts[i].getHideText())
+				texts[i].run();
 		}
 		return this->formContext;
 	}

@@ -1,5 +1,6 @@
 #define GUI_CONTEXT_SETUP 1
 #define GUI_CONTEXT_LOGIN 2
+#define GUI_CONTEXT_MAIN 3
 
 #include "./views/viewLinker.h"
 
@@ -9,6 +10,7 @@ class GuiContext{
                 float bgColor[4] = {0.25, 0.0, 0.5, 1};
 		MorningMessenger morningMessenger;
 		SetupView setupView;
+		LoginView loginView;
 
 	public:
 		int displayW = 0;
@@ -26,7 +28,13 @@ class GuiContext{
 					setupView.run();
 					break;
 				case GUI_CONTEXT_LOGIN:
-					printf("Login view.\n");
+					if(!loginView.isInit()){
+						loginView.init(0, bgColor);
+					}
+					loginView.run();
+					break;
+				case GUI_CONTEXT_MAIN:
+					printf("Ready for main menu.\n");
 					break;
 				default:
 					if(morningMessenger.isSetup()){
@@ -49,6 +57,18 @@ class GuiContext{
 						current_context = GUI_CONTEXT_LOGIN;
 					}
                                         break;
+				case GUI_CONTEXT_LOGIN:
+					loginView.mouseClick(button, state, x, y);
+					if(loginView.ready){
+						loginView.ready = false;
+						loginView.authFailed = false;
+						if(!morningMessenger.login(loginView.username, loginView.password)){
+							loginView.authFailed = true;
+						}else{
+							current_context = GUI_CONTEXT_MAIN;
+						}
+					}
+					break;
 			}
 		}
 
@@ -57,6 +77,9 @@ class GuiContext{
                                 case GUI_CONTEXT_SETUP:
 					setupView.mouseMovement();
                                         break;
+				case GUI_CONTEXT_LOGIN:
+					loginView.mouseMovement();
+					break;
                         }
 		}
 
@@ -65,6 +88,9 @@ class GuiContext{
                                 case GUI_CONTEXT_SETUP:
 					setupView.mousePassive(x, y);
                                         break;
+				case GUI_CONTEXT_LOGIN:
+					loginView.mousePassive(x, y);
+					break;
                         }
 		}
 
@@ -73,6 +99,9 @@ class GuiContext{
                                 case GUI_CONTEXT_SETUP:
 					setupView.idle();
                                         break;
+				case GUI_CONTEXT_LOGIN:
+					loginView.idle();
+					break;
                         }
 		}
 
@@ -81,6 +110,9 @@ class GuiContext{
                                 case GUI_CONTEXT_SETUP:
 					setupView.keyDown(key, mouseX, mouseY);
                                         break;
+				case GUI_CONTEXT_LOGIN:
+					loginView.keyDown(key, mouseX, mouseY);
+					break;
                         }
 		}
 
@@ -89,6 +121,9 @@ class GuiContext{
                                 case GUI_CONTEXT_SETUP:
 					setupView.keyUp(key, mouseX, mouseY);
                                         break;
+				case GUI_CONTEXT_LOGIN:
+					loginView.keyUp(key, mouseX, mouseY);
+					break;
                         }
 		}
 }context;

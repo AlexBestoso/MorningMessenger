@@ -12,7 +12,7 @@ class SetupView : public View{
 			View::init(viewId, bgColor);
 		}
 
-		int run(){
+		int run(void){
 			 View::run();
 			 switch(viewContext){
 			 	default:
