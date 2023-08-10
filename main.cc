@@ -11,6 +11,10 @@
 #include <iostream>
 #include <signal.h>
 #include <time.h>
+#include <GL/glut.h>
+#include <GL/glu.h>
+#include <GL/freeglut.h>
+#include <X11/Xlib.h>
 
 using namespace std;
 
@@ -44,7 +48,13 @@ using namespace std;
 
 #include "./core/morningMessenger.class.h"
 
-int main(void){
+#include "./core/parsers/bmpParser.h"
+#include "./core/Gui/guiEngine.class.h"
+
+int main(int argc, char *argv[]){
+	GuiEngine ge;
+	ge.startEngine(argc, argv);
+
 	try{
 		MorningMessenger MM;
 		bool running = true;

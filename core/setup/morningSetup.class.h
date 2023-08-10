@@ -40,6 +40,40 @@ class MorningSetup{
 			return false;
 		}
 
+		void execSetup(morningconfig_t cfg, string username, string password){
+			config.setupMessenger(cfg);
+
+                        if(!user.newUser(config.getSql(), username, password))
+                                throw MorningException(user.getError());
+                        io.out(MORNING_IO_SUCCESS, "User created successfully!\n");
+
+                        io.out(MORNING_IO_GENERAL, "Generating server key pair. Please be patient.\n");
+                        server.setupServerTable(config.getSql());
+                        io.out(MORNING_IO_SUCCESS, "Server table successfully set up!\n");
+
+                        io.out(MORNING_IO_GENERAL, "Setting up trusted keys table.\n");
+                        MorningKeyManager keyManager;
+                        keyManager.setupTable();
+                        io.out(MORNING_IO_SUCCESS, "Trusted key table created!\n");
+
+                        io.out(MORNING_IO_GENERAL, "Setting up group table.\n");
+                        MorningGroupManager groupManager;
+                        groupManager.setupTable();
+                        io.out(MORNING_IO_SUCCESS, "Created group table!\n");
+
+                        io.out(MORNING_IO_GENERAL, "Setting up message table.\n");
+                        MorningMessage mornMessage;
+                        mornMessage.setupTable();
+                        io.out(MORNING_IO_SUCCESS, "Created message table!\n");
+
+                        io.out(MORNING_IO_GENERAL, "Logging into your new account!\n");
+
+                        /*
+                         * This is hacky, should fix it in the future
+                         * */
+                        cfg.sqlPass = password;
+                        cfg.sqlUser = username;
+		}
 		morningconfig_t runSetup(void){
 			morningconfig_t cfg;
 			cfg.sqlHost = io.inString(MORNING_IO_INPUT, "Enter MySql server hostname / ip > ");
