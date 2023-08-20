@@ -64,6 +64,8 @@ class SetupView : public View{
 			return getViewId();
 		}
 
+		int specialKeyDown(int key, int mouseX, int mouseY){return 0;}
+                int specialKeyUp(int key, int mouseX, int mouseY){return 0;}
 		int keyUp(unsigned char key, int mouseX, int mouseY){return 0;}
 		void idle(void){}
 		void mouseMovement(void){}

@@ -79,4 +79,14 @@ class View{
         	        setBackgroundColor();
         	        return _viewId;
         	}
+        	virtual int keyUp(unsigned char key, int mouseX, int mouseY){
+        	        setBackgroundColor();
+        	        return _viewId;
+        	}
+		virtual int specialKeyDown(int key, int mouseX, int mouseY){
+			return -1;
+		}
+                virtual int specialKeyUp(int key, int mouseX, int mouseY){
+			return -1;
+		}
 };

@@ -122,13 +122,14 @@ if [ "$?" != "0" ]; then
 		echo "[ERROR] Failed to create storage directory. Aborting."
 		exit 1
 	fi
+	sudo chmod 770 $StorageLocation
 else
 	echo "[W] Storage location already exits!"
 fi
 
 echo "[INFO] Configuring ownership of the storage file."
-#sudo chown -R $ServiceUser:$ServiceUser /var/morningService
-sudo chown -R $(whoami):$(whoami) /var/morningService
+sudo chown -R $ServiceUser:$ServiceUser /var/morningService
+#sudo chown -R $(whoami):$(whoami) /var/morningService
 if [ "$?" == "0" ];then
 	echo "[+] Successfully configured storage ownership!"
 else
@@ -144,6 +145,9 @@ else
 	echo "[ERROR] Failed to configure storage permissions. Aborting."
 	exit 1
 fi
+
+sudo usermod -a -G $ServiceUser $(whoami) 
+echo -en "\n\n\n\t\tYOU WILL NEED TO REBOOT BEFORE RUNNING FOR NEW PERMISSIONS TO BE PROPERLY APPLIED. tank you, that is all. :)\n\n"
 
 exit 0
 

@@ -1,3 +1,5 @@
 #include "./view.class.h"
 #include "./setupView/setup.view.h"
 #include "./loginView/login.view.h"
+#include "./mainView/main.view.h"
+#include "./serverView/server.view.h"

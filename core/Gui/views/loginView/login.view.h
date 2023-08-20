@@ -39,19 +39,59 @@ class LoginView : public View{
 						break;
 				}
 			}
+			loginForm.setAccessability(false);
 			return getViewId();
 		}
 
 		int keyDown(unsigned char key, int mouseX, int mouseY){
+			if(key == 0x09){ // accessability using the tab key.
+				if(!loginForm.getAccessability()){
+                                        loginForm.setAccessability(true);
+                                        loginForm.setAccessabilityElement(0);
+                                }else{
+                                        loginForm.accessabilityNext();
+                                }
+
+				return -1;
+			}
+			if(loginForm.getAccessability() && loginForm.getAccessabilityId() == 2 && key == 0xd){
+				// Pressed enter using accessibility to login.
+				ready = true;
+                                username = loginForm.getUsernameInput();
+                                password = loginForm.getPasswordInput();
+				return -1;
+			}
 			loginForm.keyDown(key, mouseX, mouseY);
 			return getViewId();
 		}
 
-		int keyUp(unsigned char key, int mouseX, int mouseY){
+
+		int specialKeyDown(int key, int mouseX, int mouseY){return 0;}
+                int specialKeyUp(int key, int mouseX, int mouseY){
+			if(key == 0x66 || key == 0x67){
+				// right arrow or down arrow
+				if(!loginForm.getAccessability()){
+					loginForm.setAccessability(true);
+					loginForm.setAccessabilityElement(0);
+				}else{
+					loginForm.accessabilityNext();
+				}
+			}else if(key == 0x64 || key == 0x65){
+				// up arrow or left arrow
+				if(!loginForm.getAccessability()){
+					loginForm.setAccessability(true);
+                                        loginForm.setAccessabilityElement(999);
+                                }else{
+                                        loginForm.accessabilityPrevious();
+                                }
+			}
 			return 0;
 		}
-
+		int keyUp(unsigned char key, int mouseX, int mouseY){return 0;}
 		void idle(void){}
 		void mouseMovement(void){}
 
+		void resetInputs(void){
+			loginForm.resetInputs();
+		}
 };

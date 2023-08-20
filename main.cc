@@ -15,6 +15,8 @@
 #include <GL/glu.h>
 #include <GL/freeglut.h>
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xmu/Atoms.h>
 
 using namespace std;
 

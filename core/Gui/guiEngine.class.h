@@ -39,6 +39,16 @@ class GuiEngine{
         	        context.keyupContextSwitch(key, getX(mouseX), getY(mouseY));
         	        glutPostRedisplay();
         	}
+
+		static void keyboardSpecial_down(int key, int mouseX, int mouseY){
+			context.specialKeydownContextSwitch(key, getX(mouseX), getY(mouseY));
+			glutPostRedisplay();
+		}
+
+		static void keyboardSpecial_up(int key, int mouseX, int mouseY){
+                        context.specialKeyupContextSwitch(key, getX(mouseX), getY(mouseY));
+                        glutPostRedisplay();
+                }
 		
 	public:
 		int displayX = 0;
@@ -67,8 +77,10 @@ class GuiEngine{
 	                glutMotionFunc(mouseMovement);
 	                glutPassiveMotionFunc(mousePassive);
 	                glutKeyboardUpFunc(keyboard_up);
+			glutSpecialUpFunc(keyboardSpecial_up);
 	                glutIdleFunc(idle);
 	                glutKeyboardFunc(keyboard_down);
+			glutSpecialFunc(keyboardSpecial_down);
 	                glutReshapeFunc(resize);
 
 	                glutMainLoop();

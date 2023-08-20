@@ -7,6 +7,43 @@ class LoginViewForm : public Form{
 		FormTextInput inputs[2];
 		FormButton buttons[1];
 		FormText texts[1];
+
+		bool accessabilityMode = false;
+		size_t elementCount = 3;
+		unsigned int currentElement = 0;
+
+		void accessabilityFocus(void){
+			if(currentElement >= elementCount)
+				currentElement = elementCount-1;
+			else if(currentElement < 0)
+				currentElement = 0;
+			switch(currentElement){
+				case 0:
+					inputs[user_password].setFocus(false);	
+					inputs[user_login].setFocus(true);
+					Form::setTextInputs(inputs, inputCount);
+					buttons[0].setHover(false);
+					Form::setButtons(buttons, 1);
+					break;
+				case 1:
+					inputs[user_password].setFocus(true);
+                                        inputs[user_login].setFocus(false);
+                                        Form::setTextInputs(inputs, inputCount);
+					Form::setButtons(buttons, 1);
+                                        Form::setTextInputs(inputs, inputCount);
+					buttons[0].setHover(false);
+					Form::setButtons(buttons, 1);
+					break;
+				case 2:
+					inputs[user_password].setFocus(false);
+                                        inputs[user_login].setFocus(false);
+                                        Form::setTextInputs(inputs, inputCount);
+					buttons[0].setHover(true);
+					Form::setButtons(buttons, 1);
+					break;
+			}
+		}
+		
 	public:
 		LoginViewForm() : Form(){
 			// configure background
@@ -90,6 +127,12 @@ class LoginViewForm : public Form{
 			Form::setTexts(texts, 1);
 		}
 
+		void resetInputs(){
+			for(int i=0; i<inputCount; i++){
+				inputs[i].setInputData("");
+			}
+		}
+
 		void hideAuthError(bool value){
 			texts[0].setHideText(value);
 			Form::setTexts(texts, 1);
@@ -101,4 +144,34 @@ class LoginViewForm : public Form{
                 string getPasswordInput(void){
                         return inputs[user_password].getInputData();
                 }
+
+		void accessabilityNext(void){
+			currentElement = (currentElement + 1) % elementCount;
+			accessabilityFocus();
+		}
+		void accessabilityPrevious(void){
+			if(((int)currentElement-1) < 0)
+				currentElement = elementCount-1;
+			else
+				currentElement -= 1;
+			accessabilityFocus();
+		}
+		void setAccessability(bool val){
+			accessabilityMode = val;
+		}
+		void setAccessabilityElement(int id){
+			if(id >= elementCount)
+				currentElement = elementCount-1;
+			else if(id < 0)
+				currentElement = 0;
+			else
+				currentElement = id;
+			accessabilityFocus();
+		}
+		int getAccessabilityId(void){
+			return currentElement;
+		}
+		bool getAccessability(void){
+			return accessabilityMode;
+		}
 };

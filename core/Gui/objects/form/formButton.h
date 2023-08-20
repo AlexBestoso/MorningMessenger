@@ -43,6 +43,13 @@ class FormButton : public CoreObject{
 		return buttonText;
 	}
 
+	void setHover(bool val){
+		hover = val;
+	}
+	bool getHover(void){
+		return hover;
+	}
+
 	float getButtonX(){
 		return x;
 	}

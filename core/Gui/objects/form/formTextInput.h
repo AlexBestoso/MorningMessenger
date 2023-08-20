@@ -51,6 +51,14 @@ class FormTextInput : public CoreObject{
 	
 	}
 
+	void setFocus(bool val){
+		focused = val;
+	}
+
+	bool getFocus(void){
+		return focused;
+	}
+
 	void setDirSafeInput(bool val){
 		dirSafeInput = val;
 	}
@@ -154,6 +162,166 @@ class FormTextInput : public CoreObject{
                 blueFocus = b;
         }
 
+	string getClipboardText(void){
+		string ret = "";
+		Display *display = XOpenDisplay(NULL);
+  		unsigned long color = BlackPixel(display, DefaultScreen(display));
+  		Window window = XCreateSimpleWindow(display, DefaultRootWindow(display), 0,0, 1,1, 0, color, color);
+		const char *bufname = "CLIPBOARD";
+		const char *fmtname = "UTF8_STRING";
+		char *result;
+  		unsigned long ressize, restail;
+  		int resbits;
+  		Atom bufid = XInternAtom(display, bufname, False);
+       		Atom fmtid = XInternAtom(display, fmtname, False);
+       		Atom propid = XInternAtom(display, "XSEL_DATA", False);
+       		Atom incrid = XInternAtom(display, "INCR", False);
+  		XEvent event;
+
+  		XConvertSelection(display, bufid, fmtid, propid, window, CurrentTime);
+  		do {
+    			XNextEvent(display, &event);
+  		} while (event.type != SelectionNotify || event.xselection.selection != bufid);
+
+  		if (event.xselection.property){
+    			XGetWindowProperty(display, window, propid, 0, LONG_MAX/4, False, AnyPropertyType,
+      			&fmtid, &resbits, &ressize, &restail, (unsigned char**)&result);
+
+    			if (fmtid == incrid){
+      				printf("Buffer is too large and INCR reading is not implemented yet.\n");
+			}else{
+      				ret = result;
+			}	
+    			XFree(result);
+    			return ret;
+  		}
+		// request failed, e.g. owner can't convert to the target format
+    		return ret;
+	}
+
+	string getClipboardText2(void){
+                string ret = "";
+                Display *display = XOpenDisplay(NULL);
+                unsigned long color = BlackPixel(display, DefaultScreen(display));
+                Window window = XCreateSimpleWindow(display, DefaultRootWindow(display), 0,0, 1,1, 0, color, color);
+                const char *bufname = "CLIPBOARD";
+                const char *fmtname = "STRING";
+                char *result;
+                unsigned long ressize, restail;
+                int resbits;
+                Atom bufid = XInternAtom(display, bufname, False);
+                Atom fmtid = XInternAtom(display, fmtname, False);
+                Atom propid = XInternAtom(display, "XSEL_DATA", False);
+                Atom incrid = XInternAtom(display, "INCR", False);
+                XEvent event;
+
+                XConvertSelection(display, bufid, fmtid, propid, window, CurrentTime);
+                do {
+                        XNextEvent(display, &event);
+                } while (event.type != SelectionNotify || event.xselection.selection != bufid);
+
+                if (event.xselection.property){
+                        XGetWindowProperty(display, window, propid, 0, LONG_MAX/4, False, AnyPropertyType,
+                        &fmtid, &resbits, &ressize, &restail, (unsigned char**)&result);
+
+                        if (fmtid == incrid){
+                                printf("Buffer is too large and INCR reading is not implemented yet.\n");
+                        }else{
+                                ret = result;
+                        }
+                        XFree(result);
+                        return ret;
+                }
+                // request failed, e.g. owner can't convert to the target format
+                return ret;
+        }
+
+	bool setClipboardValue(string dest){
+		if(dest.length() <= 0){
+			return false;
+		}
+		// init X11 display and window.
+		Display *display = XOpenDisplay(NULL);
+  		unsigned long color = BlackPixel(display, DefaultScreen(display));
+  		Window window = XCreateSimpleWindow(display, DefaultRootWindow(display), 0,0, 1,1, 0, color, color);
+
+		// Copy string into an unsigned char array, may be able to just typecast.
+		size_t destSize = dest.length();
+		unsigned char *copyData = new unsigned char[destSize];
+		int copyDataLen = destSize;
+		for(int i=0; i<copyDataLen; i++){
+			copyData[i] = (unsigned char)dest[i];
+		}
+	
+		// Pre-iteration preperations...
+		XEvent event;
+		Atom selection = XA_CLIPBOARD(display);
+		Atom target = XA_UTF8_STRING(display);
+	
+		XSelectInput(display, window, PropertyChangeMask);
+		XSetSelectionOwner(display, selection, window, CurrentTime);
+
+		Window requestor_id;
+
+		/*
+		 * Loop over a few events.
+		 * The first 3 appears to require sending information regarding the previous event to the X11 Server.
+		 * On the 4th iteration the event that allows you to write into the clipboard appears to become usable. 
+		 * */
+		for(int i=0; i<4; i++){
+			XNextEvent(display, &event);
+			if(event.type == SelectionRequest){
+				requestor_id = event.xselectionrequest.requestor;
+			}else{
+				XDestroyWindow(display, window);
+			 	XCloseDisplay(display);
+				return false;
+			}
+		
+			XEvent eventResponse;
+	    		Atom inc;
+	    		Atom targets;
+			targets = XInternAtom(display, "TARGETS", False);
+			inc = XInternAtom(display, "INCR", False);
+	
+			if (event.xselectionrequest.target == targets) {
+				// These operations will allow the code to continue iterating through events.
+				Atom types[2] = { targets, XA_UTF8_STRING(display) };
+				XChangeProperty(display,
+		        	                event.xselectionrequest.requestor,
+		        	                event.xselectionrequest.property,
+		        	                XA_ATOM,
+		        	                32, PropModeReplace, (unsigned char *) types,
+		        	                (int) (sizeof(types) / sizeof(Atom))
+		        	);
+			}else{
+				// This is what actually sets the clipboard data.
+				XChangeProperty(display,
+		                            event.xselectionrequest.requestor,
+		                            event.xselectionrequest.property,
+		                            XA_UTF8_STRING(display),
+		                            8, PropModeReplace, (unsigned char *) copyData,
+		                            (int) copyDataLen);
+			}
+		
+			// Create a X11 event packet and send it to the server.
+			eventResponse.xselection.property = event.xselectionrequest.property;
+		        eventResponse.xselection.type = SelectionNotify;
+		        eventResponse.xselection.display = event.xselectionrequest.display;
+		        eventResponse.xselection.requestor = event.xselectionrequest.requestor;
+		        eventResponse.xselection.selection = event.xselectionrequest.selection;
+		        eventResponse.xselection.target = event.xselectionrequest.target;
+		        eventResponse.xselection.time = event.xselectionrequest.time;
+		
+			XSendEvent(display, event.xselectionrequest.requestor, 0, 0, &eventResponse);
+		        XFlush(display);
+		}
+		// Clean up.
+		XDestroyWindow(display, window);
+	  	XCloseDisplay(display);
+		return true;
+	}
+
 	void run(){
 		/* Core Container.*/
 		if(this->focused){
@@ -218,19 +386,42 @@ class FormTextInput : public CoreObject{
 
 	int keyDown(unsigned char key, int mouseX, int mouseY){
 		if(this->focused){
-			if(key == 0x08){
+			if(key == 0x08){ // backspace
 				if(this->inputData.size() > 0)
 					this->inputData.pop_back();
-			}else if(key == 0x0d){
+			}else if(key == 0x0d){ // Enter key
                                 this->focused = false;
-                        }else if(dirSafeInput){
+                        }else if(dirSafeInput){ // exclude certain chars
 				if((key >= 0x61 && key <= 0x7a) || (key >= 0x41 && key <= 0x5a) || (key >= 0x30 && key <= 0x39) || key == 0x20){
 					this->inputData += key;
 				}
+			}else if(key == 0x16){ // Ctrl+v / paste
+				this->inputData = getClipboardText();
+				if(this->inputData == ""){
+					this->inputData = getClipboardText2();
+				}
+			}else if(key == 0x3){ // Ctrl+c / copy
+				string oldVal = this->inputData;
+				int e = 0;
+				int eMax = 10;
+				while(oldVal != getClipboardText() || e < eMax){
+					setClipboardValue(this->inputData);
+					e++;
+				}
+			}else if(key == 0x18){ // Ctrl+x / cut
+				string oldVal = this->inputData;
+                                int e = 0;
+                                int eMax = 10;
+                                while(oldVal != getClipboardText() || e < eMax){
+                                        setClipboardValue(this->inputData);
+                                        e++;
+                                }
+				this->inputData = "";
 			}else if(!dirSafeInput){
 				this->inputData += key;
 			}
 		}
+		
 		return 0;
 	}
 };

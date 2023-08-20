@@ -5,8 +5,10 @@ sudo mkdir /var/morningService
 sudo mv ./morningservice.out /var/morningService/morningservice.out
 
 sudo cp -r ./sounds /var/morningService/
+sudo chmod 770 /var/morningService/sounds
 sudo mkdir /var/morningService/.config/
 sudo chown MorningNoLogin:MorningNoLogin /var/morningService/.config/
+sudo chmod 770 /var/morningService/.config/
 
 # Setup .service file.
 cp ./morningService.template ./morningService.service
@@ -42,7 +44,7 @@ sed -i "$REPLACE" ./morningService.tmp
 sudo mv ./morningService.tmp /etc/init.d/morningService
 
 # update permissions
-#sudo chown -R MorningNoLogin:MorningNoLogin /var/morningService
+sudo chown -R MorningNoLogin:MorningNoLogin /var/morningService
 
 # reload daemon cache
 sudo systemctl daemon-reload
