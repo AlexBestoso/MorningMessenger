@@ -57,7 +57,7 @@ int main(int argc, char *argv[]){
 	GuiEngine ge;
 	ge.startEngine(argc, argv);
 
-	try{
+/*	try{
 		MorningMessenger MM;
 		bool running = true;
 		while(running){
@@ -78,8 +78,8 @@ int main(int argc, char *argv[]){
 					
 					}
 					break;*/
-				case MORNING_MENU_MANAGE:
-					MM.keyManager();
+/*				case MORNING_MENU_MANAGE:
+/*					MM.keyManager();
 					break;
 				case MORNING_MENU_INBOX:
 					MM.inbox();
@@ -95,6 +95,6 @@ int main(int argc, char *argv[]){
 	}catch(exception& e){
 		printf("caught in main() | %s\n", e.what());
 		exit(EXIT_FAILURE);
-	}
+	}*/
 	exit(EXIT_SUCCESS);
 }

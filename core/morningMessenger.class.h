@@ -35,7 +35,7 @@ class MorningMessenger{
 		}
 
 		void runSetup(morningconfig_t cfg, string user, string pass){
-				setup.execSetup(cfg, user, pass);
+			setup.execSetup(cfg, user, pass);
 		}
 
 		bool login(string username, string password){

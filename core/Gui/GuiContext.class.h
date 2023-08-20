@@ -67,7 +67,7 @@ class GuiContext{
 						current_context = GUI_CONTEXT_SETUP;
 					}
 					//debug
-					//current_context = GUI_CONTEXT_SERVER;
+				//	current_context = GUI_CONTEXT_SERVER;
 					break;
 			}
 
