@@ -105,8 +105,13 @@ class BmpParser{
 			stat(fileName.c_str(), &st);
 			this->fileSize = st.st_size;
 			int fd = open(fileName.c_str(), O_RDONLY);
+
+			if(!fd && errno == EAGAIN){
+				fd = open(fileName.c_str(), O_RDONLY);
+			}
+			
 			if(!fd){
-				fprintf(stderr, "[E] Failed to open .bmp file.\n");
+				fprintf(stderr, "[E] Failed to open .bmp file (%ld) %s\nErrorNo : %d\n", (long)fileSize, fileName.c_str(), errno);
 				return;
 			}
 

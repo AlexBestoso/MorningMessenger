@@ -17,6 +17,8 @@ class GuiContext{
 		LoginView loginView;
 		MainView mainView;
 		ServerView serverView;
+		RequestView requestView;
+		KeysView keysView;
 	public:
 		int displayW = 0;
 		int displayH = 0;
@@ -60,6 +62,17 @@ class GuiContext{
 					}
 					serverView.run();
 					break;
+				case GUI_CONTEXT_FRIENDS:
+					if(!requestView.isInit())
+						requestView.init(0, bgColor);
+					requestView.run();
+					break;
+				case GUI_CONTEXT_KEYS:
+					if(!keysView.isInit()){
+						keysView.init(0, bgColor);
+					}
+					keysView.run();
+					break;
 				default:
 					if(morningMessenger.isSetup()){
 						current_context = GUI_CONTEXT_LOGIN;
@@ -96,6 +109,10 @@ class GuiContext{
 							current_context = GUI_CONTEXT_LOGIN;
 						}else if(clickEvent == __MAIN_VIEW__SERVERCTRL){
 							current_context = GUI_CONTEXT_SERVER;
+						}else if(clickEvent == __MAIN_VIEW__FINDFRIENDS){
+							current_context = GUI_CONTEXT_FRIENDS;
+						}else if(clickEvent == __MAIN_VIEW__MANAGEKEYS){
+							current_context = GUI_CONTEXT_KEYS;
 						}
 					}
 					break;
@@ -107,6 +124,18 @@ class GuiContext{
 							break;
 						}
 					}
+					break;
+				case GUI_CONTEXT_FRIENDS:
+					clickEvent = requestView.mouseClick(button, state, x, y);
+					if(clickEvent == __REQUEST_VIEW_BACK__){
+						current_context = GUI_CONTEXT_MAIN;
+					}
+					break;
+				case GUI_CONTEXT_KEYS:
+					clickEvent = keysView.mouseClick(button, state, x, y);
+					if(clickEvent == __KEYS_VIEW__BACK){
+						current_context = GUI_CONTEXT_MAIN;
+					}	
 					break;
 			}
 		}
@@ -125,6 +154,12 @@ class GuiContext{
 				case GUI_CONTEXT_SERVER:
 					serverView.mouseMovement();
 					break;
+				case GUI_CONTEXT_FRIENDS:
+					requestView.mouseMovement();
+					break;
+				case GUI_CONTEXT_KEYS:
+					keysView.mouseMovement();
+					break;
                         }
 		}
 
@@ -141,6 +176,12 @@ class GuiContext{
 					break;
 				case GUI_CONTEXT_SERVER:
 					serverView.mousePassive(x, y);
+					break;
+				case GUI_CONTEXT_FRIENDS:
+					requestView.mousePassive(x, y);
+					break;
+				case GUI_CONTEXT_KEYS:
+					keysView.mousePassive(x, y);
 					break;
                         }
 		}
@@ -159,6 +200,12 @@ class GuiContext{
 				case GUI_CONTEXT_SERVER:
 					serverView.idle();
 					break;
+				case GUI_CONTEXT_FRIENDS:
+					requestView.idle();
+					break;
+				case GUI_CONTEXT_KEYS:
+					keysView.idle();
+					break;
                         }
 		}
 
@@ -176,6 +223,12 @@ class GuiContext{
 				case GUI_CONTEXT_SERVER:
 					serverView.keyDown(key, mouseX, mouseY);
 					break;
+				case GUI_CONTEXT_FRIENDS:
+					requestView.keyDown(key, mouseX, mouseY);
+					break;
+				case GUI_CONTEXT_KEYS:
+					keysView.keyDown(key, mouseX, mouseY);
+					break;
                         }
 		}
 		void specialKeydownContextSwitch(int key, int mouseX, int mouseY){
@@ -192,6 +245,12 @@ class GuiContext{
                                 case GUI_CONTEXT_SERVER:
                                         serverView.specialKeyDown(key, mouseX, mouseY);
                                         break;
+				case GUI_CONTEXT_FRIENDS:
+					requestView.specialKeyDown(key, mouseX, mouseY);
+					break;
+				case GUI_CONTEXT_KEYS:
+					keysView.specialKeyDown(key, mouseX, mouseY);
+					break;
                         }
 		}
 		void specialKeyupContextSwitch(int key, int mouseX, int mouseY){
@@ -208,6 +267,12 @@ class GuiContext{
                                 case GUI_CONTEXT_SERVER:
                                         serverView.specialKeyUp(key, mouseX, mouseY);
                                         break;
+				case GUI_CONTEXT_FRIENDS:
+					requestView.specialKeyUp(key, mouseX, mouseY);
+					break;
+				case GUI_CONTEXT_KEYS:
+					keysView.specialKeyUp(key, mouseX, mouseY);
+					break;
                         }
 		}
 
@@ -224,6 +289,12 @@ class GuiContext{
 					break;
 				case GUI_CONTEXT_SERVER:
 					serverView.keyUp(key, mouseX, mouseY);
+					break;
+				case GUI_CONTEXT_FRIENDS:
+					requestView.keyUp(key, mouseX, mouseY);
+					break;
+				case GUI_CONTEXT_KEYS:
+					keysView.keyUp(key, mouseX, mouseY);
 					break;
                         }
 		}

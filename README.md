@@ -1,5 +1,5 @@
 # MorningMessenger
-Version `0.6.3 alpha`<br>
+Version `0.6.4 alpha`<br>
 This commandline application allows you to send p2p encrypted messages using RSA and AES-256-CTR.<br>
 <b>Tested on Linux Mint</b>
 
@@ -19,6 +19,7 @@ This commandline application allows you to send p2p encrypted messages using RSA
 2. Added GUI login view
 3. Added better; but experimental menu controls
 4. You can no use the gui to configure the server configurations.
+5. Added gui for the find frends feature.
 
 ### Messages From Morning Star
 1. I'll be looking into creating a notification system so that you don't need to manually refresh the message cache.
