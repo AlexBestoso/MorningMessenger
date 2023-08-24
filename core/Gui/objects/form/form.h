@@ -5,6 +5,7 @@
 #include "./formTextInput.h"
 #include "./formDropDown.h"
 #include "./formSelectList.h"
+#include "./formScrollText.h"
 class Form : public CoreObject{
 	private:
 	int formContext = 0;
@@ -26,14 +27,14 @@ class Form : public CoreObject{
 
 	FormSelectList *selectLists = NULL;
 	size_t selectListCount = 0;
+
+	FormScrollText *scrollTexts = NULL;
+	size_t scrollTextCount = 0;
 	
 	bool hideTitle = false;
-
 	int clickedButtonId = -1;
-
 	int clickedDropdownId = -1;
 	int clickedDropdownOptionId = -1;
-
 	int clickedSelectListId = -1;
         int clickedSelectListOptionId = -1;
 
@@ -107,6 +108,11 @@ class Form : public CoreObject{
 		this->selectListCount = count;
 	}
 
+	void setScrollTexts(FormScrollText *texts, size_t count){
+		scrollTexts = texts;
+        	scrollTextCount = count;
+	}
+
 	void setHideTitle(bool hide){
 		hideTitle = hide;
 	}
@@ -131,6 +137,9 @@ class Form : public CoreObject{
 			if(!texts[i].getHideText())
 				texts[i].run();
 		}
+		for(int i=0; i<scrollTextCount; i++){
+			scrollTexts[i].run();
+		}
 		return this->formContext;
 	}
 
@@ -147,6 +156,9 @@ class Form : public CoreObject{
 		for(int i=0; i<selectListCount; i++){
                         selectLists[i].mousePassive(x, y);
                 }
+		for(int i=0; i<scrollTextCount; i++){
+			scrollTexts[i].mousePassive(x, y);
+		}
 		return this->formContext;
 	}
 
@@ -186,6 +198,13 @@ class Form : public CoreObject{
 				return val;
 			}
                 }
+		for(int i=0; i<scrollTextCount; i++){
+			int val = scrollTexts[i].mouseClick(button, state, x, y);
+			if(val != -1){
+				return -1;
+			}
+			
+		}
                 return -1;
 	}
 
@@ -193,6 +212,37 @@ class Form : public CoreObject{
 		for(int i=0; i<textInputCount; i++){
 			textInputs[i].keyDown(key, x, y);
 		}
+		for(int i=0; i<scrollTextCount; i++){
+			scrollTexts[i].keyDown(key, x, y);
+		}
 		return -1;
 	}
+
+	virtual int specialKeyDown(int key, int mouseX, int mouseY){
+		for(int i=0; i<scrollTextCount; i++){
+			scrollTexts[i].specialKeyDown(key, mouseX, mouseY);
+		}
+        	return 0;
+        }
+
+	virtual int specialKeyUp(int key, int mouseX, int mouseY){
+		for(int i=0; i<scrollTextCount; i++){
+			scrollTexts[i].specialKeyUp(key, mouseX, mouseY);
+		}
+		return 0;
+        }
+
+	virtual int keyUp(unsigned char key, int mouseX, int mouseY){
+		for(int i=0; i<scrollTextCount; i++){
+			scrollTexts[i].keyUp(key, mouseX, mouseY);
+		}
+        	return 0;
+	}
+
+	virtual void idle(void){
+        	for(int i=0; i<scrollTextCount; i++){
+			scrollTexts[i].idle();
+		}
+	}
+
 };

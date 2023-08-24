@@ -442,11 +442,9 @@ class MorningClient{
 		string continueAccessRequest(string response, bool firstRun){
 			string ret = "";
 			if(firstRun){
-				printf("in first run\n");
 				this->ctrSend(response, response.length());
 				ret = ctrRecv();
 			}else{
-				printf("in second run\n");
 				server.loadConfigs();
                                 serverconfig_t cfg = server.getServerConfig();
                                 this->ctrSend(response, response.length());

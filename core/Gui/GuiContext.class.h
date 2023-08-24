@@ -6,6 +6,11 @@
 #define GUI_CONTEXT_KEYS 6
 #define GUI_CONTEXT_INBOX 7
 
+//#define DEBUG_MODE_ENABLED 1
+#ifdef DEBUG_MODE_ENABLED
+	#define GUI_CONTEXT_DEBUG 999
+#endif
+
 #include "./views/viewLinker.h"
 
 class GuiContext{
@@ -19,6 +24,9 @@ class GuiContext{
 		ServerView serverView;
 		RequestView requestView;
 		KeysView keysView;
+#ifdef DEBUG_MODE_ENABLED
+		DebugView debugView;
+#endif
 	public:
 		int displayW = 0;
 		int displayH = 0;
@@ -73,14 +81,23 @@ class GuiContext{
 					}
 					keysView.run();
 					break;
+#ifdef DEBUG_MODE_ENABLED
+				case GUI_CONTEXT_DEBUG:
+					if(!debugView.isInit())
+						debugView.init(0, bgColor);
+					debugView.run();
+					break;
+#endif
 				default:
 					if(morningMessenger.isSetup()){
 						current_context = GUI_CONTEXT_LOGIN;
 					}else{
 						current_context = GUI_CONTEXT_SETUP;
 					}
-					//debug
-				//	current_context = GUI_CONTEXT_SERVER;
+#ifdef DEBUG_MODE_ENABLED
+					if(DEBUG_MODE_ENABLED == 1)
+						current_context = GUI_CONTEXT_DEBUG;
+#endif
 					break;
 			}
 
@@ -137,6 +154,11 @@ class GuiContext{
 						current_context = GUI_CONTEXT_MAIN;
 					}	
 					break;
+#ifdef DEBUG_MODE_ENABLED
+				case GUI_CONTEXT_DEBUG:
+					clickEvent = debugView.mouseClick(button, state, x, y);
+					break;
+#endif
 			}
 		}
 
@@ -160,6 +182,11 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.mouseMovement();
 					break;
+#ifdef DEBUG_MODE_ENABLED
+				case GUI_CONTEXT_DEBUG:
+					debugView.mouseMovement();
+					break;
+#endif
                         }
 		}
 
@@ -183,6 +210,11 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.mousePassive(x, y);
 					break;
+#ifdef DEBUG_MODE_ENABLED
+				case GUI_CONTEXT_DEBUG:
+					debugView.mousePassive(x, y);
+					break;
+#endif
                         }
 		}
 
@@ -206,6 +238,11 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.idle();
 					break;
+#ifdef DEBUG_MODE_ENABLED
+				case GUI_CONTEXT_DEBUG:
+					debugView.idle();
+					break;
+#endif
                         }
 		}
 
@@ -229,6 +266,11 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.keyDown(key, mouseX, mouseY);
 					break;
+#ifdef DEBUG_MODE_ENABLED
+				case GUI_CONTEXT_DEBUG:
+					debugView.keyDown(key, mouseX, mouseY);
+					break;
+#endif
                         }
 		}
 		void specialKeydownContextSwitch(int key, int mouseX, int mouseY){
@@ -251,6 +293,11 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.specialKeyDown(key, mouseX, mouseY);
 					break;
+#ifdef DEBUG_MODE_ENABLED
+				case GUI_CONTEXT_DEBUG:
+					debugView.specialKeyDown(key, mouseX, mouseY);
+					break;
+#endif
                         }
 		}
 		void specialKeyupContextSwitch(int key, int mouseX, int mouseY){
@@ -273,6 +320,11 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.specialKeyUp(key, mouseX, mouseY);
 					break;
+#ifdef DEBUG_MODE_ENABLED
+				case GUI_CONTEXT_DEBUG:
+					debugView.specialKeyUp(key, mouseX, mouseY);
+					break;
+#endif
                         }
 		}
 
@@ -296,6 +348,11 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.keyUp(key, mouseX, mouseY);
 					break;
+#ifdef DEBUG_MODE_ENABLED
+				case GUI_CONTEXT_DEBUG:
+					debugView.keyUp(key, mouseX, mouseY);
+					break;
+#endif
                         }
 		}
 }context;

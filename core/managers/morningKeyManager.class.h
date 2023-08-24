@@ -101,13 +101,13 @@ class MorningKeyManager{
         }
 
 	bool denyUntrustedKey(int id){
+		sqlSnake = config.getSql();
 		sqlwherelist_t wheres;
 		wheres = sqlSnake.addToWhere(
 				wheres, 
 				sqlSnake.generateWhere(colNames[sql_id], "=", to_string(id), true), 
 				""
 		);
-		sqlSnake = config.getSql();
 		if(!sqlSnake.secureDelete(tableName, wheres)){
 			return false;
 		}		
@@ -151,6 +151,7 @@ class MorningKeyManager{
 	}
 
 	bool approveUntrustedKey(int id){
+		sqlSnake = config.getSql();
 		sqlupdate_t update;
 		update.table = tableName;
 		update.valueCount = 1;
@@ -165,7 +166,6 @@ class MorningKeyManager{
 			sqlSnake.generateWhere(colNames[sql_id], "=", to_string(id)),
 			""
 		);
-		sqlSnake = config.getSql();
 		if(!sqlSnake.secureUpdate(update))
 			throw MorningException("Failed to approve key : %s", sqlSnake.getError().c_str());
 
@@ -173,6 +173,7 @@ class MorningKeyManager{
 	}
 
 	bool revokeTrustedKey(int id){
+                sqlSnake = config.getSql();
                 sqlupdate_t update;
                 update.table = tableName;
                 update.valueCount = 1;
@@ -187,7 +188,6 @@ class MorningKeyManager{
                         sqlSnake.generateWhere(colNames[sql_id], "=", to_string(id)),
                         ""
                 );
-                sqlSnake = config.getSql();
                 if(!sqlSnake.secureUpdate(update))
                         throw MorningException("Failed to revoke key : %s", sqlSnake.getError().c_str());
 
@@ -227,8 +227,8 @@ class MorningKeyManager{
 
 		for(int i=0; i<keyCount; i++){
 			untrustedKeys[i].id = atoi(res.results[i].values[sql_id].c_str());
-			untrustedKeys[i].alias = res.results[i].values[sql_alias];
-			untrustedKeys[i].message = res.results[i].values[sql_justification];
+			untrustedKeys[i].alias = sqlSnake.desanitize(res.results[i].values[sql_alias]);
+			untrustedKeys[i].message = sqlSnake.desanitize(res.results[i].values[sql_justification]);
 			untrustedKeys[i].publickey = sqlSnake.desanitize(res.results[i].values[sql_key]);
 		}
 
@@ -269,8 +269,8 @@ class MorningKeyManager{
 
                 for(int i=0; i<keyCount; i++){
                         trustedKeys[i].id = atoi(res.results[i].values[sql_id].c_str());
-                        trustedKeys[i].alias = res.results[i].values[sql_alias];
-                        trustedKeys[i].message = res.results[i].values[sql_justification];
+                        trustedKeys[i].alias = sqlSnake.desanitize(res.results[i].values[sql_alias]);
+                        trustedKeys[i].message = sqlSnake.desanitize(res.results[i].values[sql_justification]);
                         trustedKeys[i].publickey = sqlSnake.desanitize(res.results[i].values[sql_key]);
                 }
 

@@ -56,7 +56,7 @@ class FormText : public CoreObject{
 				titleFont = GLUT_BITMAP_TIMES_ROMAN_10;
 				break;
 			case 3: 
-				setFont(GLUT_BITMAP_TIMES_ROMAN_24);
+				titleFont = GLUT_BITMAP_TIMES_ROMAN_24;
 				break;
 			case 4:
 				titleFont = GLUT_BITMAP_HELVETICA_10;
