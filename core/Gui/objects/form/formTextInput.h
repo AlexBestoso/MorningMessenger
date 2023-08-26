@@ -34,6 +34,7 @@ class FormTextInput : public CoreObject{
 	float blueLabel = 1;
 	bool showButtonText = true;
 	bool focused = false;
+	bool enterToDeselect = true;
 
 	string inputData;
 	float redInput = 1;
@@ -53,6 +54,10 @@ class FormTextInput : public CoreObject{
 
 	void setFocus(bool val){
 		focused = val;
+	}
+
+	void setEnterToDeselect(bool val){
+		enterToDeselect = val;
 	}
 
 	bool getFocus(void){
@@ -193,9 +198,11 @@ class FormTextInput : public CoreObject{
       				ret = result;
 			}	
     			XFree(result);
+			XCloseDisplay(display);
     			return ret;
   		}
 		// request failed, e.g. owner can't convert to the target format
+		XCloseDisplay(display);
     		return ret;
 	}
 
@@ -230,9 +237,11 @@ class FormTextInput : public CoreObject{
                                 ret = result;
                         }
                         XFree(result);
+			XCloseDisplay(display);
                         return ret;
                 }
                 // request failed, e.g. owner can't convert to the target format
+		XCloseDisplay(display);
                 return ret;
         }
 
@@ -389,7 +398,7 @@ class FormTextInput : public CoreObject{
 			if(key == 0x08){ // backspace
 				if(this->inputData.size() > 0)
 					this->inputData.pop_back();
-			}else if(key == 0x0d){ // Enter key
+			}else if(key == 0x0d && enterToDeselect){ // Enter key
                                 this->focused = false;
                         }else if(dirSafeInput){ // exclude certain chars
 				if((key >= 0x61 && key <= 0x7a) || (key >= 0x41 && key <= 0x5a) || (key >= 0x30 && key <= 0x39) || key == 0x20){
@@ -418,7 +427,12 @@ class FormTextInput : public CoreObject{
                                 }
 				this->inputData = "";
 			}else if(!dirSafeInput){
-				this->inputData += key;
+				if(!enterToDeselect && key == 0x0d)
+					this->inputData += "\n";
+				else if(key == 0x09)
+					this->inputData += "\t";
+				else
+					this->inputData += key;
 			}
 		}
 		

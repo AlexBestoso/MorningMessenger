@@ -24,6 +24,7 @@ class GuiContext{
 		ServerView serverView;
 		RequestView requestView;
 		KeysView keysView;
+		InboxView inboxView;
 #ifdef DEBUG_MODE_ENABLED
 		DebugView debugView;
 #endif
@@ -81,6 +82,11 @@ class GuiContext{
 					}
 					keysView.run();
 					break;
+				case GUI_CONTEXT_INBOX:
+					if(!inboxView.isInit())
+						inboxView.init(0, bgColor);
+					inboxView.run();
+					break;
 #ifdef DEBUG_MODE_ENABLED
 				case GUI_CONTEXT_DEBUG:
 					if(!debugView.isInit())
@@ -130,6 +136,8 @@ class GuiContext{
 							current_context = GUI_CONTEXT_FRIENDS;
 						}else if(clickEvent == __MAIN_VIEW__MANAGEKEYS){
 							current_context = GUI_CONTEXT_KEYS;
+						}else if(clickEvent == __MAIN_VIEW__INBOX){
+							current_context = GUI_CONTEXT_INBOX;
 						}
 					}
 					break;
@@ -153,6 +161,12 @@ class GuiContext{
 					if(clickEvent == __KEYS_VIEW__BACK){
 						current_context = GUI_CONTEXT_MAIN;
 					}	
+					break;
+				case GUI_CONTEXT_INBOX:
+					clickEvent = inboxView.mouseClick(button, state, x, y);
+					if(clickEvent == INBOX_MENU_BACK){
+						current_context = GUI_CONTEXT_MAIN;
+					}
 					break;
 #ifdef DEBUG_MODE_ENABLED
 				case GUI_CONTEXT_DEBUG:
@@ -182,6 +196,9 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.mouseMovement();
 					break;
+				case GUI_CONTEXT_INBOX:
+					inboxView.mouseMovement();
+					break;
 #ifdef DEBUG_MODE_ENABLED
 				case GUI_CONTEXT_DEBUG:
 					debugView.mouseMovement();
@@ -209,6 +226,9 @@ class GuiContext{
 					break;
 				case GUI_CONTEXT_KEYS:
 					keysView.mousePassive(x, y);
+					break;
+				case GUI_CONTEXT_INBOX:
+					inboxView.mousePassive(x, y);
 					break;
 #ifdef DEBUG_MODE_ENABLED
 				case GUI_CONTEXT_DEBUG:
@@ -238,6 +258,9 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.idle();
 					break;
+				case GUI_CONTEXT_INBOX:
+					inboxView.idle();
+					break;
 #ifdef DEBUG_MODE_ENABLED
 				case GUI_CONTEXT_DEBUG:
 					debugView.idle();
@@ -266,6 +289,9 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.keyDown(key, mouseX, mouseY);
 					break;
+				case GUI_CONTEXT_INBOX:
+					inboxView.keyDown(key, mouseX, mouseY);
+					break;
 #ifdef DEBUG_MODE_ENABLED
 				case GUI_CONTEXT_DEBUG:
 					debugView.keyDown(key, mouseX, mouseY);
@@ -292,6 +318,9 @@ class GuiContext{
 					break;
 				case GUI_CONTEXT_KEYS:
 					keysView.specialKeyDown(key, mouseX, mouseY);
+					break;
+				case GUI_CONTEXT_INBOX:
+					inboxView.specialKeyDown(key, mouseX, mouseY);
 					break;
 #ifdef DEBUG_MODE_ENABLED
 				case GUI_CONTEXT_DEBUG:
@@ -320,6 +349,9 @@ class GuiContext{
 				case GUI_CONTEXT_KEYS:
 					keysView.specialKeyUp(key, mouseX, mouseY);
 					break;
+				case GUI_CONTEXT_INBOX:
+					inboxView.specialKeyUp(key, mouseX, mouseY);
+					break;
 #ifdef DEBUG_MODE_ENABLED
 				case GUI_CONTEXT_DEBUG:
 					debugView.specialKeyUp(key, mouseX, mouseY);
@@ -347,6 +379,9 @@ class GuiContext{
 					break;
 				case GUI_CONTEXT_KEYS:
 					keysView.keyUp(key, mouseX, mouseY);
+					break;
+				case GUI_CONTEXT_INBOX:
+					inboxView.keyUp(key, mouseX, mouseY);
 					break;
 #ifdef DEBUG_MODE_ENABLED
 				case GUI_CONTEXT_DEBUG:

@@ -37,6 +37,32 @@ else
         echo "[+] Successfully installed freeglut3-dev"
 fi
 
+dpkg -l libxmu-dev >/dev/null
+if [ "$?" == "0" ]; then
+        echo "[+] libxmu-dev found!"
+else
+        echo "[-] libxmu-dev not found! Attempting to install."
+        sudo apt-get install libxmu-dev -y
+        if [ "$?" == "1" ]; then
+                echo "[ERROR] Failed to install libxmu-dev. Aborting."
+                exit 1
+        fi
+        echo "[+] Successfully installed libxmu-dev"
+fi
+
+dpkg -l libx11-dev >/dev/null
+if [ "$?" == "0" ]; then
+        echo "[+] libx11-dev found!"
+else
+        echo "[-] libx11-dev not found! Attempting to install."
+        sudo apt-get install libx11-dev -y
+        if [ "$?" == "1" ]; then
+                echo "[ERROR] Failed to install libx11-dev. Aborting."
+                exit 1
+        fi
+        echo "[+] Successfully installed libx11-dev"
+fi
+
 dpkg -l libmysql++-dev > /dev/null
 if [ "$?" == "0" ]; then
 	echo "[+] libmysql++-dev found!"

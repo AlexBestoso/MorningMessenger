@@ -8,6 +8,7 @@
 #include "./serverView/server.view.h"
 #include "./requestView/request.view.h"
 #include "./keysView/keys.view.h"
+#include "./inboxView/inbox.view.h"
 
 #ifdef DEBUG_MODE_ENABLED
 	#include "./debugView/debug.view.h"

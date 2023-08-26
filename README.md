@@ -1,5 +1,5 @@
 # MorningMessenger
-Version `0.6.5 alpha`<br>
+Version `0.6.6 alpha`<br>
 This commandline application allows you to send p2p encrypted messages using RSA and AES-256-CTR.<br>
 <b>Tested on Linux Mint</b>
 
@@ -21,9 +21,12 @@ This commandline application allows you to send p2p encrypted messages using RSA
 4. You can no use the gui to configure the server configurations.
 5. Added gui for the find frends feature.
 6. Added gui for managing your untrusted and trusted friend keys.
+7. Implemented remaining core functionalites in the GUI.
+8. modified how the application runs so that we can get audio working.
 
 ### Messages From Morning Star
 1. I'll be looking into creating a notification system so that you don't need to manually refresh the message cache.
 2. Need to implement the live chat feature now that AF UNIX support was added. (maybe not)
-3. Implement a gui ;)
-4. Thinking that I'm going to refactor the gui engine class to use shared objects. which should make it easier to test views and forms
+3. Going to be adding the audio features in future updates.
+4. the current textures in the application are 0 effort, and maybe offensive to some people...I'm not sorry.
+5. Application requires X11.

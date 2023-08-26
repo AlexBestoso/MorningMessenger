@@ -62,9 +62,6 @@ class MorningInboxtMenu : public MorningMenu{
 				delete[] keys;
 			keys = new friendkey_t[100];
 			userNamesCount = morningKey.queryKeys(true, keys, 100);
-			if(userNamesCount == 0){
-				return;
-			}
 		}
 
 	public:
