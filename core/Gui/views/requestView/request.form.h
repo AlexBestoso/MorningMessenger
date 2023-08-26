@@ -11,8 +11,13 @@ class RequestViewForm : public Form{
 		int butt_back = 0;
 		int butt_submit = 1;
 		FormButton buttons[2];
+
+		 MorningSetup setup;
 	public:
 		RequestViewForm() : Form(){
+			if(!setup.isSetup()){
+                                return;
+                        }
 			// -- setup background
 			background.setUseTexture(true);
 			background.setTexturePath("./assets/menu-findfrenz.bmp");

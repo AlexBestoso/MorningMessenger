@@ -17,9 +17,13 @@ class InboxViewReadForm : public Form{
 		FormScrollText scrollText[1];
 
 		int keyId = -1;
+		MorningSetup setup;
 
 	public:
 		InboxViewReadForm() : Form(){
+			if(!setup.isSetup()){
+                                return;
+                        }
 			// -- setup background
 			background.setUseTexture(true);
 			background.setTexturePath("./assets/menu-inbox.bmp");

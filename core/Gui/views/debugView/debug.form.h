@@ -2,8 +2,12 @@ class DebugForm : public Form{
 	private:
 		FormBackground background;
 		FormScrollText scrollText[1];
+		MorningSetup setup;
 	public:
 		DebugForm() : Form(){
+			if(!setup.isSetup()){
+                                return;
+                        }
 			// Setup background
 			background.setUseTexture(false);
 			Form::setBackground(background);

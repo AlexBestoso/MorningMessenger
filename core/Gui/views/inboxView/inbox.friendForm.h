@@ -26,9 +26,13 @@ class InboxViewFriendForm : public Form{
 		FormText texts[1];
 
 		friendkey_t friendKey;
+		MorningSetup setup;
 
 	public:
 		InboxViewFriendForm() : Form(){
+			if(!setup.isSetup()){
+                                return;
+                        }
 			// -- setup background
 			background.setUseTexture(true);
 			background.setTexturePath("./assets/menu-inbox.bmp");

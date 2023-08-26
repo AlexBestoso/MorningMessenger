@@ -8,8 +8,12 @@ class KeysUntrustedManageForm : public Form{
 
 		keyfile *untrustedKeys = NULL;
                 size_t keyCount = 0;
+		MorningSetup setup;
 	public:
 		KeysUntrustedManageForm() : Form(){
+			if(!setup.isSetup()){
+                                return;
+                        }
 			// -- setup background
 			background.setUseTexture(true);
 			background.setTexturePath("./assets/menu-keys-untrusted.bmp");

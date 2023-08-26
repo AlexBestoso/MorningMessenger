@@ -18,8 +18,13 @@ class InboxViewUnreadForm : public Form{
 
 		int keyId = -1;
 
+		MorningSetup setup;
+
 	public:
 		InboxViewUnreadForm() : Form(){
+			if(!setup.isSetup()){
+                                return;
+                        }
 			// -- setup background
 			background.setUseTexture(true);
 			background.setTexturePath("./assets/menu-inbox.bmp");

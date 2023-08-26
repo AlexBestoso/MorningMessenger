@@ -17,8 +17,12 @@ class InboxViewForm : public Form{
 		FormButton buttons[1];
 		FormButton templateButton;
 		FormSelectList selectList[1];
+		MorningSetup setup;
 	public:
 		InboxViewForm() : Form(){
+			if(!setup.isSetup()){
+                                return;
+                        }
 			// -- setup background
 			background.setUseTexture(true);
 			background.setTexturePath("./assets/menu-inbox.bmp");

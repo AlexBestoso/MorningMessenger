@@ -1,5 +1,6 @@
 class RequestViewResponseForm : public Form{
 	private:
+		MorningSetup setup;
 		FormBackground background;
 		
 		size_t textCount = 1;
@@ -15,6 +16,9 @@ class RequestViewResponseForm : public Form{
 		FormButton buttons[1];
 	public:
 		RequestViewResponseForm() : Form(){
+			if(!setup.isSetup()){
+                                return;
+                        }
 			// -- setup background
 			background.setUseTexture(true);
 			background.setTexturePath("./assets/menu-findfrenz-response.bmp");
