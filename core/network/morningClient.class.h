@@ -409,6 +409,59 @@ class MorningClient{
         	}
 		
 		
+		string startAccessRequest(string host, int port){
+			string ret = "";
+			server.loadConfigs();
+                        serverconfig_t cfg = server.getServerConfig();
+                        encryptionSnake.cleanOutPrivateKey();
+			encryptionSnake.cleanOutPublicKey();
+                        encryptionSnake.fetchRsaKeyFromString(true, false, cfg.privateKey, cfg.privateKey.length(), cfg.keyPassword);
+                        if(encryptionSnake.didFail())
+                        	throw MorningException("Failed to load client private key.\n");
+                        encryptionSnake.fetchRsaKeyFromString(false, false, cfg.publicKey, cfg.publicKey.length(), "");
+                        if(encryptionSnake.didFail())
+                        	throw MorningException("Failed to load client public key.\n");
+
+                        if(fileSnake.fileExists("/var/morningService/libtorsocks.so")){
+                        	config.loadConfig();
+                                torMode = config.getConfig().torMode;
+                                if(torMode)
+                                	io.out(MORNING_IO_GENERAL, "Loading Tor Functions\n");
+                               	torSnake.setSoLoc("/var/morningService/libtorsocks.so");
+                    	}else{
+                        	torMode = false;
+                        }
+
+                        connectClient(host, port);
+                        sendAccessRequest();
+                        keyExchange();
+			ret = this->ctrRecv();
+			return ret;
+		}
+
+		string continueAccessRequest(string response, bool firstRun){
+			string ret = "";
+			if(firstRun){
+				this->ctrSend(response, response.length());
+				ret = ctrRecv();
+			}else{
+				server.loadConfigs();
+                                serverconfig_t cfg = server.getServerConfig();
+                                this->ctrSend(response, response.length());
+				io.out(MORNING_IO_GENERAL, "Processing request...\n");
+                                sleep(1);
+                                this->ctrSend(cfg.serverHost, cfg.serverHost.length());
+                                sleep(1);
+                                this->ctrSend(to_string(cfg.serverPort), to_string(cfg.serverPort).length());
+                                sleep(1);
+                                this->ctrSend(cfg.serverName, cfg.serverName.length());
+
+                                // check with server to see if successful.
+                                ret = ctrRecv();
+				netSnake.closeSocket();
+			}
+			return ret;
+		}
 		bool requestAccess(string host, int port){
 			try{
 				server.loadConfigs();

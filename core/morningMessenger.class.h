@@ -1,6 +1,6 @@
 class MorningMessenger{
 	private:
-		const char *version = "0.5.7 Alpha";
+		const char *version = "0.6.1 Alpha";
 		MorningIO io;
 		MorningAlgorithms algorithms;
 		MorningConfig config;
@@ -26,7 +26,27 @@ class MorningMessenger{
 		bool serverLaunched = false;
 
 	public:
-	MorningMessenger(){
+		MorningMessenger(){
+		
+		}
+
+		bool isSetup(){
+			return setup.isSetup();
+		}
+
+		void runSetup(morningconfig_t cfg, string user, string pass){
+			setup.execSetup(cfg, user, pass);
+		}
+
+		bool login(string username, string password){
+			config.loadConfig();
+			this->username = username;
+			this->password = password;
+			if(!user.login(config.getSql(), username, password))
+				return false;
+			return true;
+		}
+	MorningMessenger(bool test){
 		try{
 			if(!setup.isSetup()){
 				morningconfig_t cfg = setup.runSetup();

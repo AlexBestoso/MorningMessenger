@@ -327,7 +327,7 @@ class MorningServer{
 							exit(EXIT_FAILURE);
 						}
 
-						string msg = "What is your name? > ";
+						string msg = "What is your name?";
 						if(!ctrSend(msg, msg.length())){
 							netSnake.closeConnection();
 							exit(EXIT_FAILURE);
@@ -339,7 +339,7 @@ class MorningServer{
 							exit(EXIT_FAILURE);
 						}
 
-						msg = "Why should we trust you? > ";
+						msg = "Why should we trust you?";
 						if(!ctrSend(msg, msg.length())){
                                                         netSnake.closeConnection();
                                                         exit(EXIT_FAILURE);

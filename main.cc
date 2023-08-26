@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -11,6 +12,12 @@
 #include <iostream>
 #include <signal.h>
 #include <time.h>
+#include <GL/glut.h>
+#include <GL/glu.h>
+#include <GL/freeglut.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xmu/Atoms.h>
 
 using namespace std;
 
@@ -44,8 +51,14 @@ using namespace std;
 
 #include "./core/morningMessenger.class.h"
 
-int main(void){
-	try{
+#include "./core/parsers/bmpParser.h"
+#include "./core/Gui/guiEngine.class.h"
+
+int main(int argc, char *argv[]){
+	GuiEngine ge;
+	ge.startEngine(argc, argv);
+
+/*	try{
 		MorningMessenger MM;
 		bool running = true;
 		while(running){
@@ -66,8 +79,8 @@ int main(void){
 					
 					}
 					break;*/
-				case MORNING_MENU_MANAGE:
-					MM.keyManager();
+/*				case MORNING_MENU_MANAGE:
+/*					MM.keyManager();
 					break;
 				case MORNING_MENU_INBOX:
 					MM.inbox();
@@ -83,6 +96,6 @@ int main(void){
 	}catch(exception& e){
 		printf("caught in main() | %s\n", e.what());
 		exit(EXIT_FAILURE);
-	}
+	}*/
 	exit(EXIT_SUCCESS);
 }

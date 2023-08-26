@@ -1,5 +1,5 @@
 BinaryName = "./bin/MorningMessenger"
-Flags = -lglut -lGL -lX11 -lasound -lpulse -lpulse-simple -ldl -lxml2 -lcrypto $(shell mysql_config --cflags) -o $(BinaryName) $(shell mysql_config --libs)
+Flags = -lglut -lGL -lX11 -lXmu -lasound -lpulse -lpulse-simple -ldl -lxml2 -lcrypto $(shell mysql_config --cflags) -o $(BinaryName) $(shell mysql_config --libs)
 
 all:
 	g++ main.cc $(Flags)

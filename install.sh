@@ -37,6 +37,32 @@ else
         echo "[+] Successfully installed freeglut3-dev"
 fi
 
+dpkg -l libxmu-dev >/dev/null
+if [ "$?" == "0" ]; then
+        echo "[+] libxmu-dev found!"
+else
+        echo "[-] libxmu-dev not found! Attempting to install."
+        sudo apt-get install libxmu-dev -y
+        if [ "$?" == "1" ]; then
+                echo "[ERROR] Failed to install libxmu-dev. Aborting."
+                exit 1
+        fi
+        echo "[+] Successfully installed libxmu-dev"
+fi
+
+dpkg -l libx11-dev >/dev/null
+if [ "$?" == "0" ]; then
+        echo "[+] libx11-dev found!"
+else
+        echo "[-] libx11-dev not found! Attempting to install."
+        sudo apt-get install libx11-dev -y
+        if [ "$?" == "1" ]; then
+                echo "[ERROR] Failed to install libx11-dev. Aborting."
+                exit 1
+        fi
+        echo "[+] Successfully installed libx11-dev"
+fi
+
 dpkg -l libmysql++-dev > /dev/null
 if [ "$?" == "0" ]; then
 	echo "[+] libmysql++-dev found!"
@@ -122,12 +148,14 @@ if [ "$?" != "0" ]; then
 		echo "[ERROR] Failed to create storage directory. Aborting."
 		exit 1
 	fi
+	sudo chmod 770 $StorageLocation
 else
 	echo "[W] Storage location already exits!"
 fi
 
 echo "[INFO] Configuring ownership of the storage file."
 sudo chown -R $ServiceUser:$ServiceUser /var/morningService
+#sudo chown -R $(whoami):$(whoami) /var/morningService
 if [ "$?" == "0" ];then
 	echo "[+] Successfully configured storage ownership!"
 else
@@ -136,13 +164,16 @@ else
 fi
 
 echo "[INFO] Configuring storage permissions."
-sudo chmod 770 /var/morningService
+sudo chmod 774 /var/morningService
 if [ "$?" == "0" ];then
 	echo "[+] Successfully configured storage permissions."
 else
 	echo "[ERROR] Failed to configure storage permissions. Aborting."
 	exit 1
 fi
+
+sudo usermod -a -G $ServiceUser $(whoami) 
+echo -en "\n\n\n\t\tYOU WILL NEED TO REBOOT BEFORE RUNNING FOR NEW PERMISSIONS TO BE PROPERLY APPLIED. tank you, that is all. :)\n\n"
 
 exit 0
 
